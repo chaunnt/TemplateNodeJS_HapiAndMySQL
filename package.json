@@ -4,6 +4,8 @@
   "description": "template for nodejs project with hapi",
   "main": "server.js",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^3.4.0",
+    "aedes": "^0.47.0",
     "bcrypt": "^3.0.6",
     "bcryptjs": "^2.4.3",
     "chai": "^4.3.4",
@@ -37,6 +39,7 @@
     "redis": "^3.1.2",
     "sha256": "^0.2.0",
     "vision": "^4.1.1",
+    "websocket-stream": "^5.5.2",
     "winston": "^2.3.1"
   },
   "devDependencies": {

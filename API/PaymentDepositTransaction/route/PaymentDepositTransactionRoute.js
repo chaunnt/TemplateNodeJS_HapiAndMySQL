@@ -312,7 +312,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().required().min(0),
-        amount: Joi.number()required().min(0),
+        amount: Joi.number().required().min(0),
         paymentNote: Joi.string(),
       })
     },

@@ -331,7 +331,7 @@ module.exports = {
   findById,
   findAllDelete,
   updateById,
-  updateAllById
+  updateAllById,
   count,
   createOrReplaceView,
   updateAll,

@@ -192,76 +192,77 @@ const verify2FACode = (token, topSecret) => {
 
 async function createNewUser(userData) {
   return new Promise(async (resolve, reject) => {
-    let checkUser = await AppUsersResourceAccess.find({ username: userData.username });
-    if (checkUser && checkUser.length > 0) {
-      reject(ERROR.DUPLICATED_USER);
-      return;
-    }
-    if (userData.email) {
-      checkUser = await AppUsersResourceAccess.find({ email: userData.email });
+    try {
+      let checkUser = await AppUsersResourceAccess.find({ username: userData.username });
       if (checkUser && checkUser.length > 0) {
         reject(ERROR.DUPLICATED_USER);
         return;
       }
-    }
-    if (userData.phoneNumber) {
-      checkUser = await AppUsersResourceAccess.find({ phoneNumber: userData.phoneNumber });
-      if (checkUser && checkUser.length > 0) {
-        reject(ERROR.DUPLICATED_USER);
-        return;
-      }
-    }
-    
-      //hash password
-      userData.password = hashPassword(userData.password);
-      if(userData.userAvatar ===  null || userData.userAvatar === undefined || userData.userAvatar === "") {
-        userData.userAvatar = `https://${process.env.HOST_NAME}/uploads/avatar.png`;
-      }
-
-      //if system support for secondary password, (2 step authentication)
-      if (userData.secondaryPassword) {
-        userData.secondaryPassword = hashPassword(userData.secondaryPassword);
-      }
-
-      //check refer user by refer's username
-      if (userData.referUser && userData.referUser.trim() !== '') {
-        let referUser = await AppUsersResourceAccess.find({username: userData.referUser}, 0, 1);
-        if (referUser && referUser.length > 0) {
-          userData.referUserId = referUser[0].appUserId;
-        } else {
-          Logger.info(`invalid refer user ${userData.referUser}`);
-          reject(USER_ERROR.INVALID_REFER_USER);
+      if (userData.email) {
+        checkUser = await AppUsersResourceAccess.find({ email: userData.email });
+        if (checkUser && checkUser.length > 0) {
+          reject(ERROR.DUPLICATED_USER);
+          return;
         }
       }
-      //create new user
-      let addResult = await AppUsersResourceAccess.insert(userData);
-      if (addResult === undefined) {
-        Logger.info("can not insert user " + JSON.stringify(userData));
-        reject(USER_ERROR.DUPLICATED_USER);
-      } else {
-        let newUserId = addResult[0];
-        await generate2FACode(newUserId);
-
-        //Create wallet for user
-        let newWalletData =
-          [
-            {
-              appUserId: newUserId,
-              walletType: WALLET_TYPE.POINT //vi diem
-            },
-          ];
-        await WalletResource.insert(newWalletData);
-
-        let userDetail = retrieveUserDetail(newUserId);
-        resolve(userDetail);
+      if (userData.phoneNumber) {
+        checkUser = await AppUsersResourceAccess.find({ phoneNumber: userData.phoneNumber });
+        if (checkUser && checkUser.length > 0) {
+          reject(ERROR.DUPLICATED_USER);
+          return;
+        }
       }
-      return;
+      
+        //hash password
+        userData.password = hashPassword(userData.password);
+        if(userData.userAvatar ===  null || userData.userAvatar === undefined || userData.userAvatar === "") {
+          userData.userAvatar = `https://${process.env.HOST_NAME}/uploads/avatar.png`;
+        }
+
+        //if system support for secondary password, (2 step authentication)
+        if (userData.secondaryPassword) {
+          userData.secondaryPassword = hashPassword(userData.secondaryPassword);
+        }
+
+        //check refer user by refer's username
+        if (userData.referUser && userData.referUser.trim() !== '') {
+          let referUser = await AppUsersResourceAccess.find({username: userData.referUser}, 0, 1);
+          if (referUser && referUser.length > 0) {
+            userData.referUserId = referUser[0].appUserId;
+          } else {
+            Logger.info(`invalid refer user ${userData.referUser}`);
+            reject(USER_ERROR.INVALID_REFER_USER);
+          }
+        }
+        //create new user
+        let addResult = await AppUsersResourceAccess.insert(userData);
+        if (addResult === undefined) {
+          Logger.info("can not insert user " + JSON.stringify(userData));
+          reject(USER_ERROR.DUPLICATED_USER);
+        } else {
+          let newUserId = addResult[0];
+          await generate2FACode(newUserId);
+
+          //Create wallet for user
+          let newWalletData =
+            [
+              {
+                appUserId: newUserId,
+                walletType: WALLET_TYPE.POINT //vi diem
+              },
+            ];
+          await WalletResource.insert(newWalletData);
+
+          let userDetail = retrieveUserDetail(newUserId);
+          resolve(userDetail);
+        }
+        return;
     } catch (e) {
       Logger.info('AppUserFunctions', e);
       Logger.info("can createNewUser user ", JSON.stringify(userData));
       resolve(undefined);
     }
-  });
+  });  
 }
 
 async function sendEmailToResetPassword(user, userToken, email) {

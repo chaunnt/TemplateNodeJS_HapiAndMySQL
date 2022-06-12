@@ -112,6 +112,6 @@ module.exports = {
   find,
   updateById,
   findById,
-  deleteById
+  deleteById,
     getList,
 };
