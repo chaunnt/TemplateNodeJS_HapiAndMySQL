@@ -116,4 +116,19 @@ describe(`Tests UserPaymentServicePackage`, () => {
         done();
       });
   });
+  it("POST /PaymentServicePackage/user/historyBonusServicePackage", (done) => {
+    const body = {};
+    chai
+      .request(`0.0.0.0:${process.env.PORT}`)
+      .post(`/PaymentServicePackage/user/historyBonusServicePackage`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send(body)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+        }
+        checkResponseStatus(res, 200);
+        done();
+      });
+  });
 });

@@ -22,13 +22,18 @@ const insertSchema = {
   birthDay: Joi.string(),
   identityNumber: Joi.string(),
   sex: Joi.number().min(USER_SEX.MALE).max(USER_SEX.FEMALE),
+  companyName: Joi.string(),
+  province: Joi.string(),
+  district: Joi.string(),
+  ward: Joi.string(),
+  address: Joi.string(),
 };
 const updateSchema = {
-  lastName: Joi.string(),
-  firstName: Joi.string(),
+  lastName: Joi.string().allow(''),
+  firstName: Joi.string().allow(''),
   phoneNumber: Joi.string(),
   email: Joi.string().email(),
-  birthDay: Joi.string(),
+  birthDay: Joi.string().allow(''),
   active: Joi.number().min(0).max(1),
   limitWithdrawDaily: Joi.number().min(0).max(1000000000),
   memberLevelName: Joi.string(),
@@ -40,22 +45,29 @@ const updateSchema = {
   firebaseToken: Joi.string(),
   telegramId: Joi.string(),
   isDeleted: Joi.number(),
-  sotaikhoan: Joi.string(),
-  tentaikhoan: Joi.string(),
-  tennganhang: Joi.string(),
+  sotaikhoan: Joi.string().allow(['', null]),
+  tentaikhoan: Joi.string().allow(['', null]),
+  tennganhang: Joi.string().allow(['', null]),
+  diachiviUSDT: Joi.string().allow(['', null]),
+  diachiviBTC: Joi.string().allow(['', null]),
+  companyName: Joi.string(),
+  province: Joi.string(),
+  district: Joi.string(),
+  ward: Joi.string(),
+  address: Joi.string(),
 }
 
 const filterSchema = {
-  active: Joi.number().min(0).max(1),
+  active: Joi.number().min(0).max(100),
   username: Joi.string().alphanum(),
   email: Joi.string(),
   phoneNumber: Joi.string(),
   referUser: Joi.string(),
   name: Joi.string(),
-  userType: Joi.number().min(1).max(2),
-  isVerified: Joi.number().min(-1).max(2),
-  isVerifiedEmail: Joi.number().min(-1).max(2),
-  isVerifiedPhoneNumber: Joi.number().min(-1).max(2),
+  userType: Joi.number().min(0).max(100),
+  isVerified: Joi.number().min(0).max(100),
+  isVerifiedEmail: Joi.number().min(0).max(100),
+  isVerifiedPhoneNumber: Joi.number().min(0).max(100),
   memberLevelName: Joi.string(),
 };
 
@@ -173,6 +185,23 @@ module.exports = {
       Response(req, res, "loginByPhone");
     }
   },
+  loginByEmail: {
+    tags: ["api", `${moduleName}`],
+    description: `login ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        email: Joi.string().email().min(6).max(30).required(),
+        password: Joi.string().required(),
+      })
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "loginByEmail");
+    }
+  },
   loginFacebook: {
     tags: ["api", `${moduleName}`],
     description: `login ${moduleName}`,
@@ -271,7 +300,8 @@ module.exports = {
     validate: {
       payload: Joi.object({
         password: Joi.string().required().min(6),
-        phoneNumber: Joi.string().required(),
+        phoneNumber: Joi.string().required().max(15),
+        companyName: Joi.string(),
       })
     },
     handler: function (req, res) {
@@ -280,6 +310,26 @@ module.exports = {
         return;
       }
       Response(req, res, "registerUserByPhone");
+    }
+  },
+  registerUserByEmail: {
+    tags: ["api", `${moduleName}`],
+    description: `register ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        referUser: Joi.string().allow(''),
+        secondaryPassword: Joi.string().min(6),
+        password: Joi.string().required().min(6),
+        email: Joi.string().required().email(),
+        companyName: Joi.string(),
+      })
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "registerUserByEmail");
     }
   },
   forgotPassword: {
@@ -336,7 +386,6 @@ module.exports = {
       Response(req, res, "verifyEmailUser");
     }
   },
-  
   changePasswordUser: {
     tags: ["api", `${moduleName}`],
     description: `change password ${moduleName}`,
@@ -454,7 +503,7 @@ module.exports = {
       Response(req, res, "verifyInfoUser");
     }
   },
-
+  
   rejectInfoUser: {
     tags: ["api", `${moduleName}`],
     description: `reject info ${moduleName}`,
@@ -468,6 +517,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
+        appUserNote: Joi.string(),
       })
     },
     handler: function (req, res) {
@@ -557,9 +607,9 @@ module.exports = {
     },
   },
 
-  submitIdentityCardImage: {
+  userSubmitIdentity: {
     tags: ["api", `${moduleName}`],
-    description: `submit images of identity card of ${moduleName}`,
+    description: `user submit identity to admin`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyOwnerToken }],
     auth: {
       strategy: 'jwt',
@@ -573,7 +623,7 @@ module.exports = {
       })
     },
     handler: function (req, res) {
-      Response(req, res, "submitIdentityCardImage");
+      Response(req, res, "userSubmitIdentity");
     }
   },
   uploadAvatar: {
@@ -743,6 +793,166 @@ module.exports = {
         return;
       }
       Response(req, res, "adminChangeSecondaryPasswordUser");
+    }
+  },
+  userViewsListMembership: {
+    tags: ["api", `${moduleName}`],
+    description: `get list ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "userViewsListMembership");
+    }
+  },
+  findAllUsersFollowingReferId: {
+    tags: ["api", `${moduleName}`],
+    description: `get list ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken }
+    ],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          username: Joi.string(),
+          firstName: Joi.string(),
+          phoneNumber: Joi.string(),
+          email: Joi.string()
+        }),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "findAllUsersFollowingReferId");
+    }
+  },
+  userCheckExistingAccount: {
+    tags: ["api", `${moduleName}`],
+    description: `userCheckExistingAccount ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        username: Joi.string().alphanum(),
+        email: Joi.string().email(),
+        phoneNumber: Joi.string(),
+        companyName: Joi.string(),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "userCheckExistingAccount");
+    }
+  },
+  confirmEmailOTP: {
+    tags: ["api", `${moduleName}`],
+    description: `confirm OTP on email ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        email: Joi.string().email().required(),
+        otp: Joi.string().required()
+      })
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "confirmEmailOTP");
+    }
+  },
+  sendEmailOTP: {
+    tags: ["api", `${moduleName}`],
+    description: `send OTP on email ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        email: Joi.string().email().required(),
+      })
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "sendEmailOTP");
+    }
+  },
+  changePasswordviaEmailOTP: {
+    tags: ["api", `${moduleName}`],
+    description: `changePasswordviaEmailOTP ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        email: Joi.string().email().required(),
+        otpCode: Joi.string().required(),
+        newPassword: Joi.string().required(),
+      })  
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "changePasswordviaEmailOTP");
+    }
+  },
+  userChangeSecondaryPassword: {
+    tags: ["api", `${moduleName}`],
+    description: `${moduleName} userChangeSecondaryPassword`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        password: Joi.string().required().min(6),
+        oldPassword: Joi.string().min(6),
+      })
+    },
+    handler: function (req, res) {
+      if(SystemStatus.all === false){
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "userChangeSecondaryPassword");
     }
   },
 };

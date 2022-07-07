@@ -1,0 +1,1 @@
+require('./CustomerMeasureRecord_User.spec');

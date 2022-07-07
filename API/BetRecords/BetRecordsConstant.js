@@ -12,19 +12,28 @@ module.exports = {
     DELETED: "Deleted",
     CANCELED: "Canceled",
   },
+  BET_RESULT: {
+    WIN: 1,
+    LOSE: 0
+  },
   BET_TYPE: {
-    BIG: "BetBig",
-    SMALL: "BetSmall",
-    ODD: "BetOdd",
-    EVEN: "BetEven",
-    UP: "BetUp",
-    DOWN: "BetDown",
+    BIG: 1,
+    SMALL: 2,
+    ODD: 3,
+    EVEN: 4,
+    UP: 5,
+    DOWN: 6,
+    HALF: 7,
+    FULL: 8,
+    FAC: 10,
+    BTC: 20,
   },
   BET_UNIT: {
     BTC: "BTC-USD",
     ETH: "ETH-USD"
   },
   BET_AMOUNT: [
+    10000,
     100000,
     200000,
     500000,

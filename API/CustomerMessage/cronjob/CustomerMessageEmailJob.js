@@ -3,8 +3,8 @@
  */
 "use strict";
 const Joi = require('joi')
-const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
-const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
+// const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
+// const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
 const CustomerMessage = require('../resourceAccess/CustomerMessageResourceAccess');
 const CustomerRecord = require('../../CustomerRecord/resourceAccess/CustomerRecordResourceAccess');
 const { MESSAGE_STATUS, MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
@@ -91,7 +91,7 @@ async function sendMessageEmailToCustomer(station) {
     if (messageList && messageList.length > 0) {
       for (let i = 0; i < messageList.length; i++) {
         const _customerMessage = messageList[i];
-        let _templateId = _customerMessage.customerMessageTemplateId;
+        let _templateId = _customerMessage.templateCustomerMessageId;
         let messageContent = _customerMessage.customerMessageContent;
 
         //if using template, then generate content based on template

@@ -7,6 +7,8 @@ module.exports = [
   // { method: 'POST', path: '/PaymentDepositTransaction/updateById', config: PaymentDepositTransaction.updateById },
   { method: 'POST', path: '/PaymentDepositTransaction/findById', config: PaymentDepositTransaction.findById },
   // { method: 'POST', path: '/PaymentDepositTransaction/deleteById', config: PaymentDepositTransaction.deleteById },
+  { method: 'POST', path: '/PaymentDepositTransaction/exportData', config: PaymentDepositTransaction.exportData },
+  
   { method: 'POST', path: '/PaymentDepositTransaction/user/requestDeposit', config: PaymentDepositTransaction.userRequestDeposit },
   { method: 'POST', path: '/PaymentDepositTransaction/user/depositHistory', config: PaymentDepositTransaction.depositHistory },
   { method: 'POST', path: '/PaymentDepositTransaction/addPointForUser', config: PaymentDepositTransaction.addPointForUser },

@@ -10,12 +10,11 @@ function checkResponseStatus(res, expected) {
     console.log(res.request.url);
     console.log(res.request.method);
     console.log(res.request._header);
-    console.log(res.request._data);
+    console.log(JSON.stringify(res.request._data));
     console.log('========Response======');
     console.log(res.body);
   }
   expect(res).to.have.status(expected);
-  expect(res.body.statusCode === expected);
 }
 
 var lhs = {

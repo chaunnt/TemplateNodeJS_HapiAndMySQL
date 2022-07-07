@@ -3,7 +3,7 @@ require("dotenv").config();
 const { DB, timestamps } = require("../../../config/database")
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = "SummaryUserPaymentDepositTransactionView";
-const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransactionConstant');
+
 const rootTableName = 'AppUser';
 const primaryKeyField = "appUserId";
 async function createUserDepositTransactionView() {
@@ -67,69 +67,6 @@ async function sum(field, filter, order) {
   return await Common.sum(tableName, field, filter, order);
 }
 
-//find any user that have balance bigger than requirement
-async function findByMinBalance(minBalance, skip, limit) {
-  let queryBuilder = DB(tableName);
-  if(minBalance){
-    queryBuilder.where('sumPaymentDepositTransactionAmount', '>=', minBalance);
-  } else {
-    return undefined;
-  }
-
-  if (limit) {
-    queryBuilder.limit(limit);
-  }
-
-  if (skip) {
-    queryBuilder.offset(skip);
-  }
-
-  queryBuilder.where({isDeleted: 0});
-  queryBuilder.where({paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED});
-  return new Promise((resolve, reject) => {
-    try {
-      queryBuilder.select()
-        .then(records => {
-          resolve(records);
-        });
-    } catch (e) {
-      resolve(undefined);
-    }
-  });
-}
-
-//find any user that have balance bigger than requirement
-async function countByMinBalance(minBalance, skip, limit) {
-  let queryBuilder = DB(tableName);
-  if(minBalance){
-    queryBuilder.where('sumPaymentDepositTransactionAmount', '>=', minBalance);
-  } else {
-    return undefined;
-  }
-
-  if (limit) {
-    queryBuilder.limit(limit);
-  }
-
-  if (skip) {
-    queryBuilder.offset(skip);
-  }
-
-  queryBuilder.where({paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED});
-  queryBuilder.where({isDeleted: 0});
-  
-  return new Promise((resolve, reject) => {
-    try {
-      queryBuilder.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
-    } catch (e) {
-      resolve(undefined);
-    }
-  });
-}
-
 module.exports = {
   insert,
   find,
@@ -137,7 +74,5 @@ module.exports = {
   updateById,
   initViews,
   sum,
-  findByMinBalance,
-  countByMinBalance,
   modelName: tableName,
 };

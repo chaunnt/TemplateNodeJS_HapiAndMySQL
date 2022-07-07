@@ -15,6 +15,7 @@ const insertSchema = {
   email: Joi.string().email(),
   password: Joi.string().required(),
   phoneNumber: Joi.string(),
+  staffAvatar: Joi.string(),
 };
 
 const updateSchema = {
@@ -27,6 +28,8 @@ const updateSchema = {
   roleId: Joi.number(),
   email: Joi.string().email(),
   isDeleted: Joi.number(),
+  stationsId: Joi.number(),
+  staffAvatar: Joi.string(),
 }
 
 const filterSchema = {
@@ -37,6 +40,7 @@ const filterSchema = {
   email: Joi.string(),
   phoneNumber: Joi.string(),
   roleId: Joi.number(),
+  stationsId: Joi.number(),
 };
 
 module.exports = {
@@ -95,6 +99,7 @@ module.exports = {
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string()
             .default("createdAt")
@@ -177,15 +182,35 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        username: Joi.string().required(),
-        password: Joi.string().required(),
         newPassword: Joi.string().required(),
+        password: Joi.string().required(),
       })
     },
     handler: function (req, res) {
       Response(req, res, "changePasswordStaff");
     }
   },
+  adminChangePasswordStaff: {
+    tags: ["api", `${moduleName}`],
+    description: `change password ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().required(),
+        newPassword: Joi.string().required(),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "adminChangePasswordStaff");
+    }
+  },
+  
   deleteById: {
     tags: ["api", `${moduleName}`],
     description: `delete ${moduleName}`,

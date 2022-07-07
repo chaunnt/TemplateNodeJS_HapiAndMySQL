@@ -135,6 +135,43 @@ async function verifyAdminToken(request, reply) {
     reply('pre-handler done');
   });
 }
+
+
+async function verifyAgentToken(request, reply) {
+  return new Promise(function (resolve) {
+    let currentUser = request.currentUser;
+
+    if (!currentUser.staffId || currentUser.staffId < 1) {
+      reply.response(errorCodes[505]).code(505).takeover();
+      return;
+    }
+
+    if (!currentUser.roleId || currentUser.roleId < 1) {
+      reply.response(errorCodes[505]).code(505).takeover();
+      return;
+    }
+
+    //neu day la agent
+    const AGENT_ROLE = 5; //<< agent role luon la ID lon nhat ben trong he thong
+    if (currentUser.roleId < AGENT_ROLE) {
+      //if it is agent, reject user
+      reply.response(errorCodes[505]).code(505).takeover();
+      return;
+    }
+
+    //if agent do not have station
+    if (!currentUser.stationsId || currentUser.stationsId <= 0) {
+      //if it is agent, reject user
+      reply.response(errorCodes[505]).code(505).takeover();
+      return;
+    }
+
+    resolve("ok");
+  }).then(function () {
+    reply('pre-handler done');
+  });
+}
+
 //verify token is belong to user or not
 //to make sure they can not get info or update other user
 async function verifyOwnerToken(request, reply) {
@@ -172,22 +209,11 @@ async function verifyTokenOrAllowEmpty(request, reply) {
   });
 }
 
-function parseIntArray(array) {
-  let newArray = array.split(";")
-  let result = [];
-  for(let element of newArray) {
-      if(element) {
-          result.push(parseInt(element));
-      }
-  }
-  return result;
-}
-
 module.exports = {
   verifyToken,
   verifyStaffToken,
   verifyOwnerToken,
   verifyAdminToken,
+  verifyAgentToken,
   verifyTokenOrAllowEmpty,
-  parseIntArray,
 };

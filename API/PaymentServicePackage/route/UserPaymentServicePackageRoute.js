@@ -7,22 +7,14 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require("../../Common/CommonFunctions");
-const { PACKAGE_STATUS } = require('../PaymentServicePackageConstant');
-
-const insertSchema = {
-  packageName: Joi.string().required(),
-  packagePrice: Joi.number().required(),
-  packageDiscountPrice: Joi.number(),
-  packagePerformance: Joi.number().required().min(1),
-  packageUnitId: Joi.number().required().min(0),
-  packageDuration: Joi.number().required().min(1),
-  packageStatus: Joi.number().allow([PACKAGE_STATUS.NORMAL, PACKAGE_STATUS.HOT, PACKAGE_STATUS.NEW])
-};
-
+const { PACKAGE_CATEGORY,ACTIVITY_STATUS } = require('../PaymentServicePackageConstant');
 const filterSchema = {
   packageUnitId: Joi.number(),
+  packageCategory: Joi.string(),
+  packageActivityStatus : Joi.number(),
+  packageType: Joi.string(),
 }
-
+const filterSchemaServiPackeUser = {}
 module.exports = {
   buyServicePackage: {
     tags: ["api", `${moduleName}`],
@@ -202,6 +194,379 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "getListUserBuyPackage");
+    },
+  },
+  userRequestCompletedServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `userCompletedServicePackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentServicePackageUserId: Joi.number().required().min(1),
+        secondaryPassword: Joi.string().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "userRequestCompletedServicePackage");
+    },
+  },
+  userAproveCompletedServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `userAproveCompletedServicePackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentServicePackageId: Joi.number().required().min(1),
+        secondaryPassword: Joi.string().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "userAproveCompletedServicePackage");
+    },
+  },
+  userDenyCompletedServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `userDenyCompletedServicePackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentServicePackageId: Joi.number().required().min(1),
+        secondaryPassword: Joi.string().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "userDenyCompletedServicePackage");
+    },
+  },
+  historyCompleteServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `user view historyCompleteServicePackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchemaServiPackeUser),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "historyCompleteServicePackage");
+    },
+  },
+  historyCancelServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `user view historyCancelServicePackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchemaServiPackeUser),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "historyCancelServicePackage");
+    },
+  },
+  historyBonusServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `user view historyBonusServicePackage }`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "historyBonusServicePackage");
+    },
+  },
+  countAllUserPackage: {
+    tags: ["api", `${moduleName}`],
+    description: `staff count ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100)
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "countAllUserPackage");
+    },
+  },
+  adminHistoryCancelServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `admin view historyCancel ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchemaServiPackeUser),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "adminHistoryCancelServicePackage");
+    },
+  },
+  adminHistoryCompleteServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `admin view adminHistoryCompleteServicePackage`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyAdminToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchemaServiPackeUser),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "adminHistoryCompleteServicePackage");
+    },
+  },
+  adminUpdateCompleteServicePackage: {
+    tags: ["api", `${moduleName}`],
+    description: `admin update adminHistoryCompleteServicePackage`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number(),
+        data: Joi.object({
+          packagePrice: Joi.number(),
+          percentCompleted: Joi.number()
+        })
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "updateById");
+    },
+  },
+  summaryReferedUser: {
+    tags: ["api", `${moduleName}`],
+    description: `user view refered user`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+        searchText: Joi.string(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "summaryReferedUser");
+    },
+  },
+  getListReferralByUserId: {
+    tags: ["api", `${moduleName}`],
+    description: `admin view refered user of user`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          appUserId: Joi.number().required()
+        }).required(),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+        searchText: Joi.string(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "getListReferralByUserId");
+    },
+  },
+  
+  findUserBuyPackage: {
+    tags: ["api", `${moduleName}`],
+    description: `findUserBuyPackage ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          ...filterSchema,
+          appUserId: Joi.number(),
+        }),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        searchText: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default("createdAt").allow(""),
+          value: Joi.string().default("desc").allow(""),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "findUserBuyPackage");
+    },
+  },
+  adminCompletePackagesById: {
+    tags: ["api", `${moduleName}`],
+    description: `admin complete package by id ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    auth: {
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0).required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "adminCompletePackagesById");
     },
   },
 };

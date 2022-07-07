@@ -1,4 +1,4 @@
-FROM node:10.16.3-buster
+FROM node:12.22
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app

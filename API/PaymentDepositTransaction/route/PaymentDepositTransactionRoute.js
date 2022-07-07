@@ -12,6 +12,7 @@ const { DEPOSIT_TRX_STATUS } = require("../PaymentDepositTransactionConstant");
 const insertSchema = {
   appUserId: Joi.number().required(),
   paymentAmount: Joi.number().required().min(0),
+  paymentCategory: Joi.string(),
 };
 
 const updateSchema = {
@@ -22,18 +23,12 @@ const updateSchema = {
 
 const filterSchema = {
   appUserId: Joi.number(),
-  username: Joi.string(),
   walletId: Joi.number(),
   referId: Joi.number(),
-  firstName: Joi.string(),
-  lastName: Joi.string(),
-  email: Joi.string(),
   paymentPICId: Joi.number(),
-  phoneNumber: Joi.string(),
   paymentStatus: Joi.string(),
-  paymentRef: Joi.string(),
-  paymentApproveDate: Joi.string(),
   paymentMethodId: Joi.number(),
+  paymentCategory: Joi.string(),
 };
 
 module.exports = {
@@ -91,6 +86,7 @@ module.exports = {
         endDate: Joi.string(),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string()
             .default("createdAt")
@@ -170,32 +166,16 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        paymentServicePackageId: Joi.number().required().default(1),
-        paymentMethodId: Joi.number().required().default(1),
+        paymentAmount: Joi.number().required().min(0),
+        // //<< Cho nay la dia chi transaction, khong phai dia chi vi. 
+        //paymentRef = ma hoa don / ma giao dich ben ngoai he thong
+        paymentRef: Joi.string(),
+        paymentCategory: Joi.string(),
+        paymentRefAmount: Joi.number().min(0),
       })
     },
     handler: function (req, res) {
       Response(req, res, "userRequestDeposit");
-    }
-  },
-  userViewRequestDeposit: {
-    tags: ["api", `${moduleName}`],
-    description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        id: Joi.number().min(0),
-        paymentTransactionCode: Joi.string()
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "userViewRequestDeposit");
     }
   },
   approveDepositTransaction: {
@@ -211,7 +191,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        paymentNote: Joi.string(),
+        paymentNote: Joi.string()
       })
     },
     handler: function (req, res) {
@@ -231,7 +211,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        paymentNote: Joi.string(),
+        paymentNote: Joi.string()
       })
     },
     handler: function (req, res) {
@@ -299,7 +279,7 @@ module.exports = {
       Response(req, res, "deleteById");
     }
   },
-  addRewardPointForUser: {
+  addPointForUser: {
     tags: ["api", `${moduleName}`],
     description: `${moduleName} - add reward point for user`,
     pre: [{ method: CommonFunctions.verifyToken },{ method: CommonFunctions.verifyStaffToken } ],
@@ -312,19 +292,18 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().required().min(0),
-        amount: Joi.number()required().min(0),
+        amount: Joi.number().required(),
         paymentNote: Joi.string(),
       })
     },
     handler: function (req, res) {
-      Response(req, res, "addRewardPointForUser");
+      Response(req, res, "addPointForUser");
     }
   },
-
-  exportExcelHistory: {
+  exportData: {
     tags: ["api", `${moduleName}`],
-    description: `${moduleName} - export excel history reward point for user`,
-    pre: [{ method: CommonFunctions.verifyToken },{ method: CommonFunctions.verifyStaffToken } ],
+    description: `exportData ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -333,31 +312,24 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
+        filter: Joi.object(filterSchema),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
       })
     },
     handler: function (req, res) {
-      Response(req, res, "exportHistoryOfUser");
-    }
-  },
-  exportSalesToExcel: {
-    tags: ["api", `${moduleName}`],
-    description: `${moduleName} - export excel sales`,
-    pre: [{ method: CommonFunctions.verifyToken },{ method: CommonFunctions.verifyStaffToken } ],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        startDate: Joi.string().required(),
-        endDate: Joi.string().required(),
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "exportSalesToExcel");
+      Response(req, res, "exportData");
     }
   },
 };

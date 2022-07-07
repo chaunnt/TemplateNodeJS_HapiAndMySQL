@@ -43,10 +43,6 @@ function convertToURLFormat(str) {
   return "/" + encodeURI(replaceAll(outString, ' ', '-'));
 }
 
-function randomInt(min, max) { // min and max included 
-  return Math.floor(Math.random() * (max - min + 1) + min)
-}
-
 async function chunkArray(arrData, chunkSize) {
   var arrayResult = [];
   for (var i = 0; i < arrData.length; i += chunkSize) {
@@ -54,17 +50,38 @@ async function chunkArray(arrData, chunkSize) {
   }
   return arrayResult;
 }
-function FormatDate(date,resultFormat) {
+function FormatDate(date, resultFormat) {
   var newDate = moment(date, "YYYY-MM-DD");
   var newDateFormat = newDate.format(`${resultFormat}`);
-  return newDateFormat 
+  return newDateFormat
 }
 
+function padLeadingZeros(num, size, char = "0") {
+  var s = num + "";
+  while (s.length < size) s = char + s;
+  return s;
+}
+
+function randomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+function randomIntByMinMax(min, max) { // min and max included 
+return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
+function convertStringToHex(inputText) {
+  const bufferText = Buffer.from(inputText, 'utf8'); // or Buffer.from('hello world')
+  return bufferText.toString('hex');
+}
 module.exports = {
   nonAccentVietnamese,
   replaceAll,
   convertToURLFormat,
   randomInt,
+  randomIntByMinMax,
   chunkArray,
-  FormatDate
+  FormatDate,
+  padLeadingZeros,
+  convertStringToHex
 };

@@ -7,51 +7,59 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
-const { MESSAGE_CATEGORY } = require('../../CustomerMessage/CustomerMessageConstant');
 
 const insertSchema = {
-  licensePlates: Joi.string().required(),
-  phone: Joi.string(),
-  fullnameSchedule: Joi.string(),
-  email: Joi.string(),
-  dateSchedule: Joi.string(),
-  time: Joi.string(),
+  customerIdentity: Joi.string(),
+  customerPhone: Joi.string().alphanum(),
+  customerName: Joi.string().required(),
+  customerEmail: Joi.string().email(),
+  customerScheduleDate: Joi.string().required().default('2022/01/01'),
+  customerScheduleTime: Joi.string().required().default('07:30'),
+  customerScheduleNote: Joi.string().allow(''),
   stationsId: Joi.number(),
-  notificationMethod: Joi.string().required().valid([MESSAGE_CATEGORY.SMS,MESSAGE_CATEGORY.EMAIL])
+  appUserId: Joi.number(),
+  agencyId: Joi.number(),
+  stationProductsId: Joi.number(),
+  stationServicesId: Joi.number(),
 };
 
 const updateSchema = {
-  licensePlates: Joi.string(),
-  phone: Joi.string(),
-  fullnameSchedule: Joi.string(),
-  email: Joi.string(),
-  dateSchedule: Joi.string(),
-  time: Joi.string(),
+  customerIdentity: Joi.string(),
+  customerPhone: Joi.string().alphanum(),
+  customerName: Joi.string(),
+  customerEmail: Joi.string().email(),
+  customerScheduleDate: Joi.string(),
+  customerScheduleTime: Joi.string(),
+  customerScheduleNote: Joi.string().allow(''),
+  customerScheduleStatus: Joi.string(),
+  customerScheduleAddress: Joi.string(),
   stationsId: Joi.number(),
-  isDeleted: Joi.number(),
-  notificationMethod: Joi.string().valid([MESSAGE_CATEGORY.SMS,MESSAGE_CATEGORY.EMAIL]),
-  CustomerScheduleStatus:Joi.number()
+  appUserId: Joi.number(),
+  agencyId: Joi.number(),
+  stationProductsId: Joi.number(),
+  stationServicesId: Joi.number(),
 }
 
 const filterSchema = {
-  licensePlates: Joi.string(),
-  phone: Joi.string(),
-  fullnameSchedule: Joi.string(),
-  email: Joi.string(),
-  dateSchedule: Joi.string(),
-  time: Joi.string(),
+  customerIdentity: Joi.string(),
+  customerPhone: Joi.string().alphanum(),
+  customerName: Joi.string(),
+  customerEmail: Joi.string(),
+  customerScheduleDate: Joi.string(),
+  customerScheduleTime: Joi.string(),
+  customerScheduleStatus: Joi.string(),
   stationsId: Joi.number(),
-  isDeleted: Joi.number(),
-  notificationMethod: Joi.string().valid([MESSAGE_CATEGORY.SMS,MESSAGE_CATEGORY.EMAIL]),
-  CustomerScheduleStatus:Joi.number()
-
+  appUserId: Joi.number(),
+  agencyId: Joi.number(),
+  stationProductsId: Joi.number(),
+  stationServicesId: Joi.number(),
 };
 
 module.exports = {
   insert: {
     tags: ["api", `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -68,7 +76,7 @@ module.exports = {
   updateById: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -88,7 +96,7 @@ module.exports = {
   find: {
     tags: ["api", `${moduleName}`],
     description: `List ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -101,6 +109,8 @@ module.exports = {
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
         order: Joi.object({
           key: Joi.string()
             .default("createdAt")
@@ -118,7 +128,7 @@ module.exports = {
   findById: {
     tags: ["api", `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -134,23 +144,10 @@ module.exports = {
       Response(req, res, "findById");
     }
   },
-  userInsertSchedule: {
-    tags: ["api", `${moduleName}`],
-    description: `insert ${moduleName}`,
-    validate: {
-      payload: Joi.object({
-        ...insertSchema,
-        stationUrl: Joi.string().required()
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "userInsertSchedule");
-    }
-  },
   deleteById: {
     tags: ["api", `${moduleName}`],
     description: `Delete ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -165,6 +162,25 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "deleteById");
+    }
+  },
+  adminCancelSchedule: {
+    tags: ["api", `${moduleName}`],
+    description: `admin cancel ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        customerScheduleId: Joi.number().min(0),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "adminCancelSchedule");
     }
   },
 };

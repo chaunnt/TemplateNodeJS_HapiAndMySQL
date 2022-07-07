@@ -7,7 +7,12 @@ const StationsDetailModel = require('./model/StationDetailModel');
 const StationDetailPublicModel = require('./model/StationDetailPublicModel');
 const UtilsFunction = require('../ApiUtils/utilFunctions');
 const UploadResource = require('../Upload/resourceAccess/UploadResourceAccess');
-const TextToSpeechFunction = require('../../ThirdParty/TextToSpeech/TextToSpeechFunctions');
+const StaffResource = require('../Staff/resourceAccess/StaffResourceAccess');
+
+if (process.env.GOOGLE_TTS_ENABLE) {
+  const TextToSpeechFunction = require('../../ThirdParty/TextToSpeech/TextToSpeechFunctions');
+}
+
 
 async function registerNewStation(stationsData) {
   //generate new url based on name
@@ -30,6 +35,16 @@ async function getStationDetailById(stationId) {
   if (result) {
     result = StationsDetailModel.fromData(result);
   }
+
+  let staffCount = await StaffResource.count({ stationsId: stationId});
+  if (staffCount && staffCount.length > 0) {
+    staffCount = staffCount[0].count;
+  } else {
+    staffCount = 0;
+  }
+
+  result.staffCount = staffCount;
+  
   return result;
 }
 
@@ -72,20 +87,22 @@ async function updateVoiceDataForConfig(stationsConfig) {
       }
       //if voice is not existed, make a new one and store it to upload storage
       else {
-        let result = await TextToSpeechFunction.createProcessSpeechFile(configVoice, voiceFilePath);
-        if (result) {
-          stationsConfig[i].stepVoiceUrl = `https://${process.env.HOST_NAME}${voiceUrl}`;
-          UploadResource.insert({
-            uploadFileName: voiceFilePath,
-            uploadFileExtension: "mp3",
-            uploadUnicodeName: configVoice,
-            uploadFileSize: 100,
-            uploadFileUrl: `https://${process.env.HOST_NAME}${voiceUrl}`
-          });
-        } else {
-          console.error(`can not make stepVoiceUrl ${configVoice}`)
-          //handle error
-          stationsConfig[i].stepVoiceUrl = "";
+        if (process.env.GOOGLE_TTS_ENABLE) {
+          let result = await TextToSpeechFunction.createProcessSpeechFile(configVoice, voiceFilePath);
+          if (result) {
+            stationsConfig[i].stepVoiceUrl = `https://${process.env.HOST_NAME}${voiceUrl}`;
+            UploadResource.insert({
+              uploadFileName: voiceFilePath,
+              uploadFileExtension: "mp3",
+              uploadUnicodeName: configVoice,
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}${voiceUrl}`
+            });
+          } else {
+            console.error(`can not make stepVoiceUrl ${configVoice}`)
+            //handle error
+            stationsConfig[i].stepVoiceUrl = "";
+          }
         }
       }
     }
@@ -115,7 +132,7 @@ async function sortCheckingConfigStep(config) {
   }
 
   for (let i = 0; i < config.length; i++) {
-    config[i].stepIndex = i;
+    config[i].index = i;
   }
 }
 

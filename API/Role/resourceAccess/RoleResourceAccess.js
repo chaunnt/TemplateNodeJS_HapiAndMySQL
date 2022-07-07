@@ -20,34 +20,12 @@ async function createTable() {
           table.index('permissions');
           table.index('roleName');
         })
-        .then(async () => {
+        .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          let roles = [
-            "Admin",
-            "Operator",
-            "Moderator",
-            "Editor",
-          ];
-          let rolesArr = [];
-          let adminPermissions = await DB(`Permission`).select();
-          let permissionList = [];
-          for (let i = 0; i < adminPermissions.length; i++) {
-            const permission = adminPermissions[i];
-            permissionList.push(permission.permissionKey);
-          }
-          permissionList = permissionList.join(',');
-          for (let i = 0; i < roles.length; i++) {
-            const role = roles[i];
-            rolesArr.push({
-              roleName: role,
-              permissions: permissionList
-            });
-          }
-
-          DB(`${tableName}`).insert(rolesArr).then((result) => {
+          seeding().then((result) => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
-          });
+          })
         });
     });
   });
@@ -55,6 +33,37 @@ async function createTable() {
 
 async function initDB() {
   await createTable();
+}
+
+async function seeding() {
+  return new Promise(async (resolve, reject) => {
+    let initialRoles = [
+      {
+        roleName: "Super Admin",
+        permissions: "VIEW_DASHBOARD,VIEW_USERS,VIEW_STAFF,VIEW_STATION,VIEW_MENU,VIEW_SERVICE,VIEW_SCHEDULE,VIEW_CONFIGURATION,EDIT_USERS,EDIT_STAFF,VIEW_SERVICE_PACKAGE"
+      },
+      {
+        roleName: "Station Admin",
+        permissions: "VIEW_DASHBOARD,VIEW_USERS,VIEW_STAFF,EDIT_STAFF,VIEW_SCHEDULE"
+      },
+      {
+        roleName: "Station Support",
+        permissions: "VIEW_USERS,VIEW_STAFF,VIEW_SCHEDULE"
+      },
+      {
+        roleName: "Station Operator",
+        permissions: "VIEW_SCHEDULE"
+      },
+      {
+        roleName: "Station Trainer",
+        permissions: "VIEW_SCHEDULE"
+      },
+    ]
+    DB(`${tableName}`).insert(initialRoles).then((result) => {
+      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+      resolve();
+    });
+  });
 }
 
 async function insert(data) {
@@ -79,7 +88,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  if(filterData.roleName) {
+  if (filterData.roleName) {
     queryBuilder.where('roleName', 'like', `%${filter.roleName}%`);
     delete filterData.roleName
   }

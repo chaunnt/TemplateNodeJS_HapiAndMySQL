@@ -12,21 +12,34 @@ async function createTable() {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
-          table.increments('systemConfigurationsId').primary();
-          table.string('systemLeftBannerAd').defaultTo('');
-          table.string('systemRightBannerAd').defaultTo('');
+          table.increments(`${primaryKeyField}`).primary();
+          table.double('exchangeRateCoin'); // tỉ lệ quy đổi xu (VND > XU)
+          table.string('telegramGroupUrl').defaultTo('https://telegram.com'); // link group telegram
+          table.string('fbMessengerUrl').defaultTo('https://messenger.com'); // link messenger FB
+          table.string('zaloUrl').defaultTo('https://zalo.com'); //link zalo OA
+          table.string('playStoreUrl').defaultTo('https://play.google.com/'); //link play store
+          table.string('appStoreUrl').defaultTo('https://apps.apple.com/'); //link app store
+          table.string('instagramUrl').defaultTo('https://instagram.com'); //link instagram
+          table.string('facebookUrl').defaultTo('https://facebook.com'); // link fan page facebook
+          table.string('twitterUrl').defaultTo('https://twitter.com'); // link fan page twitter
+          table.string('youtubeUrl').defaultTo('https://youtube.com'); // link channel youtube
+          table.string('websiteUrl').defaultTo('https://google.com'); // website chinh
+          table.string('hotlineNumber').defaultTo('123456789'); //hotline
+          table.string('supportEmail').defaultTo('supportEmail@gmail.com'); //hotline
+          table.string('address').defaultTo('123 Ho Chi Minh, VietNam'); //dia chi cong ty
+          table.string('systemVersion').defaultTo('1.0.0'); //version he thong
+          table.double('exchangeVNDPrice').defaultTo(23000); //gia quy doi USD - VND 
+          table.string('bannerImage1').defaultTo(`https://${process.env.HOST_NAME}/uploads/sample_banner.png`);
+          table.string('bannerImage2').defaultTo(`https://${process.env.HOST_NAME}/uploads/sample_banner.png`);
+          table.string('bannerImage3').defaultTo(`https://${process.env.HOST_NAME}/uploads/sample_banner.png`);
+          table.string('bannerImage4').defaultTo(`https://${process.env.HOST_NAME}/uploads/sample_banner.png`);
+          table.string('bannerImage5').defaultTo(`https://${process.env.HOST_NAME}/uploads/sample_banner.png`);
           timestamps(table);
+          table.index(`${primaryKeyField}`);
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-
-          let configuration = {
-            systemLeftBannerAd: `https://${process.env.HOST_NAME}/uploads/media/quangcao/leftBanner.gif`,
-            systemRightBannerAd: `https://${process.env.HOST_NAME}/uploads/media/quangcao/rightBanner.gif`,
-          };
-
-          DB(`${tableName}`).insert(configuration).then((result) => {
-            Logger.info(`${tableName}`, `init ${tableName}` + result);
+          seeding().then(() => {
             resolve();
           });
         });
@@ -34,12 +47,26 @@ async function createTable() {
   });
 }
 
-async function initDB() {
-  await createTable();
+async function seeding() {
+  let projectStatus = [
+    {
+      systemVersion: '1.0.0', 
+      exchangeRateCoin: 1000, 
+      bannerImage1: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`, 
+      bannerImage2: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+      bannerImage3: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+    },
+  ];
+  return new Promise(async (resolve, reject) => {
+    DB(`${tableName}`).insert(projectStatus).then((result) => {
+      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+      resolve();
+    });
+  });
 }
 
-async function insert(data) {
-  return await Common.insert(tableName, data);
+async function initDB() {
+  await createTable();
 }
 
 async function updateById(id, data) {
@@ -52,18 +79,8 @@ async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
 
-async function count(filter, order) {
-  return await Common.count(tableName, primaryKeyField, filter, order);
-}
-async function findById(id) {
-  return await Common.findById(tableName, primaryKeyField, id);
-}
 module.exports = {
-  insert,
   find,
-  count,
   updateById,
-  initDB,
-  findById,
-  modelName: tableName
+  initDB
 };

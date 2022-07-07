@@ -3,7 +3,11 @@
  */
 "use strict";
 const PaymentServicePackageResourceAccess = require("../resourceAccess/PaymentServicePackageResourceAccess");
-const SystemConfiguration = require('../../SystemConfiguration/SystemConfigurationFunction');
+const ServicePackageUserResourceAccess = require("../resourceAccess/PaymentServicePackageUserResourceAccess");
+const PackageUnitView = require('../resourceAccess/PackageUnitView');
+
+const { PACKAGE_CATEGORY, PACKAGE_STATUS } = require('../PaymentServicePackageConstant');
+
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
@@ -29,26 +33,24 @@ async function find(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
+      let searchText = req.payload.searchText;
 
-      let paymentServices = await PaymentServicePackageResourceAccess.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
+      if (!filter) {
+        filter = {}
+      }
 
-      if (paymentServices) {
-        //lay ti le quy doi Xu
-        let _configuration = await SystemConfiguration.getSystemConfig();
+      if (!filter.packageStatus) {
+        filter.packageStatus = PACKAGE_STATUS.NEW;
+      }
 
-        for (let i = 0; i < paymentServices.length; i++) {
-          let promotionAmount = paymentServices[i].promotion; //<<so tien khuyen mai
+      if (!filter.packageCategory) {
+        filter.packageCategory = PACKAGE_CATEGORY.NORMAL
+      }
 
-          //neu so tien khuyen mai sai thi ko de khuyen mai
-          if (promotionAmount === null || promotionAmount === undefined || promotionAmount <= 0) {
-            promotionAmount = 0;
-          }
-
-          //cap nhat ti le quy doi xu cho tung goi cuoc
-          paymentServices[i].exchangePoint = parseInt((paymentServices[i].rechargePackage / _configuration.exchangeRateCoin) * promotionAmount / 100);
-        }
-
-        let paymentServiceCount = await PaymentServicePackageResourceAccess.customCount(filter, undefined, undefined, undefined, order);
+      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
+      
+      if (paymentServices && paymentServices.length > 0) {
+        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, searchText, order);
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -124,10 +126,110 @@ async function findById(req) {
     }
   });
 };
+
+async function activatePackagesByIdList(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let idList = req.payload.idList;
+      let dataUpdated = {
+        isHidden: false
+      };
+
+      //vi moi lan chi co toi da 10-20 package nen ko can xu ly update theo list
+      //khoi mat cong viet them method resource, tranh lam source chay lung tung
+      for (let i = 0; i < idList.length; i++) {
+        const _id = idList[i];
+        await PaymentServicePackageResourceAccess.updateById(_id, dataUpdated);
+      }
+      resolve("success");
+
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
+async function deactivatePackagesByIdList(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let idList = req.payload.idList;
+      let dataUpdated = {
+        isHidden: true
+      };
+
+      //vi moi lan chi co toi da 10-20 package nen ko can xu ly update theo list
+      //khoi mat cong viet them method resource, tranh lam source chay lung tung
+      for (let i = 0; i < idList.length; i++) {
+        const _id = idList[i];
+        await PaymentServicePackageResourceAccess.updateById(_id, dataUpdated);
+      }
+      resolve("success");
+
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
+
+async function userGetListPaymentPackage(req,res) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+
+      if (!filter) {
+        filter = {};
+      }
+
+      filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
+      filter.packageStatus =  PACKAGE_STATUS.NEW;
+      filter.isHidden = 0;
+
+      let paymentServices = await PaymentServicePackageResourceAccess.find(filter, skip, limit, order);
+      if (paymentServices && paymentServices.length > 0) {
+        let paymentServiceCount = await PaymentServicePackageResourceAccess.count(filter);
+        resolve({ data: paymentServices, total: paymentServiceCount[0].count });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+}
+
+async function rewardProfitBonusForUser(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let servicePackageUserId = req.payload.paymentServicePackageUserId;
+      let amount = req.payload.profitBonus;
+      let rewardResult = await ServicePackageUserResourceAccess.incrementBalance(servicePackageUserId, `profitBonus`, amount);
+      if (rewardResult) {
+        resolve("success");
+      } else {
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
 module.exports = {
   insert,
   find,
   updateById,
   deleteById,
-  findById
+  findById,
+  activatePackagesByIdList,
+  deactivatePackagesByIdList,
+  userGetListPaymentPackage,
+  rewardProfitBonusForUser,
 };

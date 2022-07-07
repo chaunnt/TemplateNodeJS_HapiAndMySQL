@@ -10,7 +10,7 @@ async function insert(req) {
     try {
       let paymentMethodData = req.payload;
       let result = await PaymentMethodResourceAccess.insert(paymentMethodData);
-      if(result){
+      if (result) {
         resolve(result);
       } else {
         reject("failed");
@@ -36,9 +36,9 @@ async function find(req) {
       let paymentMethods = await PaymentMethodResourceAccess.find(filter, skip, limit, order);
       let paymentMethodsCount = await PaymentMethodResourceAccess.count(filter, order);
       if (paymentMethods && paymentMethodsCount) {
-        resolve({data: paymentMethods, total: paymentMethodsCount[0].count});
-      }else{
-        resolve({data: [], total: 0 });
+        resolve({ data: paymentMethods, total: paymentMethodsCount[0].count });
+      } else {
+        resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(e);
@@ -53,12 +53,12 @@ async function updateById(req) {
       let paymentMethodId = req.payload.id;
       let paymentMethodData = req.payload.data;
       let result = await PaymentMethodResourceAccess.updateById(paymentMethodId, paymentMethodData);
-      if(result){
+      if (result) {
         resolve(result);
       } else {
         reject("failed");
       }
-      
+
     } catch (e) {
       Logger.error(e);
       reject("failed");
@@ -70,8 +70,8 @@ async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let paymentMethodId = req.payload.id;
-      let result = await PaymentMethodResourceAccess.find({paymentMethodId: paymentMethodId});
-      if(result && result.length > 0){
+      let result = await PaymentMethodResourceAccess.find({ paymentMethodId: paymentMethodId });
+      if (result && result.length > 0) {
         resolve(result[0]);
       } else {
         reject("failed");
@@ -99,19 +99,36 @@ async function deleteById(req) {
 };
 
 async function getList(req) {
-    return new Promise(async (resolve, reject) => {
-        let result = await PaymentMethodResourceAccess.find()
-        if (result) {
-            resolve(result)
-        }
-        reject("failed");
-    })
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+
+      if (filter === undefined) {
+        filter = {}
+      }
+      let paymentMethods = await PaymentMethodResourceAccess.find(filter, skip, limit, order);
+      
+      if (paymentMethods && paymentMethods.length > 0) {
+        let paymentMethodsCount = await PaymentMethodResourceAccess.count(filter, order);
+        
+        resolve({ data: paymentMethods, total: paymentMethodsCount[0].count });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(e);
+      reject("failed");
+    }
+  });
 }
 module.exports = {
   insert,
   find,
   updateById,
   findById,
-  deleteById
-    getList,
+  deleteById,
+  getList,
 };

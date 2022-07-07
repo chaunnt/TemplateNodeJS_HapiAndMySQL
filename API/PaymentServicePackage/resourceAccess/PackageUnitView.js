@@ -26,8 +26,7 @@ async function createView() {
     `${rootTableName}.packageDuration`,
     `${rootTableName}.packageUnitId`,
     `${rootTableName}.packageStatus`,
-    `${rootTableName}.referralPackageCountRequired`,
-    `${rootTableName}.referralUserCountRequired`,
+    `${rootTableName}.packageType`,
 
     `${WalletBalanceUnitTable}.walletBalanceUnitId`,
     `${WalletBalanceUnitTable}.walletBalanceUnitDisplayName`,
@@ -80,24 +79,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
 
   if (searchText) {
-    queryBuilder.where('packageName', 'like', `%${searchText}%`)
-    queryBuilder.where('walletBalanceUnitCode', 'like', `%${searchText}%`)
-    queryBuilder.where('walletBalanceUnitDisplayName', 'like', `%${searchText}%`)
-  } else {
-    if (filterData.walletBalanceUnitDisplayName) {
-      queryBuilder.where('walletBalanceUnitDisplayName', 'like', `%${filterData.walletBalanceUnitDisplayName}%`)
-      delete filterData.walletBalanceUnitDisplayName;
-    }
-
-    if (filterData.walletBalanceUnitCode) {
-      queryBuilder.where('walletBalanceUnitCode', 'like', `%${filterData.walletBalanceUnitCode}%`)
-      delete filterData.walletBalanceUnitCode;
-    }
-
-    if (filterData.packageName) {
-      queryBuilder.where('packageName', 'like', `%${filterData.packageName}%`)
-      delete filterData.packageName;
-    }
+    this.orWhere('packageName', 'like', `%${searchText}%`)
+    .orWhere('walletBalanceUnitCode', 'like', `%${searchText}%`)
+    .orWhere('walletBalanceUnitDisplayName', 'like', `%${searchText}%`)
   }
 
   if (startDate) {

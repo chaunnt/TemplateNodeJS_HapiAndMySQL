@@ -17,7 +17,7 @@ module.exports = {
     return function (request, reply, method) {
       manager[method](request).then((data) => {
         let responseData = errorCodes[200];
-        if (data) {
+        if (data !== undefined) {
           responseData.data = data;
           reply(responseData).code(200);
         } else {

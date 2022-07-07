@@ -1,17 +1,39 @@
 /**
- * Created by A on 7/18/17.
+ * Created by Huu on 11/18/21.
  */
-"use strict";
-const SystemConfigurationsResource = require("../resourceAccess/SystemConfigurationsResourceAccess");
-const Logger = require('../../../utils/logging');
 
-const SYSTEM_CONFIG_ID = 1;
+"use strict";
+const SystemConfigurationsResourceAccess = require("../resourceAccess/SystemConfigurationsResourceAccess");
+const Logger = require("../../../utils/logging");
+const SystemConfigurationsFunction = require("../SystemConfigurationsFunction");
+
+async function find(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let data = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+
+      if (data) {
+        resolve({ data: data, total: 1 });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+}
+
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let systemConfig = req.payload.data;
-      let result = await SystemConfigurationsResource.updateById(SYSTEM_CONFIG_ID, systemConfig);
-      if(result){
+      let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+      let data = req.payload.data;
+      let result = await SystemConfigurationsResourceAccess.updateById(
+        config[0].systemConfigurationsId,
+        data
+      );
+      if (result) {
         resolve(result);
       }
       reject("failed");
@@ -20,15 +42,27 @@ async function updateById(req) {
       reject("failed");
     }
   });
-};
+}
 
-async function findById(req) {
+async function userGetDetail(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      //only support for 1 system configuration
-      let sysmteConfig = await SystemConfigurationsResource.findById(SYSTEM_CONFIG_ID);
-      if (sysmteConfig) {
-        resolve(sysmteConfig);
+      let data = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+
+      if (data && data.length > 0) {
+
+        let _systemConfig = data[0];
+
+        if (_systemConfig.USDTWalletAddress && _systemConfig.USDTWalletAddress !== null) {
+          //them QRCode cho front-end
+          const QRCodeFunction = require('../../../ThirdParty/QRCode/QRCodeFunctions');
+          const QRCodeImage = await QRCodeFunction.createQRCode(_systemConfig.USDTWalletAddress);
+          if (QRCodeImage) {
+            _systemConfig.USDTWalletAddressQRCode = `https://${process.env.HOST_NAME}/${QRCodeImage}`;
+          }
+        }
+
+        resolve(_systemConfig);
       } else {
         reject("failed");
       }
@@ -37,9 +71,10 @@ async function findById(req) {
       reject("failed");
     }
   });
-};
+}
 
 module.exports = {
+  find,
   updateById,
-  findById
+  userGetDetail,
 };

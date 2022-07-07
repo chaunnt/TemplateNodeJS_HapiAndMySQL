@@ -5,8 +5,11 @@
 
 module.exports = {
   WALLET_TYPE: {
+    USDT: "USDTWallet",
+    FAC: "FACWallet",
+    BTC: "BTCWallet",
+    POINT: "PointWallet", // hoa hong
     CRYPTO: "CryptoWallet",
-    POINT: "PointWallet",
     REWARD: "RewardWallet"
   },
   BALANCE_UNIT: {

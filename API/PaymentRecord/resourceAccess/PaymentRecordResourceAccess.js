@@ -43,7 +43,7 @@ async function createTable() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+    Logger.info(`${tableName}`, `seeding ${tableName}`);
     resolve();
   });
 }

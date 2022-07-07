@@ -8,8 +8,10 @@ const PaymentServicePackageResourceAccess = require("../resourceAccess/PaymentSe
 const UserBonusPackageResource = require("../resourceAccess/UserBonusPackageResourceAccess");
 const UserPackageResource = require("../resourceAccess/PaymentServicePackageUserResourceAccess");
 const PackageUnitView = require('../resourceAccess/PackageUnitView');
-const { CLAIMABLE_STATUS, PACKAGE_CATEGORY } = require('../PaymentServicePackageConstant');
+const UserBonusPackageView = require('../resourceAccess/UserBonusPackageView');
+const { CLAIMABLE_STATUS, PACKAGE_CATEGORY, PACKAGE_STATUS } = require('../PaymentServicePackageConstant');
 const Logger = require('../../../utils/logging');
+const WalletResource = require('../../Wallet/resourceAccess/WalletResourceAccess');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -36,10 +38,10 @@ async function find(req) {
       let order = req.payload.order;
       let searchText = req.payload.searchText;
 
-      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
+      let paymentServices = await UserBonusPackageView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
       
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, searchText, order);
+        let paymentServiceCount = await UserBonusPackageView.customCount(filter, undefined, undefined, searchText, order);
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -83,7 +85,7 @@ async function userGetListPaymentBonusPackage(req) {
       
       if (!filter) {
         filter = {};
-        filter.packageCategory = PACKAGE_CATEGORY.BONUS;
+        filter.packageCategory = PACKAGE_CATEGORY.BONUS_NORMAL;
       }
 
       let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
@@ -211,11 +213,30 @@ async function userClaimBonusPackage(req) {
           return;
         }
 
+        //create new wallet follow balance unit if wallet is not existed
+        let newUnitWallet = await WalletResource.find({
+          appUserId: req.currentUser.appUserId,
+          walletType: WALLET_TYPE.CRYPTO,
+          walletBalanceUnitId: _rewardedPackage.packageUnitId
+        });
+        if (newUnitWallet && newUnitWallet.length > 0) {
+          //if wallet existed, then do nothing
+        } else {  
+          let createNewUnitWallet = await WalletResource.insert({
+            appUserId: req.currentUser.appUserId,
+            walletType: WALLET_TYPE.CRYPTO,
+            walletBalanceUnitId: _rewardedPackage.packageUnitId
+          });
+          if (createNewUnitWallet === undefined) {
+            Logger.error(`userBuyServicePackage can not create new wallet crypto user ${req.currentUser.appUserId} - unitId ${_rewardedPackage.packageUnitId}`)
+          }
+        }
+
         //store working package 
         let _newUserPackageData = {
           appUserId: req.currentUser.appUserId,
           paymentServicePackageId: _rewardedPackage.paymentServicePackageId,
-          packageExpireDate: moment().add(_rewardedPackage.packageDuration,'days').toDate(),
+          packageExpireDate: moment().add(365, 'days').toDate(),
           profitEstimate: _rewardedPackage.packagePerformance * _rewardedPackage.packageDuration,
           packagePrice: _rewardedPackage.packagePrice,
           packageDiscountPrice: _rewardedPackage.packageDiscountPrice,
@@ -241,6 +262,57 @@ async function userClaimBonusPackage(req) {
   });
 };
 
+async function staffSendBonusPackage(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let paymentServicePackageId = req.payload.paymentServicePackageId;
+      let bonusPackageDescription = req.payload.bonusPackageDescription;
+      let appUserId = req.payload.appUserId;
+
+      //fetch package info
+      let _bonusPackage = await PaymentServicePackageResourceAccess.findById(paymentServicePackageId);
+      if (!_bonusPackage) {
+        Logger.error(`can not UserBonusPackageResource.findById ${paymentServicePackageId}`);
+        reject('failed');
+        return;
+      }
+
+      // check xem co phai type bonus ko
+      if (_bonusPackage.packageCategory !== PACKAGE_CATEGORY.BONUS_NORMAL) {
+        Logger.error(`not for bonus ${_bonusPackage.packageCategory}`);
+        reject('failed');
+        return;
+      }
+
+      // check xem da gui cho ng khac chua
+      if (_bonusPackage.packageStatus === PACKAGE_STATUS.SOLD) {
+        Logger.error(`sended for another user ${_bonusPackage.packageCategory}`);
+        reject('failed');
+        return;
+      }
+
+      let result = await UserBonusPackageResource.insert({
+        bonusPackageId: _bonusPackage.paymentServicePackageId,
+        bonusPackageExpireDate: moment().add(10, 'days').toDate(), // 10 ngay de nhan khong thi tu mat
+        bonusPackageClaimable: CLAIMABLE_STATUS.ENABLE,
+        bonusPackageDescription: bonusPackageDescription,
+        appUserId: appUserId
+      })
+      if (result) {
+        // update package da gui
+        await PaymentServicePackageResourceAccess.updateById(paymentServicePackageId, { packageStatus: PACKAGE_STATUS.SOLD })
+        resolve(result);
+      } else {
+        reject("failed");
+      }
+
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
 module.exports = {
   insert,
   find,
@@ -248,5 +320,6 @@ module.exports = {
   deleteById,
   findById,
   userGetListPaymentBonusPackage,
-  userClaimBonusPackage
+  userClaimBonusPackage,
+  staffSendBonusPackage
 };

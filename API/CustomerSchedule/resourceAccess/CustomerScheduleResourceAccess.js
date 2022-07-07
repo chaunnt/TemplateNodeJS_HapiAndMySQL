@@ -1,9 +1,11 @@
 "use strict";
 require("dotenv").config();
 
+const moment = require('moment');
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require("../../../config/database");
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
+const { SCHEDULE_STATUS } = require('../CustomerScheduleConstants');
 const tableName = 'CustomerSchedule';
 
 const primaryKeyField = "customerScheduleId";
@@ -14,21 +16,36 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments('customerScheduleId').primary();
-          table.string('licensePlates');
-          table.string('phone');
-          table.string('fullnameSchedule');
-          table.string('email');
-          table.string('dateSchedule');
-          table.string('time');
-          table.string('notificationMethod');
+          table.string('customerIdentity');
+          table.string('customerPhone');
+          table.string('customerName');
+          table.string('customerEmail');
+          table.string('customerScheduleDate');
+          table.string('customerScheduleTime');
+          table.string('customerScheduleAddress', 500);
+          table.string('customerScheduleNote');
+          table.string('customerScheduleStatus').defaultTo(SCHEDULE_STATUS.NEW);
           table.integer('stationsId');
-          table.integer('CustomerScheduleStatus').defaultTo(0);;
+          table.integer('appUserId');
+          table.integer('staffId');
+          table.integer('agencyId');
+          table.integer('stationServicesId');
+          table.integer('stationProductsId');
+          table.integer('scheduleRefId'); //lien ket den id cua paymentpackage
+          table.string('scheduleCode');
           timestamps(table);
-          table.index('customerScheduleId');
-          table.index('licensePlates');
-          table.index('phone');
-          table.index('email');
-          table.index('time');
+          table.index('customerEmail');
+          table.index('customerPhone');
+          table.index('customerIdentity');
+          table.index('customerScheduleDate');
+          table.index('customerScheduleStatus');
+          table.index('stationsId');
+          table.index('appUserId');
+          table.index('staffId');
+          table.index('agencyId');
+          table.index('stationServicesId');
+          table.index('stationProductsId');
+          table.index('scheduleRefId');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -75,40 +92,47 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('licensePlates', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`)
-        .orWhere('phone', 'like', `%${searchText}%`)
-        .orWhere('fullnameSchedule', 'like', `%${searchText}%`)
+      this.orWhere('customerIdentity', 'like', `%${searchText}%`)
+        .orWhere('customerPhone', 'like', `%${searchText}%`)
+        .orWhere('customerEmail', 'like', `%${searchText}%`)
+        .orWhere('customerName', 'like', `%${searchText}%`)
     })
   } else {
-    if (filterData.fullnameSchedule) {
-      queryBuilder.where('fullnameSchedule', 'like', `%${filterData.fullnameSchedule}%`)
-      delete filterData.fullnameSchedule;
+    if (filterData.customerName) {
+      queryBuilder.where('customerName', 'like', `%${filterData.customerName}%`)
+      delete filterData.customerName;
     }
 
-    if (filterData.email) {
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
+    if (filterData.customerEmail) {
+      queryBuilder.where('customerEmail', 'like', `%${filterData.customerEmail}%`)
+      delete filterData.customerEmail;
     }
 
-    if (filterData.phone) {
-      queryBuilder.where('phone', 'like', `%${filterData.phone}%`)
-      delete filterData.phone;
+    if (filterData.customerPhone) {
+      queryBuilder.where('customerPhone', 'like', `%${filterData.customerPhone}%`)
+      delete filterData.customerPhone;
     }
 
-    if (filterData.licensePlates) {
-      queryBuilder.where('licensePlates', 'like', `%${filterData.licensePlates}%`)
-      delete filterData.licensePlates;
+    if (filterData.customerIdentity) {
+      queryBuilder.where('customerIdentity', 'like', `%${filterData.customerIdentity}%`)
+      delete filterData.customerIdentity;
     }
   }
 
   if (startDate) {
-    queryBuilder.where('customerRecordCheckDate', '>=', startDate)
+    let _startDate = moment(startDate).format("YYYY/MM/DD");
+    // let _startTime = moment(startDate).format("HH:mm");
+    queryBuilder.where('customerScheduleDate', '>=', _startDate)
+    // queryBuilder.where('customerScheduleTime', '>=', _startTime)
   }
 
   if (endDate) {
-    queryBuilder.where('customerRecordCheckDate', '<=', endDate)
+    let _endDate = moment(endDate).format("YYYY/MM/DD");
+    // let _endTime = moment(endDate).format("HH:mm");
+    queryBuilder.where('customerScheduleDate', '<=', _endDate)
+    // queryBuilder.where('customerScheduleTime', '<=', _endTime)
   }
+
   queryBuilder.where(filterData);
 
   queryBuilder.where({ isDeleted: 0 });
@@ -140,7 +164,7 @@ async function customCount(filter, startDate, endDate, searchText, order) {
     try {
       query.count(`${primaryKeyField} as count`)
         .then(records => {
-          resolve(records[0].count);
+          resolve(records);
         });
     } catch (e) {
       Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);

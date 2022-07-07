@@ -14,6 +14,7 @@ async function createRoleStaffView() {
     `${rootTableName}.username`,
     `${rootTableName}.firstName`,
     `${rootTableName}.lastName`,
+    `${rootTableName}.companyName`,
     `${rootTableName}.email`,
     `${rootTableName}.password`,
     `${rootTableName}.active`,
@@ -27,6 +28,11 @@ async function createRoleStaffView() {
     `${rootTableName}.socialInfo`,
     `${rootTableName}.createdAt`,
     `${rootTableName}.isDeleted`,
+    `${rootTableName}.appUserNote`,
+    
+    `${rootTableName}.diachiviUSDT`, // su dung tam
+    `${rootTableName}.diachiviBTC`, //su dung tam
+    
     `${RoleTableName}.appUserRoleName`,
     `${RoleTableName}.permissions`,
   ];
@@ -47,7 +53,7 @@ async function insert(data) {
 }
 
 async function updateById(id, data) {
-  return await Common.updateById(tableName, { userId: id }, data);
+  return await Common.updateById(tableName, { appUserId: id }, data);
 }
 
 async function find(filter, skip, limit, order) {
@@ -75,31 +81,6 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
     })
-  } else {
-    if (filterData.username) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-
-    if (filterData.firstName) {
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-
-    if (filterData.lastName) {
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-
-    if (filterData.phoneNumber) {
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
-
-    if (filterData.email) {
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
-    }
   }
 
   queryBuilder.where(filterData);

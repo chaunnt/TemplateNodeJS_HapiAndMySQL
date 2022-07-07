@@ -23,33 +23,11 @@ describe(`Tests Statistical`, function () {
   });
 
   
-  it('get price statistical by realEstatePostType', done => {
-    const body = {
-      filter: {
-        realEstatePostTypeId: 1,
-        areaProvinceId: 2
-      }
-    };
+  it('get generalReport', done => {
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Statistical/statisticalPriceByPostTypeOrderByArea`)
-      .set('Authorization', token)
-      .send(body)
-      .end((err, res) => {
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('get price statistical by area', done => {
-    const body = {
-      filter: {
-        areaProvinceId: 2
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Statistical/statisticalPriceByArea`)
+      .post(`/Statistical/generalReport`)
       .set('Authorization', token)
       .send(body)
       .end((err, res) => {

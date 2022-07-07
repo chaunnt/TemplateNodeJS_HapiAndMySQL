@@ -14,6 +14,7 @@ async function createWalletUserView() {
     `${rootTableName}.firstName`,
     `${rootTableName}.lastName`,
     `${rootTableName}.email`,
+    `${rootTableName}.companyName`,
     `${rootTableName}.referUserId`,
     `${rootTableName}.referUser`,
     `${rootTableName}.password`,
@@ -30,6 +31,11 @@ async function createWalletUserView() {
     `${rootTableName}.facebookId`,
     `${rootTableName}.appleId`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.appUserNote`,
+    
+    `${rootTableName}.diachiviUSDT`, // su dung tam
+    `${rootTableName}.diachiviBTC`, //su dung tam
+    
     `${WalletTableName}.walletType`,
     `${WalletTableName}.balance`,
     `${WalletTableName}.balanceUnit`,
@@ -55,7 +61,7 @@ async function insert(data) {
 }
 
 async function updateById(id, data) {
-  return await Common.updateById(tableName, { userId: id }, data);
+  return await Common.updateById(tableName, { appUserId: id }, data);
 }
 
 async function find(filter, skip, limit, order) {

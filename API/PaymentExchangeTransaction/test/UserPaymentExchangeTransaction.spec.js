@@ -29,14 +29,13 @@ describe(`Tests PaymentExchangeTransaction`, () => {
     }).then(() => done());
   });
 
-  it('user request new PaymentExchangeTransaction', done => {
+  it('user change FAC => USDT', done => {
     const body = {
-      paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      "paymentAmount": 1
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/requestExchange`)
+      .post(`/PaymentExchangeTransaction/user/ExchangeFAC`)
       .set("Authorization", `${userToken}`)
       .send(body)
       .end((err, res) => {
@@ -49,14 +48,45 @@ describe(`Tests PaymentExchangeTransaction`, () => {
       });
   });
 
-  it('player request new PaymentExchangeTransaction', done => {
+  it('user change POINT => FAC', done => {
     const body = {
-      paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      "paymentAmount": 1
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/requestExchange`)
+      .post(`/PaymentExchangeTransaction/user/ExchangePOINT`)
+      .set("Authorization", `${userToken}`)
+      .send(body)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+        }
+        checkResponseStatus(res, 200);
+        transactionId = res.body.data[0];
+        done();
+      });
+  });
+  it('user views history FAC', done => {
+    const body = {};
+    chai
+      .request(`0.0.0.0:${process.env.PORT}`)
+      .post(`/PaymentExchangeTransaction/user/userExchangeFACHistory`)
+      .set("Authorization", `${userToken}`)
+      .send(body)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+        }
+        checkResponseStatus(res, 200);
+        transactionId = res.body.data[0];
+        done();
+      });
+  });
+  it('user views history POINT', done => {
+    const body = {};
+    chai
+      .request(`0.0.0.0:${process.env.PORT}`)
+      .post(`/PaymentExchangeTransaction/user/userExchangePOINTHistory`)
       .set("Authorization", `${userToken}`)
       .send(body)
       .end((err, res) => {
@@ -69,128 +99,4 @@ describe(`Tests PaymentExchangeTransaction`, () => {
       });
   });
 
-  it('player request new PaymentExchangeTransaction', done => {
-    const body = {
-      paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/requestExchange`)
-      .set("Authorization", `${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        transactionId = res.body.data[0];
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/exchangeHistory', done => {
-    const body = {
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/exchangeHistory`)
-      .set("Authorization", `${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/receiveHistory', done => {
-    const body = {
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/receiveHistory`)
-      .set("Authorization", `${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/viewExchangeRequests', done => {
-    const body = {
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/viewExchangeRequests`)
-      .set("Authorization", `${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/denyExchangeRequest', done => {
-    const body = {
-      id: transactionId,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/denyExchangeRequest`)
-      .set("Authorization", `${staffToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/acceptExchangeRequest', done => {
-    const body = {
-      id: transactionId,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/acceptExchangeRequest`)
-      .set("Authorization", `${staffToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('POST /PaymentExchangeTransaction/user/cancelExchangeRequest', done => {
-    const body = {
-      id: transactionId,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentExchangeTransaction/user/cancelExchangeRequest`)
-      .set("Authorization", `${staffToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
 })

@@ -7,7 +7,7 @@ const tableName = "DepositTransactionUserView";
 const rootTableName = 'PaymentDepositTransaction';
 const primaryKeyField = "paymentDepositTransactionId";
 async function createView() {
-  const UserTableName = 'AppUser';
+  const UserTableName = 'AppUserViews';
   let fields = [
     `${UserTableName}.appUserId`,
     `${UserTableName}.firstName`,
@@ -21,7 +21,12 @@ async function createView() {
     `${UserTableName}.facebookId`,
     `${UserTableName}.appleId`,
     `${UserTableName}.username`,
-
+    `${UserTableName}.companyName`,
+    `${UserTableName}.appUserMembershipTitle`,
+    `${UserTableName}.sotaikhoan`,
+    `${UserTableName}.tentaikhoan`,
+    `${UserTableName}.tennganhang`,
+    
     `${rootTableName}.paymentDepositTransactionId`,
     `${rootTableName}.paymentMethodId`,
     `${rootTableName}.paymentAmount`,
@@ -33,6 +38,14 @@ async function createView() {
     `${rootTableName}.paymentApproveDate`,
     `${rootTableName}.paymentPICId`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.paymentCategory`,
+    `${rootTableName}.paymentRefAmount`,
+    `${rootTableName}.paymentType`,
+    `${rootTableName}.paymentOwner`,
+    `${rootTableName}.paymentOriginSource`,
+    `${rootTableName}.paymentOriginName`,
+
+
     DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
     `${rootTableName}.updatedAt`,
     `${rootTableName}.isHidden`,
@@ -60,12 +73,6 @@ async function updateById(id, data) {
   return await Common.updateById(tableName, dataId, data);
 }
 
-async function findById(id) {
-  let dataId = {};
-  dataId[primaryKeyField] = id;
-  return await Common.findById(tableName, dataId, id);
-}
-
 async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
@@ -82,29 +89,22 @@ async function sumAmountDistinctByDate(filter, startDate, endDate) {
   return await Common.sumAmountDistinctByDate(tableName, 'paymentAmount', filter, startDate, endDate);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
-  if (filterData.name) {
-    queryBuilder.where('firstName', 'like', `%${filterData.name}%`);
-    delete filterData.name;
-  }
-  if (filterData.username) {
-    queryBuilder.where("username", "like", `%${filterData.username}%`);
-    delete filterData.username;
-  }
-
-  if (filterData.email) {
-    queryBuilder.where("email", "like", `%${filterData.email}%`);
-    delete filterData.email;
-  }
-
-  if (filterData.phoneNumber) {
-    queryBuilder.where("phoneNumber", "like", `%${filterData.phoneNumber}%`);
-    delete filterData.phoneNumber;
+  if (searchText) {
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+        .orWhere('companyName', 'like', `%${searchText}%`)
+    })
   }
 
   queryBuilder.where({ isDeleted: 0 });
+
   queryBuilder.where(filterData);
   
   if (startDate) {
@@ -134,13 +134,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, orde
   }
   return queryBuilder;
 }
-async function customSearch(filter, skip, limit, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, order);
+async function customCount(filter, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -148,7 +148,6 @@ module.exports = {
   insert,
   find,
   count,
-  findById,
   updateById,
   initViews,
   sum,

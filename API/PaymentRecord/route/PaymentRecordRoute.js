@@ -29,11 +29,6 @@ const filterSchema = {
   walletId: Joi.number(),
   paymentTargetType: Joi.string()
 };
-const userFilterSchema = {
-  paymentTargetId: Joi.number(),
-  walletId: Joi.number(),
-  paymentTargetType: Joi.string()
-};
 
 module.exports = {
   find: {
@@ -77,37 +72,6 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "findById");
-    }
-  },
-  findByUser: {
-    tags: ["api", `${moduleName}`],
-    description: `getList ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        filter: Joi.object(userFilterSchema),
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
-        order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "findByUser");
     }
   },
 };

@@ -4,7 +4,6 @@
 "use strict";
 const PaymentRecordResourceAccess = require("../resourceAccess/PaymentRecordResourceAccess");
 const Logger = require('../../../utils/logging');
-const PaymentRecordFunction = require('../PaymentRecordFunctions');
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -19,9 +18,9 @@ async function find(req) {
       let paymentRecords = await PaymentRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, order);
       let paymentRecordsCount = await PaymentRecordResourceAccess.customCount(filter, startDate, endDate, order);
       if (paymentRecords && paymentRecordsCount) {
-        resolve({ data: paymentRecords, total: paymentRecordsCount[0].count });
-      } else {
-        resolve({ data: [], total: 0 });
+        resolve({data: paymentRecords, total: paymentRecordsCount[0].count});
+      }else{
+        resolve({data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
@@ -47,35 +46,7 @@ async function findById(req) {
   });
 };
 
-async function findByUser(req) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      if (req.currentUser.appUserId) {
-        let filter = req.payload.filter
-        filter.paymentUserId = req.currentUser.appUserId;
-        let skip = req.payload.skip;
-        let limit = req.payload.limit;
-        let order = req.payload.order;
-        let startDate = req.payload.startDate;
-        let endDate = req.payload.endDate;
-        let paymentRecords = await PaymentRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, order);
-        let paymentRecordsCount = await PaymentRecordResourceAccess.customCount(filter, startDate, endDate, order);
-        if (paymentRecords && paymentRecordsCount) {
-          resolve({ data: paymentRecords, total: paymentRecordsCount[0].count });
-        } else {
-          resolve({ data: [], total: 0 });
-        }
-      }
-        resolve({ data: [], total: 0 });
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject("failed");
-    }
-  });
-};
-
 module.exports = {
   find,
   findById,
-  findByUser
 };

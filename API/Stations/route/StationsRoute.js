@@ -10,6 +10,7 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
   stationsName: Joi.string().required(),
+  stationsDescription: Joi.string(),
   stationsLogo: Joi.string(),
   stationsHotline: Joi.string(),
   stationsAddress: Joi.string(),
@@ -18,51 +19,30 @@ const insertSchema = {
 
 const updateSchema = {
   stationsName: Joi.string(),
-  stationUrl: Joi.string(),
-  stationCheckingAuto: Joi.number(),
+  stationsDescription: Joi.string(),
+  stationsLogo: Joi.string(),
+  stationsHotline: Joi.string(),
+  stationsAddress: Joi.string(),
   stationsEmail  :Joi.string().email(),
   stationBookingConfig: Joi.array().items({
     index: Joi.number(),
     time: Joi.string(),
     limit:Joi.number()
   }),
-  stationCheckingConfig: Joi.array().items({
-    stepIndex: Joi.number().required(),
-    stepVoice: Joi.string().allow(''),
-    stepLabel: Joi.string().required(),
-    stepDuration: Joi.number().required(),
-    stepVoiceUrl: Joi.string().allow(''),
-  }),
   isDeleted: Joi.number(),
   stationStatus: Joi.number(),
-  stationsLogo: Joi.string().allow(''),
-  stationsColorset: Joi.string().allow(''),
-  stationsHotline: Joi.string().allow(''),
-  stationsAddress: Joi.string().allow(''),
-  stationEnableUseSMS: Joi.number().allow([1,0]),
-  stationUseCustomSMTP: Joi.number().allow([1,0]),
-  stationCustomSMTPConfig: Joi.string().allow(''),
-  stationUseCustomSMSBrand: Joi.number().allow([1,0]),
-  stationCustomSMSBrandConfig: Joi.string().allow(''),
-  stationEnableUseZNS: Joi.number().allow([1,0]),
-  stationEnableUseSMS: Joi.number().allow([1,0]),
-  stationUseCustomZNS: Joi.number().allow([1,0]),
-  stationCustomZNSConfig: Joi.string().allow(''),
 }
 
 const filterSchema = {
-  stationsName: Joi.string(),
-  stationUrl: Joi.string(),
   isDeleted: Joi.number(),
   stationStatus: Joi.number(),
-  stationsEmail  :Joi.string().email()
 };
 
 module.exports = {
   insert: {
     tags: ["api", `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -79,7 +59,7 @@ module.exports = {
   updateById: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -99,7 +79,7 @@ module.exports = {
   find: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -108,6 +88,7 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
+        searchText: Joi.string(),
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
@@ -128,7 +109,7 @@ module.exports = {
   findById: {
     tags: ["api", `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -142,6 +123,25 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "findById");
+    }
+  },
+  deleteById: {
+    tags: ["api", `${moduleName}`],
+    description: `admin delete ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "deleteById");
     }
   },
   findByUrl: {
@@ -165,7 +165,6 @@ module.exports = {
       Response(req, res, "resetAllDefaultMp3");
     }
   },
-
   updateConfigSMS: {
     tags: ["api" ,`${moduleName}`],
     description: `Config SMS`,
@@ -218,7 +217,6 @@ module.exports = {
       Response(req, res, "updateConfigSMTP");
     }
   },
-
   updateCustomSMTP: {
     tags: ["api" ,`${moduleName}`],
     description: `CusTom SMTP`,
@@ -239,7 +237,6 @@ module.exports = {
       Response(req, res, "updateCustomSMTP");
     }
   },
-
   updateCustomSMSBrand: {
     tags: ["api" ,`${moduleName}`],
     description: `CusTom SMTP`,

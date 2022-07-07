@@ -1,7 +1,7 @@
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const fs = require('fs');
+const randomstring = require("randomstring");
 
 const { checkResponseStatus } = require('../../Common/test/Common');
 const TestFunctions = require('../../Common/test/CommonTestFunctions');
@@ -17,30 +17,29 @@ const app = require('../../../server');
 
 describe(`Tests ${Model.modelName}`, function() {
   let Scheduleid ;
-  let token = "";
+  let staffToken = "";
   before(done => {
     new Promise(async function(resolve, reject) {
-      let staffData = await TestFunctions.loginUser();
-      token = staffData.token;
+      let staffData = await TestFunctions.loginStaff();
+      staffToken = staffData.token;
       resolve();
     }).then(() => done());
   });
 
+  ////Admin Customer Schedule
   it('Add CustomerSchedule', done => {
     const body = {
-        "licensePlates": faker.name.findName(),
-        "phone": faker.phone.phoneNumber(),
-        "fullnameSchedule":faker.name.firstName() + faker.name.lastName(),
-        "email": faker.internet.email(),
-        "dateSchedule": faker.date.past(),
-        "time": "7h30",
-        "stationsId": 0,
-        "notificationMethod": "SMS"
+      "customerIdentity": faker.name.findName(),
+      "customerPhone": randomstring.generate({length: 11, charset: 'numeric'}),
+      "customerName":faker.name.firstName() + faker.name.lastName(),
+      "customerEmail": faker.internet.email(),
+      "customerScheduleDate": faker.date.past(),
+      "customerScheduleTime": "07:30",
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/add`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/insert`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -52,39 +51,14 @@ describe(`Tests ${Model.modelName}`, function() {
       });
   });
 
-  it('Add CustomerSchedule ký tự đặt biệt', done => {
-    const body = {
-        "licensePlates": "<.?>''---*",
-        "phone": faker.phone.phoneNumber(),
-        "fullnameSchedule":faker.name.firstName() + faker.name.lastName(),
-        "email": faker.internet.email(),
-        "dateSchedule": faker.date.past(),
-        "time": "7h30",
-        "stationsId": 0,
-        "notificationMethod": "SMS"
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/add`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 500);
-        done();
-      });
-  });
-
   it('Delete CustomerSchedule', done => {
     const body = {
         "customerScheduleId": Scheduleid
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/delete`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/deleteById`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -95,67 +69,14 @@ describe(`Tests ${Model.modelName}`, function() {
       });
   });
 
-  it('Delete CustomerSchedule body string', done => {
-    const body = {
-        "customerScheduleId": "Scheduleid"
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/delete`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 500);
-        }
-        
-        done();
-      });
-  });
-
-  it('Delete CustomerSchedule body number failse', done => {
-    const body = {
-        "customerScheduleId": 1.5
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/delete`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 500);
-        }
-        
-        done();
-      });
-  });
-
-  it('Delete CustomerSchedule body number failse', done => {
-    const body = {
-        "customerScheduleId": 1*5
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/delete`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 500);
-        }
-        
-        done();
-      });
-  });
   it('find by Id CustomerSchedule', done => {
     const body = {
         "customerScheduleId": Scheduleid
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/findId`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/findById`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -166,12 +87,12 @@ describe(`Tests ${Model.modelName}`, function() {
       });
   });
 
-  it('find all CustomerSchedule', done => {
+  it('find all CustomerSchedule (no filter)', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/find`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -181,16 +102,17 @@ describe(`Tests ${Model.modelName}`, function() {
         done();
       });
   });
+  
   it('find all CustomerSchedule by filter', done => {
     const body = {
       "filter":{
-        "licensePlates": "999aaaaaa"
+        "customerPhone": randomstring.generate({length: 11, charset: 'numeric'}),
       }
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/find`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -200,34 +122,15 @@ describe(`Tests ${Model.modelName}`, function() {
         done();
       });
   });
-  it('find all CustomerSchedule by filter ký tự đặt biệt', done => {
-    const body = {
-      "filter":{
-        "licensePlates": "<>.''''``*/---"
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 500);
-        done();
-      });
-  });
-
-  it('seachText customerSchedule', done => {
+  
+  it('search CustomerSchedule', done => {
     const body = {
       "searchText": "string"
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/find`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -238,27 +141,10 @@ describe(`Tests ${Model.modelName}`, function() {
       });
   });
 
-it('seachText customerSchedule ký tự đặt biệt', done => {
-    const body = {
-      "searchText":"'<>*/''"
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 500);
-        done();
-      });
-  });
-  it('find by time CustomerSchedule', done => {
+  it('find all CustomerSchedule (filter by time)', done => {
     const body = {
         "filter": {
-          "time": "7h30"
+          "customerScheduleTime": "07:30"
         },
         "skip": 0,
         "limit": 20,
@@ -269,8 +155,8 @@ it('seachText customerSchedule ký tự đặt biệt', done => {
       };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/find`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -281,10 +167,10 @@ it('seachText customerSchedule ký tự đặt biệt', done => {
       });
   });
 
-  it('find by time CustomerSchedule failse body is number', done => {
+  it('find all CustomerSchedule (filter by date)', done => {
     const body = {
         "filter": {
-          "time": 7.30
+          "customerScheduleDate": faker.date.past()
         },
         "skip": 0,
         "limit": 20,
@@ -295,58 +181,8 @@ it('seachText customerSchedule ký tự đặt biệt', done => {
       };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 500);
-        }
-       
-        done();
-      });
-  });
-  it('find by time is undefine', done => {
-    const body = {
-        "filter": {
-          "time": "0h00"
-        },
-        "skip": 0,
-        "limit": 20,
-        "order": {
-          "key": "createdAt",
-          "value": "desc"
-        }
-      };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 500);
-        done();
-      });
-  });
-  it('find by time CustomerSchedule fails format', done => {
-    const body = {
-        "filter": {
-          "time": "0aaa"
-        },
-        "skip": 0,
-        "limit": 20,
-        "order": {
-          "key": "createdAt",
-          "value": "desc"
-        }
-      };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/list`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/find`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
@@ -361,104 +197,24 @@ it('seachText customerSchedule ký tự đặt biệt', done => {
     const body = {
         "customerScheduleId": Scheduleid,
         "data": {
-          "licensePlates": "string",
-          "phone": "string",
-          "email": "string",
-          "dateSchedule": "string",
-          "time": "string",
-          "stationsId": 0,
-          "isDeleted": 0
+          "customerIdentity": faker.name.findName(),
+          "customerPhone": randomstring.generate({length: 11, charset: 'numeric'}),
+          "customerName":faker.name.firstName() + faker.name.lastName(),
+          "customerEmail": faker.internet.email(),
+          "customerScheduleDate": faker.date.past(),
+          "customerScheduleTime": "07:30",
         }
       };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/update`)
-      .set("Authorization", `Bearer ${token}`)
+      .post(`/CustomerSchedule/updateById`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if ( err ) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('update by id CustomerSchedule failse Id', done => {
-    const body = {
-        "customerScheduleId": "Scheduleid",
-        "data": {
-          "licensePlates": "string",
-          "phone": "string",
-          "email": "string",
-          "dateSchedule": "string",
-          "time": "string",
-          "stationsId": 0,
-          "isDeleted": 0
-        }
-      };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/update`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 500);
-        }
-        
-        done();
-      });
-  });
-  it('update by id CustomerSchedule failse data', done => {
-    const body = {
-        "customerScheduleId": "Scheduleid",
-        "data": {
-          "licensePlates": 123,
-          "phone": "string",
-          "email": "string",
-          "dateSchedule": "string",
-          "time": "string",
-          "stationsId": 0,
-          "isDeleted": 0
-        }
-      };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/update`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-          checkResponseStatus(res, 200);
-        }
-        
-        done();
-      });
-  });
-
-  it('update by id CustomerSchedule failse data ký tự đặt biệt', done => {
-    const body = {
-        "customerScheduleId": Scheduleid,
-        "data": {
-          "licensePlates": "<>./*-''",
-          "phone": "string",
-          "email": "string",
-          "dateSchedule": "string",
-          "time": "string",
-          "stationsId": 0,
-          "isDeleted": 0
-        }
-      };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/CustomerSchedule/update`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if ( err ) {
-        }
-        checkResponseStatus(res, 500);
         done();
       });
   });

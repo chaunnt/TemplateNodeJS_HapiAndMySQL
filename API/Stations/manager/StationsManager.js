@@ -6,12 +6,23 @@ const StationsResourceAccess = require("../resourceAccess/StationsResourceAccess
 const StationFunctions = require('../StationsFunctions');
 const Logger = require('../../../utils/logging');
 const UtilsFunction = require('../../ApiUtils/utilFunctions');
-const AppUserFunctions = require('../../AppUsers/AppUsersFunctions');
+const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
+const StaffFunctions = require('../../Staff/StaffFunctions');
+const { STATION_STATUS } = require("../StationsConstants");
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let stationsData = req.payload;
+      
+      //xu ly tao ra thumbnail tu avatar (neu co update)
+      if (stationsData.stationsLogo) {
+        let _thumbnailsUrl = await ImageUtils.createThumbnailsImage(stationsData.stationsLogo);
+        if (_thumbnailsUrl) {
+          stationsData.stationsLogoThumbnails = _thumbnailsUrl;
+        }
+      }
+      
       let registerResult = await StationFunctions.registerNewStation(stationsData);
 
       if (registerResult) {
@@ -27,16 +38,19 @@ async function insert(req) {
         while (registerUserResult === undefined) {
           let adminUserData = {
             username: nonVietnameseName + (generatorIndex === 0 ? "" : generatorIndex) + "admin",
-            firstName: "",
-            lastName: "",
-            phoneNumber: "",
-            email: "",
+            firstName: "admin",
+            lastName: stationsData.stationsName,
             password: "123456789",
-            stationsId: registerResult[0]
+            stationsId: registerResult[0],
+            roleId: 2 //Station Admin
           }
 
-          registerUserResult = await AppUserFunctions.createNewUser(adminUserData);
-
+          try {
+            registerUserResult = await StaffFunctions.createNewStaff(adminUserData, adminUserData.password);
+          } catch (error) {
+            Logger.info(`Duplicated staff username ${adminUserData.username}`);
+          }
+          
           if (!registerUserResult) {
             generatorIndex = generatorIndex + 1;
             retry++;
@@ -63,11 +77,13 @@ async function find(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
+      let searchText = req.payload.searchText;
 
-      let stations = await StationsResourceAccess.find(filter, skip, limit, order);
-      let stationsCount = await StationsResourceAccess.count(filter, order);
-      if (stations && stationsCount) {
-        resolve({ data: stations, total: stationsCount });
+      let stations = await StationsResourceAccess.customSearch(filter, skip, limit, searchText, order);
+      
+      if (stations && stations.length > 0) {
+        let stationsCount = await StationsResourceAccess.customCount(filter, searchText, order);
+        resolve({ data: stations, total: stationsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
@@ -80,29 +96,26 @@ async function find(req) {
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
+    let stationsId = req.payload.id;
+    let stationsData = req.payload.data;
     try {
-      let stationsId = req.payload.id;
-      let stationsData = req.payload.data;
       if (stationsData.stationBookingConfig) {
         try {
-          stationsData.stationBookingConfig = JSON.stringify(stationsData.stationBookingConfig);
           StationFunctions.sortCheckingConfigStep(stationsData.stationBookingConfig);
+          
+          stationsData.stationBookingConfig = JSON.stringify(stationsData.stationBookingConfig);
+          
         } catch (error) {
           stationsData.stationBookingConfig = '';
         }
       }
 
-      if (stationsData.stationCheckingConfig) {
-        //compare to old config and find changes
-        let oldStations = await StationsResourceAccess.findById(stationsId);
-        if (oldStations) {
-          let oldConfigs = oldStations.stationCheckingConfig;
-          if (JSON.stringify(oldConfigs) !== JSON.stringify(stationsData.stationCheckingConfig)) {
-            //update voice data for each step in checking process
-            await StationFunctions.updateVoiceDataForConfig(stationsData.stationCheckingConfig);
-          }
+      //xu ly tao ra thumbnail tu avatar (neu co update)
+      if (stationsData.stationsLogo) {
+        let _thumbnailsUrl = await ImageUtils.createThumbnailsImage(stationsData.stationsLogo);
+        if (_thumbnailsUrl) {
+          stationsData.stationsLogoThumbnails = _thumbnailsUrl;
         }
-        stationsData.stationCheckingConfig = JSON.stringify(stationsData.stationCheckingConfig);
       }
 
       let result = await StationsResourceAccess.updateById(stationsId, stationsData);
@@ -110,6 +123,27 @@ async function updateById(req) {
         resolve(result);
       }
       reject("failed");
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
+async function deleteById(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let stationsId = req.payload.id;
+      let stationsData = {
+        isDeleted: 1
+      };
+      
+      let result = await StationsResourceAccess.updateById(stationsId, stationsData);
+      if (result) {
+        resolve(result);
+      } else {
+        reject("failed");
+      }
     } catch (e) {
       Logger.error(__filename, e);
       reject("failed");
@@ -322,12 +356,73 @@ async function enableAdsForStation(req) {
 }
 
 
+async function userGetListStation(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let searchText = req.payload.searchText;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      if (!filter) {
+        filter = {};
+      }
+      filter.stationStatus = STATION_STATUS.ACTIVE;
+      let stations = await StationsResourceAccess.customSearch(filter, skip, limit, searchText, order);
+      
+      if (stations && stations.length > 0) {
+        let stationsCount = await StationsResourceAccess.customCount(filter, searchText, order);
+        resolve({ data: stations, total: stationsCount[0].count });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
+async function userGetDetailStationById(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let stationsId = req.payload.id;
+      let result = await StationFunctions.getStationDetailById(stationsId);
+      if (result) {
+        resolve(result);
+      } else {
+        reject("failed");
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
+
+async function userGetDetailStationByUrl(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let stationsUrl = req.payload.stationsUrl;
+      let result = await StationFunctions.getStationDetailByUrl(stationsUrl);
+      if (result) {
+        resolve(result);
+      } else {
+        reject("failed");
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject("failed");
+    }
+  });
+};
 
 module.exports = {
   insert,
   find,
   updateById,
   findById,
+  deleteById,
   findByUrl,
   resetAllDefaultMp3,
   updateConfigSMTP,
@@ -337,4 +432,7 @@ module.exports = {
   updateLeftAdBanner,
   updateRightAdBanner,
   enableAdsForStation,
+  userGetListStation,
+  userGetDetailStationById,
+  userGetDetailStationByUrl,
 };

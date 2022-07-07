@@ -5,8 +5,9 @@
 
 const Logger = require('../../utils/logging');
 const StaffResourceAccess = require("./resourceAccess/StaffResourceAccess");
-const RoleResourceAccess = require("../Role/resourceAccess/RoleResourceAccess");
 const RoleStaffView = require("./resourceAccess/RoleStaffView");
+const { STAFF_ERROR } = require('./StaffConstant');
+
 const crypto = require("crypto");
 
 function hashPassword(password) {
@@ -51,19 +52,48 @@ async function changeStaffPassword(staffData, newPassword) {
   }
 }
 
-async function isValidRole(roleId) {
-  let result = await RoleResourceAccess.find({ roleId: roleId });
+async function createNewStaff(staffData, newPassword) {
+  //check existed username
+  let _existedUsers = await StaffResourceAccess.find({ username: staffData.username });
+  if (_existedUsers && _existedUsers.length > 0) {
+    throw (STAFF_ERROR.DUPLICATED_USER);
+  }
 
-  if (result && result.length > 0) {
-    return true;
+  //check existed email
+  if (staffData.email) {
+    _existedUsers = await StaffResourceAccess.find({ email: staffData.email });
+    if (_existedUsers && _existedUsers.length > 0) {
+      throw (STAFF_ERROR.DUPLICATED_USER_EMAIL);
+    }
+  }
+
+  //check existed phoneNumber
+  if (staffData.phoneNumber) {
+    _existedUsers = await StaffResourceAccess.find({ phoneNumber: staffData.phoneNumber });
+    if (_existedUsers && _existedUsers.length > 0) {
+      throw (STAFF_ERROR.DUPLICATED_USER_PHONE);
+    }
+  }
+  
+  let newHashPassword = hashPassword(newPassword);
+
+  //hash password
+  staffData.password = newHashPassword;
+
+  //create new user
+  let result = await StaffResourceAccess.insert(staffData);
+
+  if (result) {
+    return result;
   } else {
-    return false;
+    return undefined;
   }
 }
+
 module.exports = {
   verifyCredentials,
   changeStaffPassword,
   unhashPassword,
   hashPassword,
-  isValidRole
+  createNewStaff,
 }

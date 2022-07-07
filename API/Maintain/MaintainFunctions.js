@@ -11,7 +11,7 @@ let systemStatus = {
   deposit: true,
   transfer: true,
   withdraw: true,
-  signup: true
+  signup: true,
   maintainMessage: "Vui lòng liên hệ admin để được hỗ trợ",
 }
 

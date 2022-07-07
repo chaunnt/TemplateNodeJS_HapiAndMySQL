@@ -20,21 +20,15 @@ const updateSchema = {
 
 const filterSchema = {
   appUserId: Joi.number(),
-  userName: Joi.string(),
   walletAddress: Joi.string(),
-  walletType: Joi.string(),
+  walletTypeBefore: Joi.string(),
   createdAt: Joi.string(),
   firstName: Joi.string(),
   lastName: Joi.string(),
   email: Joi.string(),
   memberLevelName: Joi.string(),
   active: Joi.number(),
-  ipAddress: Joi.string(),
-  phoneNumber: Joi.string(),
-  telegramId: Joi.string(),
-  facebookId: Joi.string(),
-  appleId: Joi.string(),
-  status: Joi.string(),
+  phoneNumber: Joi.string()
 };
 
 module.exports = {

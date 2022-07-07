@@ -133,16 +133,18 @@ module.exports = {
   },
   getList: {
     tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
+    description: `getList ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
       headers: Joi.object({
         authorization: Joi.string().allow(''),
       }).unknown(),
-      payload: Joi.object({})
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+      })
     },
     handler: function (req, res) {
-      Response(req, res, "find");
+      Response(req, res, "getList");
     }
   },
 };

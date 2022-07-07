@@ -4,6 +4,7 @@
 'use strict';
 const WithdrawTransactionResource = require('./resourceAccess/PaymentWithdrawTransactionResourceAccess');
 const WalletResourceAccess = require('../Wallet/resourceAccess/WalletResourceAccess');
+const SystemConfigurationsFunction = require('../SystemConfigurations/SystemConfigurationsFunction');
 const { WALLET_TYPE } = require('../Wallet/WalletConstant');
 const { WITHDRAW_TRX_STATUS } = require('./PaymentWithdrawTransactionConstant');
 const Logger = require('../../utils/logging');
@@ -71,15 +72,15 @@ async function rejectWithdrawRequest(transactionRequestId, paymentNote) {
   }
 }
 
-async function createWithdrawRequest(user, amount, staff, paymentNote) {
-  const MIN_PERSIST_AMOUNT = process.env.MIN_PERSIST_AMOUNT | 0;
+async function createWithdrawRequest(user, amount, staff, paymentNote, walletType) {
+  const MIN_PERSIST_AMOUNT = process.env.MIN_PERSIST_AMOUNT || 0;
   if (user.appUserId === undefined) {
     Logger.error(`createWithdrawRequest invalid user`);
     return undefined;
   }
   let wallet = await WalletResourceAccess.find({ 
     appUserId: user.appUserId,
-    walletType: WALLET_TYPE.POINT 
+    walletType: walletType
   });
   if (!wallet || wallet.length < 1) {
     Logger.error("user wallet is invalid");
@@ -94,11 +95,15 @@ async function createWithdrawRequest(user, amount, staff, paymentNote) {
 
   let transactionData = {
     appUserId: user.appUserId,
-    walletid: wallet.walletId,
+    walletId: wallet.walletId,
     paymentAmount: amount,
     balanceBefore: wallet.balance,
-    balanceAfter: wallet.balance - amount,
+    balanceAfter: wallet.balance - amount
   };
+
+  let _configs = await SystemConfigurationsFunction.getSystemConfig();
+  let _convertedPrice = _configs.exchangeVNDPrice || 1;
+  transactionData.paymentRefAmount = amount * _convertedPrice;
 
   if (staff) {
     transactionData.paymentApproveDate = new Date();
@@ -114,6 +119,12 @@ async function createWithdrawRequest(user, amount, staff, paymentNote) {
     transactionData.referId = user.referUserId;
   }
 
+  if (walletType === WALLET_TYPE.USDT && user.diachiviUSDT) {
+    transactionData.paymentRef = user.diachiviUSDT;
+  } else if (walletType === WALLET_TYPE.BTC && user.diachiviBTC) {
+    transactionData.paymentRef = user.diachiviBTC;
+  }
+  
   await WalletResourceAccess.incrementBalance(wallet.walletId, amount * -1);
   let result = await WithdrawTransactionResource.insert(transactionData);
 

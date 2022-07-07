@@ -35,7 +35,7 @@ module.exports = {
       Response(req, res, "userRequestExchange");
     }
   },
-  userExchangeHistory: {
+  userExchangeFACHistory: {
     tags: ["api", `${moduleName}`],
     description: `userExchangeHistory ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
@@ -62,7 +62,37 @@ module.exports = {
       })
     },
     handler: function (req, res) {
-      Response(req, res, "userExchangeHistory");
+      Response(req, res, "userExchangeFACHistory");
+    }
+  },
+  userExchangePOINTHistory: {
+    tags: ["api", `${moduleName}`],
+    description: `userExchangeHistory ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "userExchangePOINTHistory");
     }
   },
   userReceiveHistory: {
@@ -196,6 +226,54 @@ module.exports = {
         return;
       }
       Response(req, res, "userViewExchangeRequests");
+    }
+  },
+  userExchangeFAC: {
+    tags: ["api", `${moduleName}`],
+    description: `userExchangeFAC ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(0).default(1),
+        secondaryPassword: Joi.string().min(6),
+      })
+    },
+    handler: function (req, res) {
+      if (SystemStatus.exchange === false) {
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "userExchangeFAC");
+    }
+  },
+  userExchangePOINT: {
+    tags: ["api", `${moduleName}`],
+    description: `userExchangePOINT ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(0).default(1),
+        secondaryPassword: Joi.string().min(6),
+      })
+    },
+    handler: function (req, res) {
+      if (SystemStatus.exchange === false) {
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "userExchangePOINT");
     }
   },
 };

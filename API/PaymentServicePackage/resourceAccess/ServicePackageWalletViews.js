@@ -29,8 +29,11 @@ async function createView() {
     `${rootTableName}.packageActivityStatus`,
     `${rootTableName}.profitActual`,
     `${rootTableName}.profitClaimed`,
+    `${rootTableName}.profitBonus`,
+    `${rootTableName}.profitBonusClaimed`,
     `${rootTableName}.packageLastActiveDate`,
-
+    `${rootTableName}.packageNote`,
+    
     `${UserTableName}.sotaikhoan`,
     `${UserTableName}.tentaikhoan`,
     `${UserTableName}.tennganhang`,
@@ -112,36 +115,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
 
   if (searchText) {
-    queryBuilder.where('username', 'like', `%${filterData.username}%`)
-    queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-    queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-    queryBuilder.where('email', 'like', `%${filterData.email}%`)
-    queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-  } else {
-    if (filterData.username) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-
-    if (filterData.lastName) {
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-
-    if (filterData.firstName) {
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-
-    if (filterData.email) {
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
-    }
-
-    if (filterData.phoneNumber) {
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+    })
   }
 
   if (startDate) {
@@ -160,7 +140,8 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (skip) {
     queryBuilder.offset(skip);
   }
-
+  queryBuilder.where('walletBalanceUnitId','>', 0);
+  
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
@@ -228,7 +209,7 @@ async function customSumCountDistinct(distinctFields, filter, startDate, endDate
   }
 
   queryBuilder.where(filter);
-
+  queryBuilder.where('walletBalanceUnitId','>', 0);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.sum(`${_sumField} as totalSum`).count(`${_sumField} as totalCount`).select(distinctFields).groupBy(distinctFields)

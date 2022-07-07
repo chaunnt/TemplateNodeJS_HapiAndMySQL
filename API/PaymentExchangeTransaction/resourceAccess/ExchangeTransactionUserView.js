@@ -3,11 +3,13 @@ require("dotenv").config();
 const { DB } = require("../../../config/database");
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "ExchangeTransactionUserView";
+const tableName = "ExchangeTransactionUserViews";
 const rootTableName = 'PaymentExchangeTransaction';
 const primaryKeyField = "paymentExchangeTransactionId";
 async function createView() {
-  const UserTableName = 'AppUser';
+  const WalletTable = 'Wallet';
+  const UserTable = "AppUser";
+
   let fields = [
     `${primaryKeyField}`,
     `${rootTableName}.appUserId`,
@@ -15,47 +17,37 @@ async function createView() {
     `${rootTableName}.isHidden`,
     `${rootTableName}.createdAt`,
     DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
-
     `${rootTableName}.sendWalletId`, // vi nguoi gui
     `${rootTableName}.receiveWalletId`, // vi nguoi nhan
-    `${rootTableName}.referId`, // nguoi gioi thieu hoac nguoi nhan
-    `${rootTableName}.paymentMethodId`,
     `${rootTableName}.paymentAmount`,
-    `${rootTableName}.receiveAmount`,
     `${rootTableName}.sendWalletBalanceBefore`,
     `${rootTableName}.sendWalletBalanceAfter`,
     `${rootTableName}.receiveWalletBalanceBefore`,
     `${rootTableName}.receiveWalletBalanceAfter`,
-    `${rootTableName}.paymentRewardAmount`,
-    `${rootTableName}.paymentUnit`, //don vi tien
-    `${rootTableName}.sendPaymentUnitId`, //don vi tien cua ben gui
-    `${rootTableName}.receivePaymentUnitId`, //don vi tien cua ben nhan
-    `${rootTableName}.paymentStatus`,
-    `${rootTableName}.paymentNote`,
-    `${rootTableName}.paymentRef`,
-    `${rootTableName}.paymentApproveDate`,
-    `${rootTableName}.paymentPICId`,
+    `${rootTableName}.exchangeRate`,
+    `${rootTableName}.receiveAmount`,
+    `send.walletType as walletTypeBefore`,
+    `receive.walletType as walletTypeAfter`,
 
-    `${UserTableName}.sotaikhoan`,
-    `${UserTableName}.tentaikhoan`,
-    `${UserTableName}.tennganhang`,
-    `${UserTableName}.username`,
-    `${UserTableName}.firstName`,
-    `${UserTableName}.lastName`,
-    `${UserTableName}.email`,
-    `${UserTableName}.memberLevelName`,
-    `${UserTableName}.active`,
-    `${UserTableName}.ipAddress`,
-    `${UserTableName}.phoneNumber`,
-    `${UserTableName}.telegramId`,
-    `${UserTableName}.facebookId`,
-    `${UserTableName}.appleId`,
-    
+    `${UserTable}.firstName`,
+    `${UserTable}.lastName`,
+    `${UserTable}.email`,
+    `${UserTable}.phoneNumber`,
+    `${UserTable}.username`,
+    `${UserTable}.companyName`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(UserTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
+  var viewDefinition = DB.select(fields).from(rootTableName)
+  .leftJoin({ send:WalletTable}, function () {
+    this.on(`${rootTableName}.sendWalletId`, '=', `send.walletId`);
+  })
+  .leftJoin({receive : WalletTable}, function () {
+    this.on(`${rootTableName}.receiveWalletId`, '=', `receive.walletId`)
+  })
+  .leftJoin(UserTable, function () {
+    this.on(`${rootTableName}.appUserId`, '=', `${UserTable}.appUserId`)
   });
+  
 
   Common.createOrReplaceView(tableName, viewDefinition)
 }
@@ -97,36 +89,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-  } else {
-    if(filterData.username){
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-  
-    if(filterData.lastName){
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-    
-    if(filterData.firstName){
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-  
-    if(filterData.email){
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
-    }
-  
-    if(filterData.phoneNumber){
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+    })
   }
 
   if (startDate) {

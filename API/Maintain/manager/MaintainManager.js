@@ -3,7 +3,6 @@
  */
 "use strict";
 const MaintainFunctions = require("../MaintainFunctions");
-const Logger = require('../../../utils/logging');
 
 async function maintainAll(req) {
   return new Promise(async (resolve, reject) => {
@@ -11,7 +10,7 @@ async function maintainAll(req) {
       MaintainFunctions.maintainAll(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -23,7 +22,7 @@ async function maintainDeposit(req) {
       MaintainFunctions.maintainDeposit(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -35,7 +34,7 @@ async function maintainLiveGame(req) {
       MaintainFunctions.maintainLiveGame(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -47,7 +46,7 @@ async function maintainTransfer(req) {
       MaintainFunctions.maintainTransfer(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -59,7 +58,7 @@ async function maintainWithdraw(req) {
       MaintainFunctions.maintainWithdraw(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -71,7 +70,7 @@ async function maintainSignup(req) {
       MaintainFunctions.maintainSignup(req.payload.status);
       resolve("success");
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });
@@ -82,7 +81,7 @@ async function getSystemStatus(req) {
     try {
       resolve(MaintainFunctions.systemStatus);
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject("failed");
     }
   });

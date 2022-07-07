@@ -17,7 +17,7 @@ const app = require('../../../server');
 describe(`Tests ${Model.modelName}`, function () {
   let token = "";
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
-  let stationsId = 0;
+  let stationsId = 1;
   let stationData = {};
   fakeUserName = fakeUserName.replace("'", "");
   before(done => {
@@ -47,6 +47,7 @@ describe(`Tests ${Model.modelName}`, function () {
         done();
       });
   });
+  
   it(`Insert ${Model.modelName} (no email)`, done => {
     const body = {
       "stationsName": fakeUserName,
@@ -65,14 +66,14 @@ describe(`Tests ${Model.modelName}`, function () {
         done();
       });
   });
-
+  
   it('findById Stations', done => {
     const body = {
       "id": stationsId
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getDetailById`)
+      .post(`/Stations/findById`)
       .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
@@ -85,22 +86,6 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
 
-  it('findById Stations failse format', done => {
-    const body = {
-      "id": "stationsId"
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getDetailById`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          checkResponseStatus(res, 500);
-        }
-        done();
-      });
-  });
   it('find Stations', done => {
     const body = {
       "filter": {
@@ -110,7 +95,7 @@ describe(`Tests ${Model.modelName}`, function () {
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getList`)
+      .post(`/Stations/find`)
       .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
@@ -121,6 +106,7 @@ describe(`Tests ${Model.modelName}`, function () {
         done();
       });
   });
+  
   it('find Stations by filter', done => {
     const body = {
       "filter": {
@@ -131,7 +117,7 @@ describe(`Tests ${Model.modelName}`, function () {
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getList`)
+      .post(`/Stations/find`)
       .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
@@ -153,7 +139,7 @@ describe(`Tests ${Model.modelName}`, function () {
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getList`)
+      .post(`/Stations/find`)
       .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
@@ -165,27 +151,27 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
 
-  it('find Stations by filter ký tự đặt biệt', done => {
+  it('search Stations', done => {
     const body = {
-      "filter": {
-        "stationsName": "<,.>''''---**-*"
-      },
+      "searchText": "string",
       "skip": 0,
       "limit": 20
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/getList`)
+      .post(`/Stations/find`)
       .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 500);
+        checkResponseStatus(res, 200);
         done();
       });
   });
+
+
   it('updateById Stations', done => {
     const body = {
       "id": stationsId,
@@ -207,262 +193,4 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
 
-  it('updateById Stations failse id', done => {
-    const body = {
-      "id": "stationsId",
-      "data": {
-        stationsName: "Automation test updated"
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateById`)
-      .send(body)
-      .set("Authorization", `Bearer ${token}`)
-      .end((err, res) => {
-        if (err) {
-          checkResponseStatus(res, 500);
-        }
-
-        done();
-      });
-  });
-  it('updateById Stations failse data', done => {
-    const body = {
-      "id": "stationsId",
-      "data": {
-        stationsName: 123
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateById`)
-      .send(body)
-      .set("Authorization", `Bearer ${token}`)
-      .end((err, res) => {
-        if (err) {
-          checkResponseStatus(res, 200);
-        }
-
-        done();
-      });
-  });
-
-  it('updateById Stations failse data ký tự đặt biệt', done => {
-    const body = {
-      "id": stationsId,
-      "data": {
-        stationsName: "<./.'''"
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateById`)
-      .send(body)
-      .set("Authorization", `Bearer ${token}`)
-      .end((err, res) => {
-        if (err) {
-          console.log(err);
-        }
-        checkResponseStatus(res, 500);
-        done();
-      });
-  });
-  it(`setupSMS`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "smsUrl": "string",
-      "smsUserName": fakeUserName,
-      "smsPassword": "string",
-      "smsBrand": "string"
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/UpdateConfigSMS`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it(`setupSMTP`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "smtpHost": "string",
-      "smtpPort": 0,
-      "smtpSecure": "string",
-      "smtpAuth": {
-        "user": "string",
-        "pass": "string"
-      },
-      "smtpTls": {
-        "rejectUnauthorized": false
-      }
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/UpdateConfigSMTP`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it(`update SMSBrand `, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationUseCustomSMSBrand": 1,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/UpdateCustomSMSBrand`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it(`update CustomSMTP `, done => {
-    const body = {
-      "stationsId": stationsId,
-      "CustomSMTP": 1,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/UpdateCustomSMTP`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-  it(`update Right Ad Banner`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsCustomAdBannerRight": "http://www.sierraconnection.com/banner8.gif",
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateRightAdBanner`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-  it(`clean Right Ad Banner (use default banner)`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsCustomAdBannerRight": "",
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateRightAdBanner`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-  it(`update Left Ad Banner`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsCustomAdBannerLeft": "http://www.sierraconnection.com/banner8.gif",
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateLeftAdBanner`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it(`clean Left Ad Banner (use default banner)`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsCustomAdBannerLeft": "",
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/updateLeftAdBanner`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it(`enable Ads For Station`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsEnableAd": 1,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/enableAdsForStation`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-  it(`disable Ads For Station`, done => {
-    const body = {
-      "stationsId": stationsId,
-      "stationsEnableAd": 0,
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/Stations/enableAdsForStation`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
 });

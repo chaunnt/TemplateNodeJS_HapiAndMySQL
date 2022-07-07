@@ -3,9 +3,9 @@ module.exports = {
   htmlBody: `<div class="container">
   <div class="row">
      <div class="col-md-12">
-        <p>Xin chào {{fullnameSchedule}},</p>
+        <p>Xin chào {{customerName}},</p>
         <p></br></p>
-        <p>{{stationsName}} xác nhận lịch hẹn kiểm định của khách hàng có ô tô BKS {{licensePlates}} vào lúc {{time}} {{dateSchedule}} tại {{stationsAddress}}. </p>
+        <p>{{stationsName}} xác nhận lịch hẹn kiểm định của khách hàng có ô tô BKS {{customerIdentity}} vào lúc {{time}} {{dateSchedule}} tại {{stationsAddress}}. </p>
         <p></br></p>
         <p>Quý khách lưu ý mang đủ các giấy tờ phương tiện bao gồm: </p>
         <ul>

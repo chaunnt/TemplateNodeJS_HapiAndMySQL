@@ -26,18 +26,13 @@ async function createTable() {
           console.log(`${tableName} table created done`);
           let paymentMethods = [
             {
-            paymentMethodName: "ATM / Bank",
-            paymentMethodIdentityNumber: "123577",
-            paymentMethodReferName: "Citi Bank",
-            paymentMethodReceiverName: "David Beckam",
-          },
-          {
-            paymentMethodName: "ATM / Bank",
-            paymentMethodIdentityNumber: "987654321",
-            paymentMethodReferName: "HD Bank",
-            paymentMethodReceiverName: "Ronaldo",
-          },
-        ];
+              paymentMethodName: "USDT",
+              paymentMethodIdentityNumber: "",
+              paymentMethodReferName: "",
+              paymentMethodReceiverName: "TA6xG4AYZ9r6Lu98CH9ucy7y9Tu8Gj9m44",
+              paymentMethodType: PAYMENT_TYPE.CRYPTO
+            },
+          ];
 
           DB(`${tableName}`).insert(paymentMethods).then((result) => {
             console.log(`init ${tableName}` + result);

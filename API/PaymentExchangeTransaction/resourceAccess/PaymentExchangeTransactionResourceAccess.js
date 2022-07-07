@@ -2,6 +2,7 @@
 require("dotenv").config();
 const { DB, timestamps } = require("../../../config/database");
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
+const { WITHDRAW_TRX_STATUS } = require("../../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant");
 const { EXCHANGE_TRX_STATUS } = require('../PaymentExchangeTransactionConstant');
 const tableName = "PaymentExchangeTransaction";
 const primaryKeyField = "paymentExchangeTransactionId";
@@ -17,13 +18,14 @@ async function createTable() {
           table.integer('receiveWalletId'); // vi nguoi nhan
           table.integer('referId'); // nguoi gioi thieu hoac nguoi nhan
           table.integer('paymentMethodId');
-          table.float('paymentAmount', 48, 24).defaultTo(0);
-          table.float('receiveAmount', 48, 24).defaultTo(0);
-          table.float('sendWalletBalanceBefore', 48, 24).defaultTo(0);
-          table.float('sendWalletBalanceAfter', 48, 24).defaultTo(0);
-          table.float('receiveWalletBalanceBefore', 48, 24).defaultTo(0);
-          table.float('receiveWalletBalanceAfter', 48, 24).defaultTo(0);
-          table.float('paymentRewardAmount', 48, 24).defaultTo(0);
+          table.float('exchangeRate', 48, 24).defaultTo(1); //ti le quy doi
+          table.float('paymentAmount', 48, 24).defaultTo(0); //so luong tien gui di
+          table.float('receiveAmount', 48, 24).defaultTo(0); //so luong tien nhan lai
+          table.float('sendWalletBalanceBefore', 48, 24).defaultTo(0); //balance vi gui truoc khi exchange
+          table.float('sendWalletBalanceAfter', 48, 24).defaultTo(0);  //balance vi gui sau khi exchange
+          table.float('receiveWalletBalanceBefore', 48, 24).defaultTo(0);  //balance vi nhan truoc khi exchange
+          table.float('receiveWalletBalanceAfter', 48, 24).defaultTo(0);  //balance vi nhan sau khi exchange
+          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //thuong 
           table.string('paymentUnit'); //don vi tien
           table.string('sendPaymentUnitId'); //don vi tien cua ben gui
           table.string('receivePaymentUnitId'); //don vi tien cua ben nhan
@@ -112,6 +114,48 @@ async function customSum(filter, startDate, endDate) {
 async function sumAmountDistinctByDate(filter, startDate, endDate) {
   return await Common.sumAmountDistinctByDate(tableName, 'paymentAmount', filter, startDate, endDate);
 }
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+  let queryBuilder = DB(tableName);
+  if (filter === undefined) {
+    filter = {};
+  }
+
+  if (startDate) {
+    queryBuilder.where("createdAt", ">=", startDate);
+  }
+  if (endDate) {
+    queryBuilder.where("createdAt", "<=", endDate);
+  }
+
+  queryBuilder.where(filter);
+
+  if (limit) {
+    queryBuilder.limit(limit);
+  }
+
+  if (skip) {
+    queryBuilder.offset(skip);
+  }
+
+  if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
+    queryBuilder.orderBy(order.key, order.value);
+  } else {
+    queryBuilder.orderBy("createdAt", "desc")
+  }
+
+  return queryBuilder;
+}
+
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+  return await query.select();
+}
+
+async function customCount(filter, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+  return await query.count(`${primaryKeyField} as count`);
+}
+
 
 module.exports = {
   insert,
@@ -121,4 +165,6 @@ module.exports = {
   initDB,
   customSum,
   sumAmountDistinctByDate,
+  customSearch,
+  customCount
 };

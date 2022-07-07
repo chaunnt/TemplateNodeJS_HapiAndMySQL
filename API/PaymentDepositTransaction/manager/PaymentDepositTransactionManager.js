@@ -10,13 +10,14 @@ const UserResource = require("../../AppUsers/resourceAccess/AppUsersResourceAcce
 const DepositFunction = require('../PaymentDepositTransactionFunctions');
 const Logger = require('../../../utils/logging');
 const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransactionConstant');
-// const ExcelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let appUserId = req.payload.appUserId;
       let paymentAmount = req.payload.paymentAmount;
+      let paymentCategory = req.payload.paymentCategory;
+
       if (!appUserId) {
         reject("user is invalid");
         return;
@@ -29,7 +30,7 @@ async function insert(req) {
       }
       user = user[0];
 
-      let result = await DepositFunction.createDepositTransaction(user, paymentAmount);
+      let result = await DepositFunction.createDepositTransaction(user, paymentAmount, paymentCategory);
       if (result) {
         resolve(result);
       } else {
@@ -51,13 +52,14 @@ async function find(req) {
       let order = req.payload.order;
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
+      let searchText = req.payload.searchText;
 
       if (filter === undefined) {
         filter = {}
       }
 
-      let transactionList = await DepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, order);
-      let transactionCount = await DepositTransactionUserView.customCount(filter, startDate, endDate, order);
+      let transactionList = await DepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let transactionCount = await DepositTransactionUserView.customCount(filter, startDate, endDate, searchText, order);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -131,8 +133,8 @@ async function depositHistory(req) {
         return;
       }
 
-      let transactionList = await DepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, order);
-      let transactionCount = await DepositTransactionUserView.customCount(filter, startDate, endDate, order);
+      let transactionList = await DepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+      let transactionCount = await DepositTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -244,40 +246,44 @@ async function addPointForUser(req) {
   });
 }
 
-async function exportHistoryOfUser(req) {
+async function exportData(req) {
   return new Promise(async (resolve, reject) => {
     try{
-      let userId = req.payload.id;
-      let history = await DepositTransactionAccess.find({appUserId: userId});
-      if (history && history.length > 0) {
-        const fileName = 'userRewardHistory' + (new Date() - 1).toString();
-        let filePath = await ExcelFunction.renderExcelFile(fileName, history, 'User Reward History');
-        let url = `https://${process.env.HOST_NAME}/${filePath}`;
-        resolve(url);
-      } else {
-        resolve('Not have data');
-      }
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject("failed");
-    }
-  })
-}
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      let startDate = req.payload.startDate;
+      let endDate = req.payload.endDate;
+      let searchText = req.payload.searchText;
 
-async function exportSalesToExcel(req) {
-  return new Promise(async (resolve, reject) => {
-    try{
-      let startDate = moment(req.payload.startDate).startOf('month').format('YYYY-MM-DD');
-      let endDate = moment(req.payload.endDate).endOf('month').format('YYYY-MM-DD');
-      let data = await DepositTransactionAccess.customSearch(startDate, endDate)
-      if (data && data.length > 0) {
-        const fileName = 'SalesHistory' + (new Date() - 1).toString();
-        let filePath = await ExcelFunction.renderExcelFile(fileName, data, 'Sales History');
-        let url = `https://${process.env.HOST_NAME}/${filePath}`;
-        resolve(url);
-      } else {
-        resolve('Not have data');
+      if (filter === undefined) {
+        filter = {}
       }
+
+      let transactionList = await DepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+
+      if (!transactionList || transactionList.length <= 0) {
+        transactionList = [];
+      }
+      const columnNames = [
+        {"key":"paymentDepositTransactionId", "label":"ID"},
+        {"key":"username", "label":"Tài khoản"},
+        {"key":"companyName", "label":"Tên tổ chức"},
+        {"key":"tennganhang", "label":"Ngân hàng"},
+        {"key":"sotaikhoan", "label":"Số tài khoản"},
+        {"key":"tentaikhoan", "label":"Tên tài khoản"},
+        {"key":"paymentRefAmount", "label":"Số tiền (VND)"},
+        {"key":"paymentStatus", "label":"Trạng thái"},
+        {"key":"createdAt", "label":"Thời gian"}
+      ];
+
+      const fileName = `DepositHistory_${moment().format('YYYYMMDDHHmm')}.xlsx`;
+      const ExcelFunction = require('../../../ThirdParty/Excel/excelFunction');
+      let filePath = await ExcelFunction.exportExcel(transactionList, columnNames,'Deposit History', fileName);
+      let url = `https://${process.env.HOST_NAME}/${filePath}`;
+      
+      resolve(url);
     } catch (e) {
       Logger.error(__filename, e);
       reject("failed");
@@ -290,6 +296,8 @@ async function userRequestDeposit(req) {
     try {
       let appUserId = req.currentUser.appUserId;
       let paymentAmount = req.payload.paymentAmount;
+      let paymentRef = req.payload.paymentRef;
+      let paymentCategory = req.payload.paymentCategory;
       if (!appUserId) {
         reject("user is invalid");
         return;
@@ -302,7 +310,7 @@ async function userRequestDeposit(req) {
       }
       user = user[0];
 
-      let result = await DepositFunction.createDepositTransaction(user, paymentAmount);
+      let result = await DepositFunction.createDepositTransaction(user, paymentAmount, paymentCategory, paymentRef);
       if (result) {
         resolve(result);
       } else {
@@ -310,7 +318,11 @@ async function userRequestDeposit(req) {
       }
     } catch (e) {
       console.error(e);
-      reject("failed");
+      if (e === "DUPLICATE_TRANSACTION_ID") {
+        reject("DUPLICATE_TRANSACTION_ID");
+      } else {
+        reject("failed");
+      }
     }
   });
 };
@@ -327,6 +339,5 @@ module.exports = {
   userRequestDeposit,
   depositHistory,
   addPointForUser,
-  exportHistoryOfUser,
-  exportSalesToExcel
+  exportData,
 };

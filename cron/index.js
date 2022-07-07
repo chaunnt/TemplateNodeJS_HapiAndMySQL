@@ -21,12 +21,12 @@ async function startSchedule() {
   setInterval(CustomerMessageJob.autoSendMessageForCustomer, 30 * 1000);
 
   //every 30 seconds
-  setInterval(CustomerRecordJob.autoUpdateProcessForStation, 30 * 1000);
+  // setInterval(CustomerRecordJob.autoUpdateProcessForStation, 30 * 1000);
 
   // every day - at the end of day
-  CronInstance.schedule('0 23 * * *', async function () {
-    executeJob('./API/CustomerRecord/cronjob/StationsRecordCompleteJob.js');
-  });
+  // CronInstance.schedule('0 23 * * *', async function () {
+  //   executeJob('./API/CustomerRecord/cronjob/StationsRecordCompleteJob.js');
+  // });
 }
 
 module.exports = {

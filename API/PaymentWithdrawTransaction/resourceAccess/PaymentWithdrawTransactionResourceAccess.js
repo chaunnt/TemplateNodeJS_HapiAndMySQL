@@ -2,7 +2,7 @@
 require("dotenv").config();
 const { DB, timestamps } = require("../../../config/database");
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { WITHDRAW_TRX_STATUS } = require('../PaymentWithdrawTransactionConstant');
+const { WITHDRAW_TRX_STATUS, WITHDRAW_TRX_CATEGORY, WITHDRAW_TRX_UNIT, WITHDRAW_TRX_TYPE } = require('../PaymentWithdrawTransactionConstant');
 const tableName = "PaymentWithdrawTransaction";
 const primaryKeyField = "paymentWithdrawTransactionId";
 async function createTable() {
@@ -16,16 +16,23 @@ async function createTable() {
           table.integer('walletId');
           table.integer('referId'); // nguoi gioi thieu
           table.integer('paymentMethodId');
-          table.float('paymentAmount', 48, 24).defaultTo(0);
+          table.float('paymentAmount', 48, 24).defaultTo(0); //số tiền nạp
           table.float('balanceBefore', 48, 24).defaultTo(0);
           table.float('balanceAfter', 48, 24).defaultTo(0);
-          table.float('paymentRewardAmount', 48, 24).defaultTo(0);
-          table.string('paymentUnit'); //don vi tien
+          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //số tiền được thưởng
+          table.float('paymentRefAmount', 48, 24).defaultTo(0); //số tiền quy đổi hoặc tham chiếu 
+          table.string('paymentUnit').defaultTo(WITHDRAW_TRX_UNIT.USDT); //don vi tien
+          table.string('paymentType').defaultTo(WITHDRAW_TRX_TYPE.USER_WITHDRAW);
           table.string('paymentStatus').defaultTo(WITHDRAW_TRX_STATUS.NEW);
-          table.string('paymentNote').defaultTo(''); //Ghi chu hoa don
-          table.string('paymentRef').defaultTo(''); //Ma hoa don ngoai thuc te
+          table.string('paymentCategory').defaultTo(WITHDRAW_TRX_CATEGORY.BANK);
+          table.string('paymentNote').defaultTo(''); //Ghi chu
+          table.string('paymentRef').defaultTo(''); //Ma hoa don,ma giao dich thuc te 
+          table.string('paymentOwner').defaultTo(''); //ten nguoi gui, ten tai khoan
+          table.string('paymentOriginSource').defaultTo(''); //ten ngan hang, ten mang (blockchain)
+          table.string('paymentOriginName').defaultTo(''); //so tai khoan, dia chi vi
           table.timestamp('paymentApproveDate',{ useTz: true }); // ngay duyet
           table.integer('paymentPICId');  // nguoi duyet
+          table.integer('paymentStaffId');  // nguoi tạo, người quản lý
           timestamps(table);
           table.index('appUserId');
           table.index('walletId');
@@ -71,10 +78,6 @@ async function customSum(filter, startDate, endDate) {
 
   if (endDate) {
     DB.where('createdAt', '<=', endDate);
-  }
-
-  if (filter.referAgentId) {
-    DB.where('referId', referAgentId);
   }
 
   DB.where({

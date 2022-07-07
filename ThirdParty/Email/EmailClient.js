@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 const emailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
-  secure: process.env.SMTP_SECURE,
+  secure: true,
   auth: {
     user: process.env.SMTP_EMAIL,
     pass: process.env.SMTP_PASSWORD,
@@ -15,6 +15,7 @@ const emailTransporter = nodemailer.createTransport({
 });
 
 async function sendTestEmail(testEmail = "chaupad@gmail.com") {
+  console.info("sendTestEmail")
   let mailBody = "";
   mailBody += "THÔNG BÁO!" + "\r\n\r\n";
   let subject = "[THÔNG BÁO] đây là email test hệ thống";

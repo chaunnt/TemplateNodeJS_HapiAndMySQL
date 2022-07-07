@@ -7,58 +7,31 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require("../../Common/CommonFunctions");
-const { PACKAGE_STATUS , PACKAGE_CATEGORY} = require('../PaymentServicePackageConstant');
-
-const insertSchema = {
-  packageName: Joi.string().required(),
-  packageDescription: Joi.string(),
-  packagePerformance: Joi.number().required().min(1),
-  packageUnitId: Joi.number().required().min(0),
-  packageDuration: Joi.number().required().min(1),
-  packageCategory: Joi.string().default(PACKAGE_CATEGORY.BONUS),
-  packageStatus: Joi.number().allow([PACKAGE_STATUS.NORMAL, PACKAGE_STATUS.HOT, PACKAGE_STATUS.NEW]).default(PACKAGE_STATUS.NORMAL),
-  referralPackageCountRequired: Joi.number().required().min(1),
-  referralUserCountRequired: Joi.number().required().min(1),
-};
+const { CLAIMABLE_STATUS } = require('../PaymentServicePackageConstant');
 
 const filterSchema = {
   packageUnitId: Joi.number(),
   packageStatus: Joi.number(),
-  packageCategory: Joi.string().default(PACKAGE_CATEGORY.BONUS),
+  bonusPackageExpireDate: Joi.string(),
+  bonusPackageClaimable: Joi.number().allow([CLAIMABLE_STATUS.ENABLE, CLAIMABLE_STATUS.DISABLE, CLAIMABLE_STATUS.CLAIMED]),
+  firstName: Joi.string(),
+  lastName: Joi.string(),
+  username: Joi.string(),
+  email: Joi.string(),
+  memberLevelName: Joi.string(),
+  phoneNumber: Joi.string(),
 }
 
 const updateSchema = {
-  packageName: Joi.string(),
-  packageDescription: Joi.string(),
-  packagePerformance: Joi.number().min(1),
-  packageUnitId: Joi.number().min(0),
-  packageDuration: Joi.number().min(1),
-  packageStatus: Joi.number().allow([PACKAGE_STATUS.NORMAL, PACKAGE_STATUS.HOT, PACKAGE_STATUS.NEW]),
-  referralPackageCountRequired: Joi.number().min(1),
-  referralUserCountRequired: Joi.number().min(1),
+  appUserId: Joi.number(),
+  bonusPackageId: Joi.number(),
+  bonusPackageExpireDate: Joi.string(),
+  bonusPackageClaimedDate: Joi.string(),
+  bonusPackageClaimable: Joi.number().allow([CLAIMABLE_STATUS.ENABLE, CLAIMABLE_STATUS.DISABLE, CLAIMABLE_STATUS.CLAIMED]),
+  bonusPackageDescription: Joi.string()
 };
 
 module.exports = {
-  insert: {
-    tags: ["api", `${moduleName}`],
-    description: `insert ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
-    auth: {
-      strategy: "jwt",
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object(insertSchema),
-    },
-    handler: function (req, res) {
-      Response(req, res, "insert");
-    },
-  },
   updateById: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
@@ -100,6 +73,7 @@ module.exports = {
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string().default("createdAt").allow(""),
           value: Joi.string().default("desc").allow(""),
@@ -194,4 +168,25 @@ module.exports = {
       Response(req, res, "userClaimBonusPackage");
     },
   },
+  staffSendBonusPackage: {
+    tags: ["api", `${moduleName}`],
+    description: `staff send ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken }
+    ],
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().allow(''),
+      }).unknown(),
+      payload: Joi.object({
+        paymentServicePackageId: Joi.number().default(0).min(0).required(),
+        bonusPackageDescription: Joi.string().required(),
+        appUserId: Joi.number().required()
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, "staffSendBonusPackage");
+    },
+  }
 };

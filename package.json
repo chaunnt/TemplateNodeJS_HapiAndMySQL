@@ -4,6 +4,7 @@
   "description": "template for nodejs project with hapi",
   "main": "server.js",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^3.4.0",
     "bcrypt": "^3.0.6",
     "bcryptjs": "^2.4.3",
     "chai": "^4.3.4",
@@ -14,6 +15,7 @@
     "deep-diff": "^1.0.2",
     "dotenv": "^4.0.0",
     "faker": "^5.5.3",
+    "fcm-notification": "^2.0.0",
     "fs": "0.0.1-security",
     "glue": "^4.1.0",
     "good": "^7.2.0",
@@ -25,7 +27,7 @@
     "hapi-swagger": "^7.7.0",
     "inert": "^4.2.0",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.95.11",
+    "knex": "^1.0.3",
     "kue": "^0.11.6",
     "mocha": "^8.3.2",
     "mysql": "^2.15.0",
@@ -34,10 +36,12 @@
     "otplib": "^12.0.1",
     "path": "^0.12.7",
     "qrcode": "^1.4.4",
+    "randomstring": "^1.2.2",
     "redis": "^3.1.2",
     "sha256": "^0.2.0",
     "vision": "^4.1.1",
-    "winston": "^2.3.1"
+    "winston": "^2.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^4.2.0",

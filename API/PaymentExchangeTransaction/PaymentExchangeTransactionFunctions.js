@@ -9,7 +9,8 @@ const { WALLET_TYPE } = require('../Wallet/WalletConstant');
 const { EXCHANGE_ERROR, EXCHANGE_TRX_STATUS } = require('./PaymentExchangeTransactionConstant');
 const { USER_MEMBER_LEVEL } = require('../AppUsers/AppUserConstant');
 const Logger = require('../../utils/logging');
-
+const AppUserFunctions = require('../AppUsers/AppUsersFunctions')
+const { USER_ERROR } = require('../AppUsers/AppUserConstant');
 async function _acceptExchangeRequest(transaction, staff, receiveWallet) {
   let updatedTransactionData = {
     paymentStatus: EXCHANGE_TRX_STATUS.COMPLETED
@@ -33,7 +34,7 @@ async function _acceptExchangeRequest(transaction, staff, receiveWallet) {
     //find wallet of sender
     let senderWallet = await WalletBalanceUnitView.find({
       appUserId: transaction.appUserId,
-      walletType: WALLET_TYPE.POINT,
+      walletType: WALLET_TYPE.USDT,
     });
     if (senderWallet && senderWallet.length > 0) {
       senderWallet = senderWallet[0];
@@ -179,7 +180,7 @@ async function userAcceptExchangeRequest(transactionRequestId, user) {
       //find wallet of receiver, to make sure they have enough money to pay for exchanging amount
       let receiverWallet = await WalletBalanceUnitView.find({
         walletId: transaction.receiveWalletId,
-        walletType: WALLET_TYPE.POINT,
+        walletType: WALLET_TYPE.USDT,
       });
       if (receiverWallet && receiverWallet.length > 0) {
         receiverWallet = receiverWallet[0];
@@ -274,7 +275,7 @@ async function createExchangeRequest(user, exchangeAmount, balanceUnitId) {
       resolve(undefined);
       return;
     }
-    
+
     //validate if wallet have enough balance
     let originWallet = await WalletBalanceUnitView.find({
       appUserId: user.appUserId,
@@ -325,7 +326,7 @@ async function createExchangeRequest(user, exchangeAmount, balanceUnitId) {
       //find receiver wallet id
       let receiverWallet = await WalletBalanceUnitView.find({
         appUserId: user.referUserId,
-        walletType: WALLET_TYPE.POINT,
+        walletType: WALLET_TYPE.USDT,
       });
       if (!receiverWallet || receiverWallet.length < 1) {
         Logger.error(`user crypto ${user.referUserId} receiverWallet is invalid`);
@@ -375,11 +376,171 @@ async function userCancelExchangeRequest(transactionRequestId) {
   });
 }
 
+async function requestExchangeFACtoUSDT(user, paymentAmount, walletType) {
+  return new Promise(async (resolve, reject) => {
+    if (user.appUserId === undefined) {
+      Logger.error(`createExchangeRequest invalid user`);
+      resolve(undefined);
+      return;
+    }
+    //validate if wallet have enough balance
+    let originWallet = await WalletBalanceUnitView.find({
+      appUserId: user.appUserId,
+      walletType: walletType,
+    });
+
+    if (!originWallet || originWallet.length < 1) {
+      Logger.error(`user ${user.appUserId} crypto (originWallet) do not have balance for unitId ${balanceUnitId}`);
+      //notify to front-end this error
+      reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      return;
+    }
+    originWallet = originWallet[0];
+    if (originWallet.balance < 0 || originWallet.balance - paymentAmount < 0) {
+      Logger.error("wallet do not have enough amount");
+      //notify to front-end this error
+      reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      return;
+    }
+    //find receiver wallet id
+    let receiverWallet = await WalletBalanceUnitView.find({
+      appUserId: user.appUserId,
+      walletType: WALLET_TYPE.USDT,
+    });
+    if (!receiverWallet || receiverWallet.length < 1) {
+      Logger.error(`user crypto ${user.referUserId} receiverWallet is invalid`);
+      resolve(undefined);
+      return;
+    }
+    receiverWallet = receiverWallet[0];
+    let transactionData = {
+      appUserId: user.appUserId,
+      sendWalletId: originWallet.walletId,
+      sendWalletBalanceBefore: originWallet.balance,
+      sendWalletBalanceAfter: originWallet.balance - paymentAmount,
+      paymentAmount: paymentAmount,
+      receiveWalletId: receiverWallet.walletId,
+    };
+    let result = await ExchangeTransactionResource.insert(transactionData);
+
+    if (result) {
+      const SystemConfigurationsFunction = require('../SystemConfigurations/SystemConfigurationsFunction');
+      let exchangeRate = await SystemConfigurationsFunction.getExchangeRate();
+      let receiveAmount = paymentAmount * exchangeRate;
+      let updatedTransactionData = {};
+      updatedTransactionData.receiveAmount = receiveAmount;
+      updatedTransactionData.exchangeRate = exchangeRate;
+      updatedTransactionData.receiveWalletBalanceBefore = receiverWallet.balance;
+      updatedTransactionData.receiveWalletBalanceAfter = receiverWallet.balance + receiveAmount;
+
+      let updateResult = await ExchangeTransactionResource.updateById(result[0], updatedTransactionData);
+      if (updateResult) {
+        let resultDecrement = await WalletResourceAccess.decrementBalance(originWallet.walletId, paymentAmount);
+        if (!resultDecrement) {
+          Logger.error(`failse to decrement`);
+          resolve(undefined);
+          return;
+        }
+        let resultIncre = await WalletResourceAccess.incrementBalance(receiverWallet.walletId, receiveAmount);
+        if (!resultIncre) {
+          Logger.error(`failse to increment`);
+          resolve(undefined);
+          return;
+        }
+        resolve(result);
+      }
+      return;
+    } else {
+      Logger.error("insert exchange trx error");
+      resolve(undefined);
+      return;
+    }
+  });
+}
+
+async function requestExchangeBonusToFAC(user, paymentAmount, walletType) {
+  return new Promise(async (resolve, reject) => {
+    if (user.appUserId === undefined) {
+      Logger.error(`createExchangeRequest invalid user`);
+      resolve(undefined);
+      return;
+    }
+    //validate if wallet have enough balance
+    let originWallet = await WalletBalanceUnitView.find({
+      appUserId: user.appUserId,
+      walletType: walletType,
+    });
+
+    if (!originWallet || originWallet.length < 1) {
+      Logger.error(`user ${user.appUserId} crypto (originWallet) do not have balance for unitId ${balanceUnitId}`);
+      //notify to front-end this error
+      reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      return;
+    }
+    originWallet = originWallet[0];
+    if (originWallet.balance < 0 || originWallet.balance - paymentAmount < 0) {
+      Logger.error("wallet do not have enough amount");
+      //notify to front-end this error
+      reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      return;
+    }
+    //find receiver wallet id
+    let receiverWallet = await WalletBalanceUnitView.find({
+      appUserId: user.appUserId,
+      walletType: WALLET_TYPE.FAC,
+    });
+    if (!receiverWallet || receiverWallet.length < 1) {
+      Logger.error(`user crypto ${user.referUserId} receiverWallet is invalid`);
+      resolve(undefined);
+      return;
+    }
+    receiverWallet = receiverWallet[0];
+    let transactionData = {
+      appUserId: user.appUserId,
+      sendWalletId: originWallet.walletId,
+      sendWalletBalanceBefore: originWallet.balance,
+      sendWalletBalanceAfter: originWallet.balance - paymentAmount,
+      paymentAmount: paymentAmount,
+      receiveWalletId: receiverWallet.walletId
+    };
+    let result = await ExchangeTransactionResource.insert(transactionData);
+
+    if (result) {
+      let updatedTransactionData = {};
+      updatedTransactionData.receiveWalletBalanceBefore = receiverWallet.balance;
+      updatedTransactionData.receiveWalletBalanceAfter = receiverWallet.balance + paymentAmount;
+      let updateResult = await ExchangeTransactionResource.updateById(result[0], updatedTransactionData);
+      if (updateResult) {
+        let resultDecrement = await WalletResourceAccess.decrementBalance(originWallet.walletId, paymentAmount);
+        if (!resultDecrement) {
+          Logger.error(`failse to decrement`);
+          resolve(undefined);
+          return;
+        }
+        let resultIncre = await WalletResourceAccess.incrementBalance(receiverWallet.walletId, paymentAmount);
+        if (!resultIncre) {
+          Logger.error(`failse to increment`);
+          resolve(undefined);
+          return;
+        }
+        resolve(result);
+      }
+      return;
+    } else {
+      Logger.error("insert exchange trx error");
+      resolve(undefined);
+      return;
+    }
+  });
+}
+
 module.exports = {
   staffAcceptExchangeRequest,
   userAcceptExchangeRequest,
   staffRejectExchangeRequest,
   userRejectExchangeRequest,
   userCancelExchangeRequest,
-  createExchangeRequest
+  createExchangeRequest,
+  requestExchangeFACtoUSDT,
+  requestExchangeBonusToFAC
 }

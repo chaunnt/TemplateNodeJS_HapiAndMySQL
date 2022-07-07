@@ -8,6 +8,7 @@ const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;
+const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 
 const insertSchema = {
   id: Joi.number().required(),
@@ -20,21 +21,13 @@ const updateSchema = {
 
 const filterSchema = {
   appUserId: Joi.number(),
-  userName: Joi.string(),
-  walletAddress: Joi.string(),
   walletType: Joi.string(),
   createdAt: Joi.string(),
-  firstName: Joi.string(),
-  lastName: Joi.string(),
-  email: Joi.string(),
   memberLevelName: Joi.string(),
   active: Joi.number(),
-  ipAddress: Joi.string(),
-  phoneNumber: Joi.string(),
   paymentStatus: Joi.string(),
-  paymentRef: Joi.string(),
-  paymentApproveDate: Joi.string(),
   paymentMethodId: Joi.number(),
+  paymentCategory: Joi.string(),
 };
 
 module.exports = {
@@ -132,7 +125,39 @@ module.exports = {
       Response(req, res, "findById");
     }
   },
-  requestWithdraw: {
+  exportData: {
+    tags: ["api", `${moduleName}`],
+    description: `exportData ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        searchText: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "exportData");
+    }
+  },
+  requestWithdrawUSDT: {
     tags: ["api", `${moduleName}`],
     description: `requestWithdraw ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
@@ -144,9 +169,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        paymentAmount: Joi.number().required().min(0).default(1000000),
+        paymentAmount: Joi.number().required().min(0.00001).default(1000000),
         secondaryPassword: Joi.string().min(6),
         paymentNote: Joi.string(),
+        paymentCategory: Joi.string(),
+        paymentRefAmount: Joi.number().min(0),
       })
     },
     handler: function (req, res) {
@@ -154,7 +181,7 @@ module.exports = {
         res("maintain").code(500);
         return;
       }
-      Response(req, res, "requestWithdraw");
+      Response(req, res, "requestWithdrawUSDT");
     }
   },
   getList: {
@@ -199,8 +226,7 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0),
-        paymentNote: Joi.string(),
+        id: Joi.number().min(0)
       })
     },
     handler: function (req, res) {
@@ -223,8 +249,7 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0),
-        paymentNote: Joi.string(),
+        id: Joi.number().min(0)
       })
     },
     handler: function (req, res) {
@@ -233,6 +258,91 @@ module.exports = {
         return;
       }
       Response(req, res, "denyWithdrawTransaction");
+    }
+  },
+  withdrawHistoryUSDT: {
+    tags: ["api", `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "withdrawHistoryUSDT");
+    }
+  },
+  requestWithdrawBTC: {
+    tags: ["api", `${moduleName}`],
+    description: `requestWithdraw ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(0.00001).default(1000000),
+        secondaryPassword: Joi.string().min(6),
+        paymentNote: Joi.string()
+      })
+    },
+    handler: function (req, res) {
+      if (SystemStatus.withdraw === false) {
+        res("maintain").code(500);
+        return;
+      }
+      Response(req, res, "requestWithdrawBTC");
+    }
+  },
+  withdrawHistoryBTC: {
+    tags: ["api", `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string()
+            .default("createdAt")
+            .allow(""),
+          value: Joi.string()
+            .default("desc")
+            .allow("")
+        })
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "withdrawHistoryBTC");
     }
   },
 };

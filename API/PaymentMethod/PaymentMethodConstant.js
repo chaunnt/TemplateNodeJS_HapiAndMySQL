@@ -8,5 +8,6 @@ module.exports = {
     ATM_BANK: 0,
     CREDIT_DEBIT: 1,
     ONLINE: 2,
+    CRYPTO: 3,
   }
 }

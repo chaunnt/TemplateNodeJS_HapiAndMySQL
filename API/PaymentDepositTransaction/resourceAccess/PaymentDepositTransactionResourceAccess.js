@@ -2,7 +2,7 @@
 require("dotenv").config();
 const { DB, timestamps } = require("../../../config/database")
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransactionConstant');
+const { DEPOSIT_TRX_STATUS, DEPOSIT_TRX_CATEGORY, DEPOSIT_TRX_UNIT, DEPOSIT_TRX_TYPE } = require('../PaymentDepositTransactionConstant');
 
 const tableName = "PaymentDepositTransaction";
 const primaryKeyField = "paymentDepositTransactionId";
@@ -18,15 +18,21 @@ async function createTable() {
           table.integer('walletId');
           table.integer('referId'); // nguoi gioi thieu
           table.integer('paymentMethodId');
-          table.float('paymentAmount', 48, 24).defaultTo(0);
-          table.float('paymentRewardAmount', 48, 24).defaultTo(0);
-          table.string('paymentUnit'); //don vi tien
+          table.float('paymentAmount', 48, 24).defaultTo(0); //số tiền nạp
+          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //số tiền được thưởng
+          table.float('paymentRefAmount', 48, 24).defaultTo(0); //số tiền quy đổi hoặc tham chiếu 
+          table.string('paymentUnit').defaultTo(DEPOSIT_TRX_UNIT.USDT); //don vi tien
+          table.string('paymentType').defaultTo(DEPOSIT_TRX_TYPE.USER_DEPOSIT);
           table.string('paymentStatus').defaultTo(DEPOSIT_TRX_STATUS.NEW);
-          table.string('paymentTransactionCode', 500).nullable();
-          table.string('paymentNote').defaultTo(''); //Ghi chu hoa don
-          table.string('paymentRef').defaultTo(''); //Ma hoa don ngoai thuc te
+          table.string('paymentCategory').defaultTo(DEPOSIT_TRX_CATEGORY.BANK);
+          table.string('paymentNote').defaultTo(''); //Ghi chu
+          table.string('paymentRef').defaultTo(''); //Ma hoa don,ma giao dich thuc te 
+          table.string('paymentOwner').defaultTo(''); //ten nguoi gui, ten tai khoan
+          table.string('paymentOriginSource').defaultTo(''); //ten ngan hang, ten mang (blockchain)
+          table.string('paymentOriginName').defaultTo(''); //so tai khoan, dia chi vi
           table.timestamp('paymentApproveDate',{ useTz: true }); // ngay duyet
           table.integer('paymentPICId');  // nguoi duyet
+          table.integer('paymentStaffId');  // nguoi tạo, người quản lý
           timestamps(table);
         })
         .then(() => {
@@ -49,10 +55,6 @@ async function updateById(id, data) {
   let dataId = {};
   dataId[primaryKeyField] = id;
   return await Common.updateById(tableName, dataId, data);
-}
-
-async function findById(id) {
-  return await Common.findById(tableName, primaryKeyField, id);
 }
 
 async function find(filter, skip, limit, order) {
@@ -116,7 +118,6 @@ module.exports = {
   updateById,
   initDB,
   customSearch,
-  findById,
   modelName: tableName,
   customSum,
   sumAmountDistinctByDate

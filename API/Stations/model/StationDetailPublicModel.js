@@ -5,6 +5,7 @@ const Joi = require("joi");
 
 const schema = Joi.object({
   stationsName: Joi.string().required(),
+  stationsDescription: Joi.string(),
   stationUrl: Joi.string().allow(''),
   stationsLogo: Joi.string().allow(''),
   stationsHotline: Joi.string().allow(''),
@@ -21,6 +22,7 @@ const schema = Joi.object({
 function fromData(data) {
   let modelData = {
     stationsName: data.stationsName,
+    stationsDescription: data.stationsDescription,
     stationUrl: data.stationUrl,
     stationsLogo: data.stationsLogo,
     stationsColorset: data.stationsColorset,

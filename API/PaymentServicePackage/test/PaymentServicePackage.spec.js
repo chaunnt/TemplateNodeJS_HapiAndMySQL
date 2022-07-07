@@ -45,7 +45,8 @@ describe(`Tests PaymentServicePackage`, () => {
       packageDuration: faker.random.number({
         min: 1,
         max: 20
-      })
+      }),
+      packageType : Constant.PACKAGE_TYPE.A1000FAC.type
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)

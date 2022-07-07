@@ -8,154 +8,163 @@ const { STATION_STATUS } = require('../StationsConstants');
 const tableName = "Stations";
 const primaryKeyField = "stationsId";
 
-function _getDefaultCheckingConfig() {
-  let defaultConfig = [
-    {
-      stepIndex: 0,
-      stepLabel: "Nhận xe cuối dây chuyền",
-      stepVoice: "Nhận xe cuối dây chuyền",
-      stepDuration: 10, //minutes
-      stepVoiceUrl: `https://${process.env.HOST_NAME}/uploads/voices/nhan-xe-cuoi-day-chuyen.mp3`
-    },
-    {
-      stepIndex: 1,
-      stepLabel: "Nộp phí đường bộ cửa 1",
-      stepVoice: "Nộp phí đường bộ cửa 1",
-      stepDuration: 10, //minutes
-      stepVoiceUrl: `https://${process.env.HOST_NAME}/uploads/voices/nop-phi-duong-bo-cua-1.mp3`
-    },
-    {
-      stepIndex: 2,
-      stepLabel: "Nhận giấy tờ xe cửa 2",
-      stepVoice: "Nhận giấy tờ xe cửa 2",
-      stepDuration: 10, //minutes
-      stepVoiceUrl: `https://${process.env.HOST_NAME}/uploads/voices/nhan-giay-to-xe-cua-2.mp3`
-    },
-    {
-      stepIndex: 3,
-      stepLabel: "Ra xe, chờ dán tem",
-      stepVoice: "Ra xe, chờ dán tem",
-      stepDuration: 10, //minutes
-      stepVoiceUrl: `https://${process.env.HOST_NAME}/uploads/voices/ra-xe-cho-dan-tem.mp3`
-    },
-    {
-      stepIndex: 4,
-      stepLabel: "Trả kết quả kiểm định cửa 4",
-      stepVoice: "Trả kết quả kiểm định cửa 4",
-      stepDuration: 10, //minutes
-      stepVoiceUrl: `https://${process.env.HOST_NAME}/uploads/voices/tra-ket-qua-kiem-dinh-cua-4.mp3`
-    }
-  ]
-  return JSON.stringify(defaultConfig);
-}
-
 function _getDefaultBookingConfig() {
   let defaultBookingConfig = [
     {
       index: 0,
-      time: "7h-7h30",
+      time: "07:00 - 11:30",
       limit: 4
     },
     {
       index: 1,
-      time: "7h30-8h",
+      time: "13:30 - 22:00",
       limit: 4
     },
-    {
-      index: 2,
-      time: "8h-8h30",
-      limit: 4
-    },
-    {
-      index: 3,
-      time: "8h30-9h",
-      limit: 4
-    },
-    {
-      index: 4,
-      time: "9h-9h30",
-      limit: 4
-    },
-    {
-      index: 5,
-      time: "9h30-10h",
-      limit: 4
-    },
-    {
-      index: 6,
-      time: "10h-10h30",
-      limit: 4
-    },
-    {
-      index: 7,
-      time: "10h30-11h",
-      limit: 4
-    },
-    {
-      index: 8,
-      time: "11h-11h30",
-      limit: 4
-    },
-    {
-      index: 9,
-      time: "11h30-12h",
-      limit: 4
-    },
-    {
-      index: 10,
-      time: "12h-12h30",
-      limit: 4
-    },
-    {
-      index: 11,
-      time: "12h30-13h",
-      limit: 4
-    },
-    {
-      index: 12,
-      time: "13h-13h30",
-      limit: 4
-    },
-    {
-      index: 13,
-      time: "13h30-14h",
-      limit: 4
-    },
-    {
-      index: 14,
-      time: "14h-14h30",
-      limit: 4
-    },
-    {
-      index: 15,
-      time: "14h30-15h",
-      limit: 4
-    },
-    {
-      index: 16,
-      time: "15h30-16h",
-      limit: 4
-    },
-    {
-      index: 17,
-      time: "16h-16h30",
-      limit: 4
-    },
-    {
-      index: 18,
-      time: "16h30-17h",
-      limit: 4
-    },
-    {
-      index: 19,
-      time: "17h-17h30",
-      limit: 4
-    },
-    {
-      index: 20,
-      time: "17h30-18h",
-      limit: 4
-    }
+    // {
+    //   index: 2,
+    //   time: "08:00 - 08:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 3,
+    //   time: "08:30 - 09:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 4,
+    //   time: "09:00 - 09:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 5,
+    //   time: "09:30 - 10:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 6,
+    //   time: "10:00 - 10:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 7,
+    //   time: "10:30 - 11:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 8,
+    //   time: "11:00 - 11:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 9,
+    //   time: "11:30 - 12:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 10,
+    //   time: "12:00 - 12:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 11,
+    //   time: "12:30 - 13:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 12,
+    //   time: "13:00 - 13:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 13,
+    //   time: "13:30 - 14:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 14,
+    //   time: "14:00 - 14:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 15,
+    //   time: "14:30 - 15:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 16,
+    //   time: "15:30 - 16:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 17,
+    //   time: "16:00 - 16:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 18,
+    //   time: "16:30 - 17:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 19,
+    //   time: "17:00 - 17:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 20,
+    //   time: "17:30 - 18:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 21,
+    //   time: "18:00 - 18:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 22,
+    //   time: "18:30 - 19:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 23,
+    //   time: "19:00 - 19:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 24,
+    //   time: "19:30 - 20:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 25,
+    //   time: "20:00 - 20:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 26,
+    //   time: "20:30 - 21:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 27,
+    //   time: "21:00 - 21:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 28,
+    //   time: "21:30 - 22:00",
+    //   limit: 4
+    // },
+    // {
+    //   index: 29,
+    //   time: "22:00 - 22:30",
+    //   limit: 4
+    // },
+    // {
+    //   index: 30,
+    //   time: "22:30 - 23:00",
+    //   limit: 4
+    // }
   ]
   return JSON.stringify(defaultBookingConfig);
 }
@@ -168,30 +177,16 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments('stationsId').primary();
           table.string('stationsName');
+          table.text('stationsDescription','longtext');
           table.string('stationUrl').defaultTo('');
           table.string('stationWebhookUrl').defaultTo('');
           table.string('stationBookingConfig', 2000).defaultTo(_getDefaultBookingConfig());
-          table.string('stationCheckingConfig', 2000).defaultTo(_getDefaultCheckingConfig());
-          table.boolean('stationCheckingAuto').defaultTo(false);
-          table.boolean('stationUseCustomSMTP').defaultTo(false);
-          table.string('stationCustomSMTPConfig', 2000).defaultTo('');
-          table.boolean('stationUseCustomSMSBrand').defaultTo(false);
-          table.string('stationCustomSMSBrandConfig', 2000).defaultTo('');
-          table.boolean('stationEnableUseZNS').defaultTo(false);
-          table.boolean('stationEnableUseSMS').defaultTo(false);
-          table.boolean('stationUseCustomZNS').defaultTo(false);
-          table.string('stationCustomZNSConfig', 2000).defaultTo('');
-          table.string('stationsColorset').defaultTo("black");
-          table.string('stationsLogo', 500).defaultTo("");
-          table.string('stationsHotline', 500).defaultTo("");
-          table.string('stationsEmail').defaultTo("");
-          table.string('stationsAddress', 500).defaultTo("");
+          table.string('stationsLogo', 500).defaultTo(`https://${process.env.HOST_NAME}/uploads/avatar.png`);
+          table.string('stationsLogoThumbnails', 500).defaultTo(`https://${process.env.HOST_NAME}/uploads/avatar.png`);
+          table.string('stationsHotline', 500).defaultTo("999999999");
+          table.string('stationsEmail').defaultTo("stationemail@gmail.com");
+          table.string('stationsAddress', 500).defaultTo("1 street, VietNam");
           table.integer('stationStatus').defaultTo(STATION_STATUS.ACTIVE);
-          table.string('stationsName');
-          //các field dành cho module quảng cáo
-          table.boolean('stationsEnableAd').defaultTo(false); //Hiển thị quảng cáo
-          table.string('stationsCustomAdBannerLeft').defaultTo(''); //Link quảng cáo trên trang thông báo (bên trái)
-          table.string('stationsCustomAdBannerRight').defaultTo(''); //Link quảng cáo trên trang thông báo (bên phải)
           timestamps(table);
         })
         .then(async () => {
@@ -228,16 +223,24 @@ async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
 
-
-  if(filterData.stationsName){
-    queryBuilder.where('stationsName', 'like', `%${filterData.stationsName}%`)
-    delete filterData.stationsName;
+  if (searchText) {
+    queryBuilder.where(function () {
+      this.orWhere('stationsHotline', 'like', `%${searchText}%`)
+        .orWhere('stationsEmail', 'like', `%${searchText}%`)
+        .orWhere('stationsAddress', 'like', `%${searchText}%`)
+        .orWhere('stationsName', 'like', `%${searchText}%`)
+    });
+  } else {
+    if(filterData.stationsName){
+      queryBuilder.where('stationsName', 'like', `%${filterData.stationsName}%`)
+      delete filterData.stationsName;
+    }
   }
-  
+
   queryBuilder.where(filterData);
 
   if (limit) {
@@ -259,18 +262,18 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, order);
+async function customSearch(filter, skip, limit, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
+async function customCount(filter, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, order);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`)
         .then(records => {
-          resolve(records[0].count);
+          resolve(records);
         });
     } catch (e) {
       Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);

@@ -10,10 +10,10 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 const { BET_STATUS , BET_TYPE, BET_AMOUNT, BET_UNIT} = require('../BetRecordsConstant');
 
 const insertSchema = {
-  userId: Joi.number().required(),
   betRecordAmountIn: Joi.number().min(BET_AMOUNT[0]).max(BET_AMOUNT[BET_AMOUNT.length - 1]).default(BET_AMOUNT[0]).required(),
-  betRecordType: Joi.string().required().allow([BET_TYPE.UP, BET_TYPE.DOWN, BET_TYPE.ODD, BET_TYPE.EVEN]),
-  betRecordUnit: Joi.string().required().allow([BET_UNIT.ETH, BET_UNIT.BTC]),
+  sectionName: Joi.string().required(),
+  gameRecordId: Joi.number().required(),
+  betRecordType: Joi.number().required(),
 };
 
 const updateSchema = {
@@ -22,7 +22,10 @@ const updateSchema = {
 }
 
 const filterSchema = {
-  betRecordUnit: Joi.string(),
+  // userId: Joi.number(),
+  // betRecordUnit: Joi.string(),
+  // gameRecordId: Joi.number(),
+  betRecordType: Joi.number().default(BET_TYPE.FAC),
 };
 
 module.exports = {
@@ -75,9 +78,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        filter: Joi.object(filterSchema),
+        filter: Joi.object(filterSchema).required(),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string()
@@ -133,6 +138,26 @@ module.exports = {
       Response(req, res, "summaryUser");
     }
   },
+  userSumaryWinLoseAmount: {
+    tags: ["api", `${moduleName}`],
+    description: `userSumaryWinLoseAmount ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        startDate: Joi.string().default(new Date().toISOString()),
+        endDate: Joi.string().default(new Date().toISOString()),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "userSumaryWinLoseAmount");
+    }
+  },
   summaryAll: {
     tags: ["api", `${moduleName}`],
     description: `summaryAll ${moduleName}`,
@@ -166,9 +191,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        filter: Joi.object(filterSchema),
+        filter: Joi.object(filterSchema).default({}),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
         order: Joi.object({
           key: Joi.string()
             .default("createdAt")
@@ -181,6 +208,40 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "getList");
+    }
+  },
+  userPlaceBetRecord: {
+    tags: ["api", `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(insertSchema)
+    },
+    handler: function (req, res) {
+      Response(req, res, "userPlaceBetRecord");
+    }
+  },
+  getListPublicFeeds: {
+    tags: ["api", `${moduleName}`],
+    description: `getListPublicFeeds ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
+    // auth: {
+    //   strategy: 'jwt',
+    // },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({})
+    },
+    handler: function (req, res) {
+      Response(req, res, "getListPublicFeeds");
     }
   },
 };

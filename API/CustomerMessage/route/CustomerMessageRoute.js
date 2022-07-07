@@ -7,12 +7,17 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
-const { MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
+const { MESSAGE_CATEGORY, MESSAGE_TYPE, MESSAGE_STATUS, MESSAGE_TOPIC } = require('../CustomerMessageConstant');
 
 const insertSchema = {
-  customerMessageCategories: Joi.string(),
-  customerMessageContent: Joi.string(),
-  customerRecordPhone:Joi.string(),
+  groupCustomerMessageCategories: Joi.string().default(MESSAGE_CATEGORY.FIREBASE_PUSH),
+  // groupCustomerMessageTopic: Joi.string().default(MESSAGE_TOPIC.GENERAL),
+  // groupCustomerMessageStatus: Joi.string().default(MESSAGE_STATUS.NEW),
+  // groupCustomerMessageType: Joi.string().default(MESSAGE_TYPE.GENERAL),
+  groupCustomerMessageContent: Joi.string().required(),
+  groupCustomerMessageTitle: Joi.string().required(),
+  groupCustomerMessageImage: Joi.string(),
+  groupCustomerMessageTemplateId: Joi.string(),
 };
 
 const updateSchema = {
@@ -21,21 +26,14 @@ const updateSchema = {
 }
 
 const filterSchema = {
-  ...insertSchema
+  groupCustomerMessageStatus: Joi.string().default(MESSAGE_STATUS.NEW),
 };
-const filterCustomerRecordSchema = {
-  customerRecordFullName: Joi.string(),
-  customerRecordPhone: Joi.string(),
-  customerRecordPlatenumber: Joi.string().alphanum(),
-  customerRecordState: Joi.number(),
-  customerRecordEmail: Joi.string().email(),
-  customerRecordPlateImageUrl: Joi.string(),
-}
+
 module.exports = {
   insert: {
     tags: ["api", `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -49,23 +47,10 @@ module.exports = {
       Response(req, res, "insert");
     }
   },
-  sendsms: {
-    tags: ["api", `${moduleName}`],
-    description: `insert ${moduleName}`,
-    validate: {
-      payload: Joi.object({
-        message: Joi.string(),
-        phoneNumber: Joi.string()
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "sendsms");
-    }
-  },
   updateById: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -85,7 +70,7 @@ module.exports = {
   find: {
     tags: ["api", `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -117,7 +102,7 @@ module.exports = {
   findById: {
     tags: ["api", `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -131,103 +116,6 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "findById");
-    }
-  },
-  searchCustomerMessage: {
-    tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
-    validate: {
-      payload: Joi.object({
-        filter: Joi.object({
-          customerMessageUpdateStatus: Joi.number(),
-          customerMessageCategories: Joi.string(),
-          customerMessageName: Joi.string(),
-        }),
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        order: Joi.object({
-          key: Joi.string().default("updatedAt"),
-          value: Joi.string().default("desc")
-        })
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "searchCustomerMessage");
-    }
-  },
-  summaryView: {
-    tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
-    validate: {
-      payload: Joi.object({
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "summaryView");
-    }
-  },
-  sendMessageByFilter: {
-    tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        customerMessageContent:Joi.string(),
-        customerMessageCategories:Joi.string().default(MESSAGE_CATEGORY.EMAIL).allow([MESSAGE_CATEGORY.EMAIL, MESSAGE_CATEGORY.SMS]),
-        customerMessageTemplateId: Joi.number().min(0),
-        filter: Joi.object(filterCustomerRecordSchema),
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "sendMessageByFilter");
-    }
-  },
-  sendMessageByCustomerList: {
-    tags: ["api", `${moduleName}`],
-    description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        customerMessageContent:Joi.string(),
-        customerMessageCategories:Joi.string().default(MESSAGE_CATEGORY.EMAIL).allow([MESSAGE_CATEGORY.EMAIL, MESSAGE_CATEGORY.SMS]),
-        customerRecordIdList: Joi.array().items(Joi.number()),
-        customerMessageTemplateId: Joi.number().min(0)
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "sendMessageByCustomerList");
-    }
-  },
-  findTemplates: {
-    tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-      })
-    },
-    handler: function (req, res) {
-      Response(req, res, "findTemplates");
     }
   },
 };

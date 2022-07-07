@@ -4,7 +4,7 @@ require("dotenv").config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require("../../../config/database");
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { PACKAGE_STATUS, PACKAGE_CATEGORY } = require('../PaymentServicePackageConstant');
+const { PACKAGE_STATUS, PACKAGE_CATEGORY, PACKAGE_TYPE } = require('../PaymentServicePackageConstant');
 const tableName = "PaymentServicePackage";
 const primaryKeyField = "paymentServicePackageId";
 
@@ -16,16 +16,15 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
           table.string('packageName'); //<< Tên gói cước 
+          table.string('packageType'); //<< Loai goi cuoc
           table.string('packageDescription', 500); //<< Mô tả gói cước 
           table.double('packagePrice'); // << gia goi cuoc
           table.double('packageDiscountPrice').nullable(); // << gia goi cuoc khuyen mai
           table.double('packagePerformance'); // << số coin / ngay
           table.string('packageCategory').defaultTo(PACKAGE_CATEGORY.NORMAL); // << phan loai
-          table.double('packageDuration').defaultTo(1); // << thoi han cua package
-          table.integer('packageUnitId');
-          table.integer('packageStatus').defaultTo(PACKAGE_STATUS.NORMAL); // HOT-NEW-NORMAL
-          table.integer('referralPackageCountRequired').nullable(); // tong so tien can de kich hoat bonus
-          table.integer('referralUserCountRequired').nullable(); //so luong user can de kich hoat bonus
+          table.double('packageDuration').defaultTo(365); // << thoi han cua package
+          table.integer('packageUnitId'); // don vi coin map `walletBalanceUnitId`
+          table.integer('packageStatus').defaultTo(PACKAGE_STATUS.NEW); // HOT-NEW-NORMAL
           timestamps(table);
           table.index(`${primaryKeyField}`);
         })
@@ -42,25 +41,25 @@ async function createTable() {
 async function seeding() {
   let paymentPackages = [
     {
-      packageName: 'VIP1',
-      packageDescription: "this is vip package",
-      packagePrice: 5000000,
-      packagePerformance: 10,
-      packageUnitId: 2
+      packageName: 'A100FAC',
+      packageType: PACKAGE_TYPE.A100FAC.type,
+      packagePrice: 100,
+      packagePerformance: PACKAGE_TYPE.A100FAC.stage1,
+      packageUnitId: 1
     },
     {
-      packageName: 'VIP2',
-      packageDescription: "this is vip2 package",
-      packagePrice: 10000000,
-      packagePerformance: 20,
-      packageUnitId: 3
+      packageName: 'A500FAC',
+      packageType: PACKAGE_TYPE.A500FAC.type,
+      packagePrice: 500,
+      packagePerformance: PACKAGE_TYPE.A500FAC.stage1,
+      packageUnitId: 1
     },
     {
-      packageName: 'VIP3',
-      packageDescription: "this is vip3 package",
-      packagePrice: 15000000,
-      packagePerformance: 30,
-      packageUnitId: 4
+      packageName: 'A1000FAC',
+      packageType: PACKAGE_TYPE.A1000FAC.type,
+      packagePrice: 1000,
+      packagePerformance: PACKAGE_TYPE.A1000FAC.stage1,
+      packageUnitId: 1
     },
   ];
   return new Promise(async (resolve, reject) => {
@@ -109,10 +108,6 @@ async function countByReferral(filter, userReferralCount = 0, totalReferPayment 
   }
 
   queryBuilder.where({ isDeleted: 0 });
-
-  queryBuilder.where("referralUserCountRequired", "<=", userReferralCount);
-  queryBuilder.where("referralPackageCountRequired", "<=", totalReferPayment);
-
   queryBuilder.orderBy("createdAt", "desc")
 
   return new Promise((resolve, reject) => {

@@ -1,56 +1,92 @@
 /**
- * Created by A on 7/18/17.
+ * Created by Huu on 11/18/21.
  */
+
 "use strict";
-const moduleName = 'SystemConfigurations';
+const moduleName = "SystemConfigurations";
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
-const CommonFunctions = require('../../Common/CommonFunctions');
-
-const updateSchema = {
-  systemLeftBannerAd: Joi.string().allow(''),
-  systemRightBannerAd: Joi.string().allow('')
-}
+const CommonFunctions = require("../../Common/CommonFunctions");
 
 module.exports = {
-  updateById: {
+  find: {
     tags: ["api", `${moduleName}`],
-    description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    description: `find ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
     auth: {
-      strategy: 'jwt',
+      strategy: "jwt",
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({}),
+    },
+    handler: function (req, res) {
+      Response(req, res, "find");
+    },
+  },
+  updateConfigs: {
+    tags: ["api", `${moduleName}`],
+    description: `Update configs`,
+    pre: [
+      { method: CommonFunctions.verifyToken },
+      { method: CommonFunctions.verifyStaffToken },
+    ],
+    auth: {
+      strategy: "jwt",
     },
     validate: {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        //only support for 1 system configuration, then no need to specify id
-        data: Joi.object(updateSchema),
-      })
+        data: Joi.object({
+          telegramGroupUrl: Joi.string(),
+          fbMessengerUrl: Joi.string(),
+          zaloUrl: Joi.string(),
+          playStoreUrl: Joi.string(),
+          appStoreUrl: Joi.string(),
+          instagramUrl: Joi.string(),
+          facebookUrl: Joi.string(),
+          twitterUrl: Joi.string(),
+          youtubeUrl: Joi.string(),
+          websiteUrl: Joi.string(),
+          hotlineNumber: Joi.string(),
+          address: Joi.string(),
+          systemVersion: Joi.string(),
+          exchangeVNDPrice: Joi.number(),
+          bannerImage1: Joi.string(),
+          bannerImage2: Joi.string(),
+          bannerImage3: Joi.string(),
+          bannerImage4: Joi.string(),
+          bannerImage5: Joi.string(),
+        }),
+      }),
     },
     handler: function (req, res) {
       Response(req, res, "updateById");
-    }
-  },
-  findById: {
-    tags: ["api", `${moduleName}`],
-    description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
     },
+  },
+
+  userGetDetail: {
+    tags: ["api", `${moduleName}`],
+    description: `userGetDetail ${moduleName}`,
+    pre: [
+      { method: CommonFunctions.verifyTokenOrAllowEmpty },
+    ],
     validate: {
       headers: Joi.object({
-        authorization: Joi.string(),
+        authorization: Joi.string().allow(''),
       }).unknown(),
-      payload: Joi.object({
-        id: Joi.number().min(1).max(1).default(1) //only support for 1 system configuration
-      })
+      payload: Joi.object({}),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, "userGetDetail");
+    },
   },
 };

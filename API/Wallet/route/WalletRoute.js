@@ -7,6 +7,7 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require("joi");
 const Response = require("../../Common/route/response").setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
+const { WALLET_TYPE } = require('../WalletConstant');
 
 
 const insertSchema = {
@@ -21,6 +22,12 @@ const updateSchema = {
 const filterSchema = {
   ...insertSchema
 };
+
+const bodyAdjustBalance = {
+  appUserId: Joi.number().required().min(0),
+  paymentAmount: Joi.number().required().min(0),
+  walletType: Joi.string().required().allow([WALLET_TYPE.USDT, WALLET_TYPE.FAC, WALLET_TYPE.POINT, WALLET_TYPE.BTC])
+}
 
 module.exports = {
   insert: {
@@ -106,6 +113,40 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, "findById");
+    }
+  },
+  increaseBalance: {
+    tags: ["api", `${moduleName}`],
+    description: `insert ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(bodyAdjustBalance)
+    },
+    handler: function (req, res) {
+      Response(req, res, "increaseBalance");
+    }
+  },
+  decreaseBalance: {
+    tags: ["api", `${moduleName}`],
+    description: `insert ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(bodyAdjustBalance)
+    },
+    handler: function (req, res) {
+      Response(req, res, "decreaseBalance");
     }
   },
 };

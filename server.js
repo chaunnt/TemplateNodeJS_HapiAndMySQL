@@ -17,6 +17,7 @@ Glue.compose(Manifest, {relativeTo: __dirname}, (err, server) => {
     }
     server.start(() => {
         Logger.info('Server running at:', server.info.uri);
+        Logger.info('Server time: ' + new Date());
         if (process.env.NODE_ENV !== 'dev') {
           CronJob.startSchedule();
         }

@@ -5,6 +5,7 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = "Wallet";
 const primaryKeyField = "walletId";
 const { WALLET_TYPE, BALANCE_UNIT } = require('../WalletConstant');
+const Logger = require('../../../utils/logging');
 
 async function createTable() {
   console.log(`createTable ${tableName}`);

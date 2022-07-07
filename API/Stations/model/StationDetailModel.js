@@ -5,6 +5,7 @@ const Joi = require("joi");
 const schema = Joi.object({
   stationsId: Joi.number(),
   stationsName: Joi.string().required(),
+  stationsDescription: Joi.string().allow(''),
   stationUrl: Joi.string().allow(''),
   stationWebhookUrl: Joi.string().allow(''),
   stationBookingConfig: Joi.array().items({
@@ -12,20 +13,14 @@ const schema = Joi.object({
     time: Joi.string(),
     limit:Joi.number()
   }),
-  stationCheckingConfig: Joi.array().items({
-    stepIndex: Joi.number(),
-    stepVoice: Joi.string().allow(''),
-    stepLabel: Joi.string(),
-    stepDuration: Joi.number(),
-    stepVoiceUrl: Joi.string().allow(''),
-  }).required(),
   stationStatus: Joi.number(),
   isHidden: Joi.number(),
   isDeleted: Joi.number(),
   updatedAt: Joi.date(),
   createdAt: Joi.date(),
   stationsLogo: Joi.string().allow(''),
-  stationsColorset: Joi.string(),
+  stationsLogoThumbnails: Joi.string().allow(''),
+  stationsColorset: Joi.string().allow(''),
   stationCheckingAuto: Joi.number(),
   stationUseCustomSMTP: Joi.number(),
   stationCustomSMTPConfig: Joi.string().allow(''),
@@ -48,7 +43,6 @@ function fromData(data) {
     ...data, //copy all data from object
     stationUrl: data.stationUrl === null ? '' : `https://${data.stationUrl}`,
     stationBookingConfig: data.stationBookingConfig === '' ? {} : JSON.parse(data.stationBookingConfig),
-    stationCheckingConfig: data.stationCheckingConfig === '' ? {} : JSON.parse(data.stationCheckingConfig),
     stationsLogo: data.stationsLogo === null ? '' : data.stationsLogo,
     stationCustomSMTPConfig: data.stationCustomSMTPConfig === null ? '' : data.stationCustomSMTPConfig,
     stationCustomSMSBrandConfig: data.stationCustomSMSBrandConfig === null ? '' : data.stationCustomSMSBrandConfig,
@@ -59,6 +53,8 @@ function fromData(data) {
     stationsAddress: data.stationsAddress === null ? '' : data.stationsAddress,
     stationsCustomAdBannerLeft: data.stationsCustomAdBannerLeft === null ? '' : data.stationsCustomAdBannerLeft,
     stationsCustomAdBannerRight: data.stationsCustomAdBannerRight === null ? '' : data.stationsCustomAdBannerRight,
+    stationsLogoThumbnails: data.stationsLogoThumbnails === null ? '' : data.stationsLogoThumbnails,
+    stationsDescription: data.stationsDescription === null ? '' : data.stationsDescription,
   }
 
   let outputModel = schema.validate(modelData);

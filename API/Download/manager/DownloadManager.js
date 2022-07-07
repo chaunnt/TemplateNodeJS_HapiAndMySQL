@@ -2,8 +2,8 @@
  * Created by A on 7/18/17.
  */
 "use strict";
-const ExcelFunctions = require('../../../ThirdParty/Excel/ExcelFunction');
-const BooksResource = require('../../Books/resourceAccess/BooksResourceAccess');
+// const ExcelFunctions = require('../../../ThirdParty/Excel/ExcelFunction');
+// const BooksResource = require('../../Books/resourceAccess/BooksResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function downloadBookReport(req, res) {

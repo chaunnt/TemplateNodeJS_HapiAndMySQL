@@ -10,12 +10,14 @@ const AppUserFunctions = require('../../AppUsers/AppUsersFunctions');
 const { USER_ERROR } = require('../../AppUsers/AppUserConstant');
 const { EXCHANGE_TRX_STATUS, EXCHANGE_ERROR } = require('../PaymentExchangeTransactionConstant');
 const Logger = require('../../../utils/logging');
+const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 
-
-async function userExchangeHistory(req) {
+async function userExchangeFACHistory(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let filter = {};
+      filter.walletTypeBefore = WALLET_TYPE.FAC;
+      filter.walletTypeAfter = WALLET_TYPE.USDT
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
@@ -33,12 +35,51 @@ async function userExchangeHistory(req) {
       if (transactionList && transactionList.length > 0) {
         let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
+          total: 0,
+        });
+      }
+      resolve("success");
+    } catch (e) {
+      Logger.error(e);
+      reject("failed");
+    }
+  });
+};
+async function userExchangePOINTHistory(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = {};
+      filter.walletTypeBefore = WALLET_TYPE.POINT;
+      filter.walletTypeAfter = WALLET_TYPE.FAC
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      let startDate = req.payload.startDate;
+      let endDate = req.payload.endDate;
+      if (req.currentUser.appUserId) {
+        filter.appUserId = req.currentUser.appUserId;
+      } else {
+        reject("failed");
+        return;
+      }
+
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+
+      if (transactionList && transactionList.length > 0) {
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
+        resolve({
+          data: transactionList,
+          total: transactionCount[0].count,
+        });
+      } else {
+        resolve({
+          data: [],
           total: 0,
         });
       }
@@ -68,12 +109,12 @@ async function userReceiveHistory(req) {
       if (transactionList && transactionList.length > 0) {
         let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
@@ -108,12 +149,12 @@ async function userViewExchangeRequests(req) {
       if (transactionList && transactionList.length > 0) {
         let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
@@ -130,7 +171,7 @@ async function userRequestExchange(req) {
     try {
       let paymentAmount = req.payload.paymentAmount;
       let walletBalanceUnitId = req.payload.walletBalanceUnitId;
-      
+
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
         let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
@@ -163,9 +204,9 @@ async function userAcceptExchangeRequest(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let result = await ExchangeTransactionFunction.userAcceptExchangeRequest(req.payload.id, req.currentUser);
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
+      } else {
         reject("failed");
       }
     } catch (e) {
@@ -179,9 +220,9 @@ async function userDenyExchangeRequest(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let result = await ExchangeTransactionFunction.userRejectExchangeRequest(req.payload.id, req.currentUser);
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
+      } else {
         reject("failed");
       }
     } catch (e) {
@@ -195,9 +236,9 @@ async function userCancelExchangeRequest(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let result = await ExchangeTransactionFunction.userCancelExchangeRequest(req.payload.id, req.currentUser);
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
+      } else {
         reject("failed");
       }
     } catch (e) {
@@ -206,13 +247,75 @@ async function userCancelExchangeRequest(req) {
     }
   });
 };
-
+async function userExchangeFAC(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let paymentAmount = req.payload.paymentAmount;
+      let walletType = WALLET_TYPE.FAC;
+      if (req.payload.secondaryPassword) {
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
+        if (verifyResult === undefined) {
+          Logger.error(`${USER_ERROR.NOT_AUTHORIZED} ExchangeTransactionFunction.createExchangeRequest`);
+          reject(USER_ERROR.NOT_AUTHORIZED);
+          return;
+        }
+      }
+      let createResult = await ExchangeTransactionFunction.requestExchangeFACtoUSDT(req.currentUser, paymentAmount, walletType);
+      if (createResult) {
+        resolve(createResult);
+      } else {
+        Logger.error(`can not ExchangeTransactionFunction.createExchangeRequest`);
+        reject("can not create exchange transaction");
+      }
+    } catch (e) {
+      Logger.error(e);
+      if (e === EXCHANGE_ERROR.NOT_ENOUGH_BALANCE) {
+        reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      } else {
+        reject("failed");
+      }
+    }
+  });
+};
+async function userExchangePOINT(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let paymentAmount = req.payload.paymentAmount;
+      let walletType = WALLET_TYPE.POINT;
+      if (req.payload.secondaryPassword) {
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
+        if (verifyResult === undefined) {
+          Logger.error(`${USER_ERROR.NOT_AUTHORIZED} ExchangeTransactionFunction.createExchangeRequest`);
+          reject(USER_ERROR.NOT_AUTHORIZED);
+          return;
+        }
+      }
+      let createResult = await ExchangeTransactionFunction.requestExchangeBonusToFAC(req.currentUser, paymentAmount, walletType);
+      if (createResult) {
+        resolve(createResult);
+      } else {
+        Logger.error(`can not ExchangeTransactionFunction.createExchangeRequest`);
+        reject("can not create exchange transaction");
+      }
+    } catch (e) {
+      Logger.error(e);
+      if (e === EXCHANGE_ERROR.NOT_ENOUGH_BALANCE) {
+        reject(EXCHANGE_ERROR.NOT_ENOUGH_BALANCE);
+      } else {
+        reject("failed");
+      }
+    }
+  });
+};
 module.exports = {
   userRequestExchange,
-  userExchangeHistory,
+  userExchangeFACHistory,
   userReceiveHistory,
   userDenyExchangeRequest,
   userCancelExchangeRequest,
   userAcceptExchangeRequest,
   userViewExchangeRequests,
+  userExchangeFAC,
+  userExchangePOINT,
+  userExchangePOINTHistory
 };

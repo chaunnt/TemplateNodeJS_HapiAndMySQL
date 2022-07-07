@@ -1,69 +1,44 @@
-const Faker = require('faker');
-const AppUser = require('../API/AppUsers/resourceAccess/AppUsersResourceAccess');
-const BooksCategory = require('../API/BooksCategory/resourceAccess/BooksCategoryResourceAccess');
-const Books = require('../API/Books/resourceAccess/BooksResourceAccess');
-const { BOOK_STATUS, BOOK_VIEW_STATUS, BOOK_UPDATE_STATUS } = require('../API/Books/BookConstants');
-const UtilFunctions = require('../API/ApiUtils/utilFunctions');
-
-
-async function _seedBooks() {
-  let booksCategories = await BooksCategory.find({});
-  let bookList = [];
-  console.log(`create books`);
-  for (let i = 0; i < booksCategories.length; i++) {
-    const category = booksCategories[i];
-    let categories = [
-      category.booksCategoryCode,
-    ];
-
-    if (i < booksCategories.length - 3) {
-      categories.push(booksCategories[i + 2].booksCategoryCode);
-    }
-
-    if (i < booksCategories.length - 2) {
-      categories.push(booksCategories[i + 1].booksCategoryCode);
-    }
-
-    let booksName = "Truyện " + Faker.company.companyName();
-    let booksUrl = UtilFunctions.nonAccentVietnamese(booksName)
-    booksUrl = UtilFunctions.convertToURLFormat(booksUrl);
-    let dayViewed = UtilFunctions.randomInt(0, 9999) * (i % 7);
-
-    bookList.push({
-      booksName: booksName,
-      booksRating: i % 5,
-      booksCreators: Faker.name.findName(),
-      booksStatus: BOOK_STATUS.ACTIVE,
-      booksTotalChapter: i * 10,
-      booksTotalViewed: dayViewed * 365,
-      booksError: "",
-      booksTagCloud: "tag truyện 1;tag truyện 2",
-      booksCategories: categories.join(';'),
-      booksViewedStatus: i % 7 === 0 ? BOOK_VIEW_STATUS.HOT : BOOK_VIEW_STATUS.NORMAL,
-      booksUrl: booksUrl,
-      booksAvatar: "http://st.imageinstant.net/data/comics/138/mot-doi-thanh-tien.jpg",
-      dayViewed: dayViewed,
-      monthViewed: dayViewed * 30,
-      weekViewed: dayViewed * 7,
-      searchCount: parseInt(dayViewed / 5),
-      booksUpdateStatus: i % 13 === 0 ? BOOK_UPDATE_STATUS.COMPLETE : BOOK_UPDATE_STATUS.UPDATING
-    });
+async function _seedStations() {
+  console.log("_seedStations");
+  const StationsResource = require('../API/Stations/resourceAccess/StationsResourceAccess');
+  for (let i = 0; i < 10; i++) {
+    let initialStation = {
+      stationsName: `Chi nhánh ${i}: Phạm Văn Đồng`,
+      stationsDescription: `Là 1 trong hệ thống những phòng tập với không gian xanh, đầy đủ trang thiết bị hiện đại cùng huấn luyện viên chuyên nghiệp tạo nên môi trường lí tưởng để mang đến hiệu quả tập luyện cao nhất cho hội viên.
+      \r\nHệ thống phòng gym hiện đại nhất quận: Hệ thống lọc khí ion cùng trang thiết bị cao cấp nhập khẩu trực tiếp từ Mỹ, đem đến môi trường tập luyện tốt nhất cho bạn
+      \r\n\r\nĐa dạng về bài tập Gym - Yoga - Dance
+      \r\nBài tập thay đổi liên tục sau mỗi tuần khi có kết quả in đo chỉ số cơ thể, đảm bảo hoàn thành mục tiêu theo từng lộ trình
+      \r\n\r\nCam kết hiệu quả tập luyện
+      \r\n100% hội viên đã đạt được kết quả tập luyện khi thực hiện đúng chương trình Cá Nhân Hóa của XStudio.`
+    };
+    await StationsResource.insert(initialStation);
   }
-
-  let insertBookResult = await Books.insert(bookList);
-  console.log(`init ${Books.modelName} ` + insertBookResult);
-}
-  for (let i = 0; i < users.length; i++) {
-    const user = users[i];
-
-  }
+  
 }
 
-for (let i = 0; i < 10; i++) {
+async function _seedPaymentServicePackage() {
+  console.log("_seedPaymentServicePackage");
+
+  const PaymentServicePackage = require('../API/PaymentServicePackage/resourceAccess/PaymentServicePackageResourceAccess');
+  const { PACKAGE_TYPE } = require('../API/PaymentServicePackage/PaymentServicePackageConstant');
+
+  for (let i = 0; i < 10; i++) {
+    let _data = {
+      packageName: `Gói tập ${i * 3} tháng`,
+      packageType: PACKAGE_TYPE.COUNTER,
+      packageDescription: `Cùng tham gia gói tập ${i * 3} tháng tập để nâng cao sức khỏe và có thân hình săn chắc`,
+      packagePrice: i * 1000000,
+      packagePerformance: 50,
+      packageDuration: 365,
+    };
+    await PaymentServicePackage.insert(_data);
+  }
+}
 
 async function seedDatabase() {
   console.log("seedDatabase");
-  await _seedBooks();
+  // await _seedStations();
+  await _seedPaymentServicePackage();
 }
 
 seedDatabase();

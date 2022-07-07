@@ -15,11 +15,12 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
-          table.integer('appUserId'); //<< User nguoi mua
-          table.integer('bonusPackageId'); //<< goi cuoc duoc thuong
+          table.integer('appUserId'); //<< User nhan
+          table.integer('bonusPackageId'); //<< goi cuoc duoc thuong map voi `paymentServicePackageId`
           table.timestamp('bonusPackageExpireDate', { useTz: true }).nullable(); // << ngay het han
-          table.timestamp('bonusPackageClaimedDate', { useTz: true }).nullable(); // << ngay het han
+          table.timestamp('bonusPackageClaimedDate', { useTz: true }).nullable(); // << ngay nhan
           table.integer('bonusPackageClaimable').defaultTo(CLAIMABLE_STATUS.ENABLE); // << tinh trang hoat dong cua package
+          table.string('bonusPackageDescription', 300);
           timestamps(table);
           table.index(`${primaryKeyField}`);
           table.index(`appUserId`);

@@ -1,103 +1,114 @@
-const faker = require('faker');
-const chai = require('chai');
-const chaiHttp = require('chai-http');
-const fs = require('fs');
+const faker = require("faker");
+const chai = require("chai");
+const chaiHttp = require("chai-http");
+// const fs = require('fs');
 
-const { checkResponseStatus } = require('../../Common/test/Common');
-const TestFunctions = require('../../Common/test/CommonTestFunctions');
-const Model = require('../resourceAccess/SystemConfigurationsResourceAccess');
-
-const app = require('../../../server');
-const { modelName } = require('../resourceAccess/SystemConfigurationsResourceAccess');
-
+const { checkResponseStatus } = require("../../Common/test/Common");
+const TestFunctions = require("../../Common/test/CommonTestFunctions");
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
+const app = require("../../../server");
 
-describe(`Tests ${Model.modelName}`, function () {
-  let staffToken = "";
-
-  before(done => {
-    new Promise(async function (resolve, reject) {
+describe(`Tests SystemConfigurations`, () => {
+  let token = "";
+  before((done) => {
+    new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
-      staffToken = staffData.token;
+      token = staffData.token;
       resolve();
     }).then(() => done());
   });
 
-  it('clean left banner ad (default empty)', done => {
-    const body = {
-      systemLeftBannerAd: ``,
-    };
+  it("find system configuration", (done) => {
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/${modelName}/updateById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .post(`/SystemConfigurations/find`)
+      .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
-          checkResponseStatus(res, 500);
+          console.error(err);
         }
+        checkResponseStatus(res, 200);
         done();
       });
   });
-  it('clean right banner ad (default empty', done => {
-    const body = {
-      systemRightBannerAd: ``,
-    };
+
+  it("user/getDetail system configuration", (done) => {
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/${modelName}/updateById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .post(`/SystemConfigurations/user/getDetail`)
+      .set("Authorization", ``)
       .send(body)
       .end((err, res) => {
         if (err) {
-          checkResponseStatus(res, 500);
+          console.error(err);
         }
+        checkResponseStatus(res, 200);
         done();
       });
   });
-  it('update left banner ad', done => {
+
+  it("Update system version", (done) => {
     const body = {
-      systemLeftBannerAd: `https://${process.env.HOST_NAME}/uploads/media/quangcao/leftBanner.gif`,
+      data: {
+        systemVersion: "1.0.0"
+      },
     };
+
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/${modelName}/updateById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .post(`/SystemConfigurations/updateConfigs`)
+      .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
-          checkResponseStatus(res, 500);
+          console.error(err);
         }
+        checkResponseStatus(res, 200);
         done();
       });
   });
-  it('update right banner ad', done => {
+
+  it("Update infomation", (done) => {
     const body = {
-      systemRightBannerAd: `https://${process.env.HOST_NAME}/uploads/media/quangcao/rightBanner.gif`,
+      data: {
+        "address": "567 TPHCM VietNam",
+        "hotlineNumber": "123456789",
+      },
     };
+
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/${modelName}/updateById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .post(`/SystemConfigurations/updateConfigs`)
+      .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
-          checkResponseStatus(res, 500);
+          console.error(err);
         }
+        checkResponseStatus(res, 200);
         done();
       });
   });
-  it('get system configuration', done => {
+
+  it("Update image banner", (done) => {
     const body = {
-      "id": 1 //only 1 system configuration, then it is ok to HARDCODE here
+      data: {
+        "bannerImage1": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+        "bannerImage2": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+        "bannerImage3": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`
+      },
     };
+
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/${modelName}/findById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .post(`/SystemConfigurations/updateConfigs`)
+      .set("Authorization", `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {

@@ -7,6 +7,21 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = "AppUser";
 const { USER_VERIFY_INFO_STATUS, USER_TYPE, USER_VERIFY_EMAIL_STATUS, USER_VERIFY_PHONE_NUMBER_STATUS, USER_MEMBER_LEVEL } = require("../AppUserConstant");
 const primaryKeyField = "appUserId";
+
+//cac field nay la optional, tuy du an co the su dung hoac khong
+function optionalFields(table) {
+  table.integer('memberReferIdF1').nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF2').nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF3').nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF4').nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF5').nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.string('sotaikhoan', 500).nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.string('tentaikhoan', 500).nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.string('tennganhang', 500).nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.string('diachiviUSDT', 500).nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+  table.string('diachiviBTC', 500).nullable();//cac field nay la optional, tuy du an co the su dung hoac khong
+}
+
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -18,6 +33,7 @@ async function createTable() {
           table.string('firstName');
           table.string('lastName');
           table.string('phoneNumber');
+          table.string('companyName');
           table.string('email');
           table.string('birthDay');
           table.integer('sex');
@@ -39,7 +55,9 @@ async function createTable() {
           table.integer('isVerifiedPhoneNumber');
           table.integer('referUserId').nullable(); //dung de luu tru nguoi gioi thieu (khi can thiet)
           table.string('referUser').nullable(); //dung de luu username cua nguoi gioi thieu (khi can thiet)
+          table.string('referCode', 15).nullable(); //dung de luu code cua nguoi gioi thieu (khi can thiet)
           table.string('memberLevelName').defaultTo(USER_MEMBER_LEVEL.MEMBER); //luu membership
+          table.integer('appUserMembershipId') // memberShip Id
           table.float('limitWithdrawDaily', 48, 24).defaultTo(1000000); //luu so tien toi da duoc rut (khi can thiet)
           table.string('ipAddress').nullable(); //luu IP address -> chong spam va hack
           table.string('googleId').nullable(); //luu google id - phong khi 1 user co nhieu tai khoan
@@ -47,6 +65,14 @@ async function createTable() {
           table.string('facebookId').nullable(); //luu facebook id - phong khi 1 user co nhieu tai khoan
           table.string('appleId').nullable(); //luu apple id - phong khi 1 user co nhieu tai khoan
           table.string('firebaseToken', 500).nullable();
+          table.string('appUserNote', 500).nullable();
+          table.string('activeOTPCode');
+          table.string('activeOTPAt');
+          optionalFields(table);
+          table.string('province', 500).nullable(); //<<ID hoac ten cua province
+          table.string('district', 500).nullable(); //<<ID hoac ten cua district
+          table.string('ward', 500).nullable(); //<<ID hoac ten cua ward
+          table.string('address', 500).nullable(); //<<dia chi
           table.string('sotaikhoan', 500).nullable();
           table.string('tentaikhoan', 500).nullable();
           table.string('tennganhang', 500).nullable();
@@ -68,7 +94,10 @@ async function createTable() {
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve();
+          seeding().then((result) => {
+            Logger.info(`${tableName}`, `init ${tableName}` + result);
+            resolve();
+          })
         });
     });
   });
@@ -76,6 +105,23 @@ async function createTable() {
 
 async function initDB() {
   await createTable();
+}
+
+async function seeding() {
+  return new Promise(async (resolve, reject) => {
+    let initialStaff = [{
+      "lastName": "string",
+      "firstName": "string",
+      "username": "string",
+      "email": "string@string.com",
+      "password": "9d8e0483d5a71a73d4cf762d3dfdd30d5f441a85a060d3335c0c4979ff3e0530",
+      "phoneNumber": "string",
+    }]
+    DB(`${tableName}`).insert(initialStaff).then((result) => {
+      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+      resolve();
+    });
+  });
 }
 
 async function insert(data) {
@@ -122,33 +168,6 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
     })
-  } else {
-    if (filterData.username) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-
-    if (filterData.firstName) {
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-
-    if (filterData.lastName) {
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-
-    if (filterData.phoneNumber) {
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
-
-    if (filterData.email) {
-    let index = filterData.email.indexOf('@');
-    let email = filterData.email.slice(0, index);
-    queryBuilder.where("email", "like", `%${email}%`);
-    delete filterData.email;
-    }
   }
 
   if (startDate) {
@@ -197,6 +216,52 @@ async function customCount(filter, searchText, startDate, endDate, order) {
     }
   });
 }
+async function customCountMemberShip(filter, searchText, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, order);
+  return new Promise((resolve, reject) => {
+    try {
+      query.where("appUserMembershipId", ">", 0)
+      query.count(`${primaryKeyField} as count`)
+        .then(records => {
+          resolve(records);
+        });
+    } catch (e) {
+      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error("ResourceAccess", e);
+      reject(undefined);
+    }
+  });
+}
+
+function _makeQueryBuilderForReferedUser(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3) {
+  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit);
+
+  if (memberReferIdF1) {
+    queryBuilder.where({memberReferIdF1: memberReferIdF1});
+  } else if (memberReferIdF2) {
+    queryBuilder.where({memberReferIdF2: memberReferIdF2});
+  } else if (memberReferIdF3) {
+    queryBuilder.where({memberReferIdF3: memberReferIdF3});
+  } else if (appUserId) {
+    queryBuilder.where(function () {
+      this.orWhere('memberReferIdF1', appUserId)
+        .orWhere('memberReferIdF2', appUserId)
+        .orWhere('memberReferIdF3', appUserId)
+    })
+  }
+  console.log(queryBuilder.toString())
+  return queryBuilder;
+}
+
+async function findReferedUserByUserId(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3) {
+  let queryBuilder = _makeQueryBuilderForReferedUser(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3);
+  return await queryBuilder.select();
+}
+
+async function countReferedUserByUserId(appUserId, memberReferIdF1, memberReferIdF2, memberReferIdF3) {
+  let queryBuilder = _makeQueryBuilderForReferedUser(appUserId, undefined, undefined, memberReferIdF1, memberReferIdF2, memberReferIdF3);
+  return await queryBuilder.count(`${primaryKeyField} as count`);
+}
 
 module.exports = {
   insert,
@@ -209,4 +274,8 @@ module.exports = {
   customSearch,
   customCount,
   modelName: tableName,
+  updateAllById,
+  customCountMemberShip,
+  findReferedUserByUserId,
+  countReferedUserByUserId,
 };

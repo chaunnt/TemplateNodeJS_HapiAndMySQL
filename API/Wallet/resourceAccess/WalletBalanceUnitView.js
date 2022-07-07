@@ -70,36 +70,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-  } else {
-    if(filterData.username){
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-  
-    if(filterData.lastName){
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-    
-    if(filterData.firstName){
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-  
-    if(filterData.email){
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
-    }
-  
-    if(filterData.phoneNumber){
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+    })
   }
 
   if (startDate) {

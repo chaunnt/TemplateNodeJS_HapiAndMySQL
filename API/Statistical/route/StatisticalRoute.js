@@ -73,4 +73,58 @@ module.exports = {
       Response(req, res, "userSummaryReferUser");
     }
   },
+  summaryCountUserFAC: {
+    tags: ["api", `${moduleName}`],
+    description: `summaryFAC ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        startDate: Joi.string().default(new Date().toISOString()),
+        endDate: Joi.string().default(new Date().toISOString()),
+      })
+    },
+    handler: function (req, res) {
+      Response(req, res, "summaryCountUserFAC");
+    }
+  },
+  summaryUserReport: {
+    tags: ["api", `${moduleName}`],
+    description: `statistical general report ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({})
+    },
+    handler: function (req, res) {
+      Response(req, res, "summaryUserReport");
+    }
+  },
+  summaryServicePackageReport: {
+    tags: ["api", `${moduleName}`],
+    description: `statistical general report ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({})
+    },
+    handler: function (req, res) {
+      Response(req, res, "summaryServicePackageReport");
+    }
+  },
 }

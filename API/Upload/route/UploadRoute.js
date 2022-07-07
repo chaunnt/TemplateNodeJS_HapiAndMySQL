@@ -26,7 +26,7 @@ module.exports = {
       })
     },
     payload: {
-      maxBytes: 100*1024*1024, //100 mb
+      maxBytes: 10*1024*1024, //100 mb
       // output: 'file',
       parse: true,
       // allow: 'multipart/form-data',

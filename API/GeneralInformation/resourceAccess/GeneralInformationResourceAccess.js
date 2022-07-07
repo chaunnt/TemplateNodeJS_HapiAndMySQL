@@ -37,9 +37,10 @@ async function createTable() {
 async function seeding() {
   let dataDefault = [
     {
-      aboutUs: null,
-      questionAndAnwser: null,
-      generalRule: null
+      aboutUs: "<h1>Giới thiệu về chúng tôi<h1>",
+      questionAndAnwser: "<h1>Các câu hỏi thường gặp<h1>",
+      generalRule: "<h1>Quy định chung<h1>",
+      appPolicy: "<h1>Điều khoản sử dụng<h1>"
     }
   ];
   return new Promise(async (resolve, reject) => {
@@ -64,8 +65,8 @@ async function updateById(id, data) {
   return await Common.updateById(tableName, dataId, data);
 }
 
-async function find(filter, skip, limit, order) {
-  return await Common.find(tableName, filter, skip, limit, order);
+async function find(filter, skip, limit, order, fields) {
+  return await Common.find(tableName, filter, skip, limit, order, fields);
 }
 
 module.exports = {

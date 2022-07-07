@@ -7,27 +7,10 @@ const tableName = "WithdrawTransactionUserView";
 const rootTableName = 'PaymentWithdrawTransaction';
 const primaryKeyField = "paymentWithdrawTransactionId";
 async function createView() {
-  const UserTableName = 'AppUser';
+  const WalletTableName = 'Wallet';
+  const UserTableName = 'AppUserViews';
   let fields = [
-    `${primaryKeyField}`,
-    `${rootTableName}.appUserId`,
-    `${rootTableName}.isDeleted`,
-    `${rootTableName}.isHidden`,
-    `${rootTableName}.createdAt`,
-    DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
-    'paymentMethodId',
-    'paymentAmount',
-    'paymentRewardAmount',
-    'paymentUnit',
-    'paymentStatus',
-    'paymentNote',
-    'paymentRef',
-    'paymentApproveDate',
-    'paymentPICId',
-    `${UserTableName}.sotaikhoan`,
-    `${UserTableName}.tentaikhoan`,
-    `${UserTableName}.tennganhang`,
-    `${UserTableName}.username`,
+    `${UserTableName}.appUserId`,
     `${UserTableName}.firstName`,
     `${UserTableName}.lastName`,
     `${UserTableName}.email`,
@@ -38,12 +21,47 @@ async function createView() {
     `${UserTableName}.telegramId`,
     `${UserTableName}.facebookId`,
     `${UserTableName}.appleId`,
+    `${UserTableName}.username`,
+    `${UserTableName}.companyName`,
+    `${UserTableName}.appUserMembershipTitle`,
+    `${UserTableName}.diachiviUSDT`,
+    `${UserTableName}.diachiviBTC`,
+    `${UserTableName}.sotaikhoan`,
+    `${UserTableName}.tentaikhoan`,
+    `${UserTableName}.tennganhang`,
+
+    `${primaryKeyField}`,
+    `${rootTableName}.isDeleted`,
+    `${rootTableName}.isHidden`,
+    `${rootTableName}.createdAt`,
+    `${rootTableName}.walletId`,
+    DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
+    // 'paymentMethodId',
+    'paymentAmount',
+    // 'paymentRewardAmount',
+    // 'paymentUnit',
+    `${rootTableName}.paymentStatus`,
+    `${rootTableName}.paymentNote`,
+    `${rootTableName}.paymentRef`,
+    `${rootTableName}.paymentApproveDate`,
+    `${rootTableName}.paymentPICId`,
+    `${rootTableName}.paymentCategory`,
+    `${rootTableName}.paymentRefAmount`,
+    `${rootTableName}.paymentType`,
+    `${rootTableName}.paymentOwner`,
+    `${rootTableName}.paymentOriginSource`,
+    `${rootTableName}.paymentOriginName`,
     
+    `${WalletTableName}.walletType`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(UserTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
-  });
+  var viewDefinition = DB.select(fields).from(rootTableName)
+    .leftJoin(UserTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
+    })
+    .leftJoin(WalletTableName, function () {
+      this.on(`${rootTableName}.walletId`, '=', `${WalletTableName}.walletId`)
+    });
 
   Common.createOrReplaceView(tableName, viewDefinition)
 }
@@ -85,36 +103,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-  } else {
-    if(filterData.username){
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
-      delete filterData.username;
-    }
-  
-    if(filterData.lastName){
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
-      delete filterData.lastName;
-    }
-    
-    if(filterData.firstName){
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
-      delete filterData.firstName;
-    }
-  
-    if(filterData.email){
-      queryBuilder.where('email', 'like', `%${filterData.email}%`)
-      delete filterData.email;
-    }
-  
-    if(filterData.phoneNumber){
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
-      delete filterData.phoneNumber;
-    }
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+    })
   }
 
   if (startDate) {
@@ -153,6 +148,11 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   return await query.count(`${primaryKeyField} as count`);
 }
 
+async function customSum(field, filter, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, undefined, order);
+  return await query.sum(`${field} as sumResult`)
+}
+
 module.exports = {
   insert,
   find,
@@ -163,4 +163,5 @@ module.exports = {
   customSearch,
   customCount,
   sumAmountDistinctByDate,
+  customSum
 };

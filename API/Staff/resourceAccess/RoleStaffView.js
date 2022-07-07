@@ -24,10 +24,16 @@ async function createRoleStaffView() {
     `${rootTableName}.telegramId`,
     `${rootTableName}.facebookId`,
     `${rootTableName}.appleId`,
+    `${rootTableName}.stationsId`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.updatedAt`,
     `${rootTableName}.isDeleted`,
-    `${RoleTableName}.roleName`,
+    `${rootTableName}.isHidden`,
+    `${rootTableName}.staffAvatar`,
+    
+
     `${RoleTableName}.permissions`,
+    `${RoleTableName}.roleName`,
   ];
 
   var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(RoleTableName, function () {
@@ -64,7 +70,7 @@ async function updateAll(data, filter) {
 function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
-  
+
   if(filterData.username){
     queryBuilder.where('username', 'like', `%${filterData.username}%`)
     delete filterData.username;
@@ -111,19 +117,11 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
 async function customSearch(filter, skip, limit, order) {
   let query = _makeQueryBuilderByFilter(filter, skip, limit, order);
 
-  //skip admin
-  query.where('roleId', '>', 1);
-  query.orWhereNull('roleId');
-  
   return await query.select();
 }
 
 async function customCount(filter, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
-  
-  //skip admin
-  query.where('roleId', '>', 1);
-  query.orWhereNull('roleId');
   
   return await query.count(`${primaryKeyField} as count`);
 }

@@ -94,72 +94,14 @@ describe(`Tests PaymentWithdrawTransaction`, () => {
         done();
       });
   });
-  // it('update PaymentWithdrawTransaction', done => {
-  //   const body = {
-  //     id: paymentMethodId,
-  //     data: {
-  //       paymentNote: 'Auto updated',
-  //     }
-  //   };
-
-  //   chai
-  //     .request(`0.0.0.0:${process.env.PORT}`)
-  //     .post(`/PaymentWithdrawTransaction/updateById`)
-  //     .set("Authorization", `Bearer ${staffToken}`)
-  //     .send(body)
-  //     .end((err, res) => {
-  //       if (err) {
-  //         console.error(err);
-  //       }
-  //       checkResponseStatus(res, 200);
-  //       done();
-  //     });
-  // });
-
-  // it('delete PaymentWithdrawTransaction', done => {
-  //   const body = {
-  //     id: paymentMethodId
-  //   };
-
-  //   chai
-  //     .request(`0.0.0.0:${process.env.PORT}`)
-  //     .post(`/PaymentWithdrawTransaction/deleteById`)
-  //     .set("Authorization", `Bearer ${staffToken}`)
-  //     .send(body)
-  //     .end((err, res) => {
-  //       if (err) {
-  //         console.error(err);
-  //       }
-  //       checkResponseStatus(res, 200);
-  //       done();
-  //     });
-  // });
-
-  it('user request new PaymentWithdrawTransaction', done => {
+  it('find PaymentWithdrawTransaction by ID', done => {
     const body = {
-      paymentAmount: 100000
+      id : paymentMethodId
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentWithdrawTransaction/user/requestWithdraw`)
-      .set("Authorization", `${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        paymentMethodId = res.body.data[0]
-        done();
-      });
-  });
-  it('user get list PaymentWithdrawTransaction', done => {
-    const body = {
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentWithdrawTransaction/user/withdrawHistory`)
-      .set("Authorization", `${userToken}`)
+      .post(`/PaymentWithdrawTransaction/findById`)
+      .set("Authorization", `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

@@ -4,13 +4,13 @@
 "use strict";
 const moment = require('moment');
 
-const BetFunctions = require('../BetRecordsFunctions');
-const UserServicePackageViews = require('../../PaymentServicePackage/resourceAccess/UserServicePackageViews');
-const UserServiceResource = require('../../PaymentServicePackage/resourceAccess/PaymentServicePackageUserResourceAccess');
+const BetFunctions = require('../../BetRecords/BetRecordsFunctions');
+const UserServicePackageViews = require('../resourceAccess/UserServicePackageViews');
+const UserServiceResource = require('../resourceAccess/PaymentServicePackageUserResourceAccess');
 const WalletResource = require('../../Wallet/resourceAccess/WalletResourceAccess');
-const { ACTIVITY_STATUS } = require('../../PaymentServicePackage/PaymentServicePackageConstant');
+const { ACTIVITY_STATUS } = require('../PaymentServicePackageConstant');
 const Logger = require('../../../utils/logging');
-const MINING_DURATION = require('../../PaymentServicePackage/PaymentServicePackageConstant').MINING_DURATION;
+const MINING_DURATION = require('../PaymentServicePackageConstant').MINING_DURATION;
 
 async function updateUserPackageStatus() {
   Logger.info(`updateUserPackageStatus ${new Date}`);
@@ -45,10 +45,10 @@ async function updateUserPackageStatus() {
     if (userServicePackages && userServicePackages.length > 0) {
       for (let packageCounter = 0; packageCounter < userServicePackages.length; packageCounter++) {
         const userPackage = userServicePackages[packageCounter];
-        if ((new Date(userPackage.packageExpireDate) - 1) < (new Date() - 1) 
-        || (userPackage.profitEstimate <= (userPackage.profitActual + userPackage.profitClaimed))) {
+        if ((new Date(userPackage.packageExpireDate) - 1) < (new Date() - 1)
+          || (userPackage.profitEstimate <= (userPackage.profitActual + userPackage.profitClaimed))) {
           await UserServiceResource.updateById(userPackage.paymentServicePackageUserId, {
-            packageActivityStatus: ACTIVITY_STATUS.COMPLETED
+            packageActivityStatus: ACTIVITY_STATUS.STANDBY
           });
         }
       }
@@ -98,27 +98,25 @@ async function mineCoin() {
             if (miningDuration < MINING_DURATION * 60) {
               continue;
             }
-            
-            //store bet records ( 1 package can generate 1 record each day)
-            let betResult = await BetFunctions.placeUserBet(
-              userPackage.appUserId,
-              userPackage.packagePerformance,
-              userPackage.packageName,
-              userPackage.walletBalanceUnitCode,
-              userPackage.paymentServicePackageUserId
-            );
-            //update profileActual of package
-            if (betResult) {
-              let updateProfitResult = await UserServiceResource.updateById(userPackage.paymentServicePackageUserId, {
-                profitActual: userPackage.profitActual + 1,
-                packageLastActiveDate: new Date(),
-              });
 
-              if (updateProfitResult) {
-                //Do nothing
-              } else {
-                Logger.error(`can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`);
-              }
+            //update profileActual of package
+            let updateProfitResult = await UserServiceResource.updateById(userPackage.paymentServicePackageUserId, {
+              profitActual: userPackage.profitActual + userPackage.packageCurrentPerformance,
+              packageLastActiveDate: new Date(),
+              packageActivityStatus: ACTIVITY_STATUS.STANDBY,
+            });
+
+            if (updateProfitResult) {
+              //store bet records ( 1 package can generate 1 record each day)
+              await BetFunctions.placeUserBet(
+                userPackage.appUserId,
+                userPackage.packageCurrentPerformance,
+                userPackage.packageName,
+                userPackage.walletBalanceUnitCode,
+                userPackage.paymentServicePackageUserId
+              );
+            } else {
+              Logger.error(`can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`);
             }
           }
         }

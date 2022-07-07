@@ -27,6 +27,8 @@ async function createTable() {
           table.string('telegramId');
           table.string('facebookId');
           table.string('appleId');
+          table.string('staffAvatar', 2000); //Image from social login may be so long (include token)
+          table.string('stationsId');
           timestamps(table);
           table.index('staffId');
           table.unique('username');
@@ -44,24 +46,10 @@ async function createTable() {
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          let initUser = [{
-            "lastName": "string",
-            "firstName": "string",
-            "username": "string",
-            "email": "string@string.com",
-            "password": "fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614",
-            "phoneNumber": "string",
-            "areaCountryId": "1",
-            "areaProvinceId": "1;2;4",
-            "areaDistrictId": "1;2;3;4;5",
-            "areaWardId": "1;2;3;5",
-            "roleId": 1
-          }]
-          DB(`${tableName}`).insert(initUser).then((result) => {
+          seeding().then((result) => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
           });
-          resolve();
         });
     });
   });
@@ -69,6 +57,37 @@ async function createTable() {
 
 async function initDB() {
   await createTable();
+}
+
+async function seeding() {
+  return new Promise(async (resolve, reject) => {
+    let initialStaff =
+      [
+        {
+          "lastName": "string",
+          "firstName": "string",
+          "username": "string",
+          "email": "string@string.com",
+          "password": "fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614",
+          "phoneNumber": "string",
+          "roleId": 1
+        },
+        {
+          "lastName": "agency",
+          "firstName": "agency",
+          "username": "agency",
+          "email": "agency@string.com",
+          "password": "fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614",
+          "phoneNumber": "agency",
+          "roleId": 5,
+          "stationsId": 1
+        }
+      ]
+    DB(`${tableName}`).insert(initialStaff).then((result) => {
+      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+      resolve();
+    });
+  });
 }
 
 async function insert(data) {
