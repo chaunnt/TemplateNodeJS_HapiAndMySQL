@@ -8,9 +8,11 @@ const SystemConfigurationsFunction = require('../SystemConfigurations/SystemConf
 const { WALLET_TYPE } = require('../Wallet/WalletConstant');
 const { WITHDRAW_TRX_STATUS } = require('./PaymentWithdrawTransactionConstant');
 const Logger = require('../../utils/logging');
+const WalletRecordFunction = require('../WalletRecord/WalletRecordFunction');
 
-async function acceptWithdrawRequest(transactionRequestId, paymentNote) {
+async function acceptWithdrawRequest(transactionRequestId, paymentNote,staff,paymentRef) {
   let transaction = await WithdrawTransactionResource.find({ paymentWithdrawTransactionId: transactionRequestId });
+  let wallet = await WalletResourceAccess.findById({appUserId:transaction.appUserId,walletId:transaction.walletId});
   if (transaction === undefined || transaction.length < 1) {
     Logger.error(`Can not acceptWithdrawRequest ${transactionRequestId}`);
     return undefined;
@@ -31,7 +33,16 @@ async function acceptWithdrawRequest(transactionRequestId, paymentNote) {
 
   let updateResult = await WithdrawTransactionResource.updateById(transactionRequestId, transaction);
   if (updateResult) {
-    return updateResult;
+    let updateWalletResult =  await WalletRecordFunction.withdrawWalletBalance(
+                                    transaction.appUserId,
+                                    transaction.paymentAmount,
+                                    wallet.walletType,
+                                    staff,
+                                    paymentRef)
+    if(updateWalletResult){
+      return updateWalletResult;
+    }
+  
   } else {
     return undefined;
   }

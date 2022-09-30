@@ -6,7 +6,7 @@ const StationProductsResourceAccess = require("../resourceAccess/StationProducts
 const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess')
 const Logger = require('../../../utils/logging');
 const formatDate = require("../../ApiUtils/utilFunctions")
-const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
+const ImageUtils = require('../../ApiUtils/utilFunctions');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {

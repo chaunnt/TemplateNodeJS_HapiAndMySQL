@@ -57,7 +57,6 @@ const StakingRoute = require('../API/StakingPackage/route')
 
 //WalletBalanceUnit
 
-const CustomerMessage = require('../API/CustomerMessage/route')
 // LeaderBoard
 const LeaderBoard = require('../API/LeaderBoard/router')
 var APIs = [

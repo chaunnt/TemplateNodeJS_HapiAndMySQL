@@ -230,7 +230,9 @@ async function withdrawHistoryBTC(req) {
 async function approveWithdrawTransaction(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let result = await WithdrawTransactionFunction.acceptWithdrawRequest(req.payload.id, req.payload.paymentNote);
+      let staff = req.currentUser;
+      let paymentRef = req.paymentRef;
+      let result = await WithdrawTransactionFunction.acceptWithdrawRequest(req.payload.id, req.payload.paymentNote,staff,paymentRef);
       if(result) {
         resolve(result);
       }else{

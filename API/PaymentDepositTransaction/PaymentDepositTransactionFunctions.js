@@ -8,10 +8,7 @@ const { PAYMENT_NOTE , DEPOSIT_TRX_CATEGORY} = require("./PaymentDepositTransact
 const SystemConfigurationsFunction = require('../SystemConfigurations/SystemConfigurationsFunction');
 const DEPOSIT_TRX_STATUS = require('./PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
 const WALLET_TYPE = require('../Wallet/WalletConstant').WALLET_TYPE;
-// const { APPROVED_PAYMENT, MESSAGE_TYPE, REFUSED_PAYMENT, REWARD_POINT } = require('../CustomerMessage/CustomerMessageConstant');
-// const Handlebars = require('handlebars');
-// const moment = require('moment');
-// const { handleSendMessage } = require('../Common/CommonFunctions');
+const WalletRecordFunction = require('../WalletRecord/WalletRecordFunction');
 
 async function createDepositTransaction(user, amount, paymentCategory, paymentRef) {
   let wallet = await UserWallet.find({
@@ -29,7 +26,6 @@ async function createDepositTransaction(user, amount, paymentCategory, paymentRe
     appUserId: user.appUserId,
     walletId: wallet.walletId,
     paymentAmount: amount,
-    
     paymentCategory: paymentCategory ? paymentCategory : DEPOSIT_TRX_CATEGORY.BLOCKCHAIN
   };
 
@@ -113,18 +109,18 @@ async function approveDepositTransaction(transactionId, staff, paymentNote) {
     //Update wallet balance in DB
     let updateWalletResult = await UserWallet.incrementBalance(usdtWallet.walletId, transaction.paymentAmount);
     if (updateWalletResult) {
-      // //send message
-      // const template = Handlebars.compile(JSON.stringify(APPROVED_PAYMENT));
-      // const data = {
-      //   "paymentId": transactionId,
-      //   "promotionMoney": transaction.paymentRewardAmount,
-      //   "totalMoney": parseFloat(pointWallet.balance) + parseFloat(transaction.paymentRewardAmount)
-      // };
-      // const message = JSON.parse(template(data));
-      // await handleSendMessage(transaction.appUserId, message, {
-      //   paymentDepositTransactionId: transactionId
-      // }, MESSAGE_TYPE.USER);
-      return updateWalletResult;
+    
+      //Update wallet balance and WalletRecord in DB
+      let  updateWalletResult = await WalletRecordFunction.depositPointWalletBalance(
+        transaction.appUserId,
+        transaction.paymentAmount,
+        staff,
+      );
+      if(!updateWalletResult){
+          return undefined;
+      }
+     return updateWalletResult;    
+    
     } else {
       console.error(`updateWalletResult error pointWallet.walletId ${pointWallet.walletId} - ${JSON.stringify(transaction)}`);
       return undefined;
@@ -167,15 +163,6 @@ async function denyDepositTransaction(transactionId, staff, paymentNote) {
   if (paymentNote) {
     updatedData.paymentNote = paymentNote;
   }
-  // //send message
-  // const template = Handlebars.compile(JSON.stringify(REFUSED_PAYMENT));
-  // const data = {
-  //   "paymentId": transactionId
-  // };
-  // const message = JSON.parse(template(data));
-  // await handleSendMessage(transaction.appUserId, message, {
-  //   paymentDepositTransactionId: transactionId
-  // }, MESSAGE_TYPE.USER);
 
   let updateResult = await DepositTransactionAccess.updateById(transactionId, updatedData);
   return updateResult;

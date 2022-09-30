@@ -226,7 +226,8 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
+        id: Joi.number().min(0),
+        paymentRef: Joi.string()
       })
     },
     handler: function (req, res) {

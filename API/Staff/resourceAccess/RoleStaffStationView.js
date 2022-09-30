@@ -89,7 +89,10 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
   queryBuilder.where({ isDeleted: 0 });
 
   queryBuilder.where(filterData);
-
+  
+  queryBuilder.whereNotIn('roleId', [1]);
+  queryBuilder.whereNotIn('staffId', [1]);
+  
   if (limit) {
     queryBuilder.limit(limit);
   }

@@ -6,7 +6,7 @@ const StationsResourceAccess = require("../resourceAccess/StationsResourceAccess
 const StationFunctions = require('../StationsFunctions');
 const Logger = require('../../../utils/logging');
 const UtilsFunction = require('../../ApiUtils/utilFunctions');
-const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
+const ImageUtils = require('../../ApiUtils/utilFunctions');
 const StaffFunctions = require('../../Staff/StaffFunctions');
 const { STATION_STATUS } = require("../StationsConstants");
 

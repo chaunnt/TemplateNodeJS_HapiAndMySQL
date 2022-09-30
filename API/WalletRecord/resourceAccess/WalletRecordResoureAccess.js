@@ -14,6 +14,9 @@ async function createTable() {
           table.integer('appUserId');
           table.integer('walletId');
           table.float('paymentAmount', 48, 10).defaultTo(0);
+          table.float('paymentAmountIn', 48, 10).defaultTo(0); //credit
+          table.float('paymentAmountOut', 48, 10).defaultTo(0); //debit
+          table.integer('paymentAmountInOut').defaultTo(0); //0: CREDIT , 10: DEBIT
           table.float('balanceBefore', 48, 10).defaultTo(0);
           table.float('balanceAfter', 48, 10).defaultTo(0);
           table.string('WalletRecordNote').nullable(); // nội dung để tham khảo
