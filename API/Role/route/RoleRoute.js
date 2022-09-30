@@ -1,31 +1,32 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'Role';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
-
 const insertSchema = {
-  roleName: Joi.string(),
-  permissions: Joi.string(),
+  roleName: Joi.string().max(2000),
+  permissions: Joi.string().max(2000),
 };
 
 const updateSchema = {
   ...insertSchema,
   isDeleted: Joi.number(),
-}
+};
 
 const filterSchema = {
-  ...insertSchema
+  ...insertSchema,
 };
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -35,16 +36,16 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(insertSchema)
+      payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -55,14 +56,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -77,21 +78,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -102,11 +99,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
 };

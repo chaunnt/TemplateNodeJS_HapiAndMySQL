@@ -1,9 +1,11 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 module.exports = {
   PACKAGE_STATUS: {
     NEW: 1,
     HOT: 2,
     NORMAL: 3,
-    SOLD: 4
+    SOLD: 4,
   },
   ACTIVITY_STATUS: {
     COMPLETED: 0,
@@ -21,10 +23,10 @@ module.exports = {
     NORMAL: 'Normal',
     BONUS_RANK: 'Rank',
     BONUS_NORMAL: 'Bonus',
-    BONUS_KYC: 'KYC'
+    BONUS_KYC: 'KYC',
   },
   // CỬA HÀNG (vào để mua máy đào đồng FAC)
-  // 1. Có 3 loại máy có giá trị, số lượng đồng FAC khai thác ra và kí hiệu khác nhau sau mỗi giai đoạn. Gồm có 5 giai đoạn, mỗi giai đoạn là 90 ngày 
+  // 1. Có 3 loại máy có giá trị, số lượng đồng FAC khai thác ra và kí hiệu khác nhau sau mỗi giai đoạn. Gồm có 5 giai đoạn, mỗi giai đoạn là 90 ngày
   // - Giai đoạn 1 : máy có kí hiệu
   // + máy giá $100 kí hiệu là A100FAC... Khai thác được 50 FAC/ngày
   // + Máy $500 kí hiệu là A500FAC... Khai thác 500FAC/ngày
@@ -47,7 +49,7 @@ module.exports = {
   // + Máy $1000 kí hiệu V1000FAC... Khai thác 500FAC/ngày
   PACKAGE_TYPE: {
     A100FAC: {
-      type: "A100FAC",
+      type: 'A100FAC',
       stage1: 50,
       stage2: 42,
       stage3: 34,
@@ -56,7 +58,7 @@ module.exports = {
       defaultPrice: 100,
     },
     A500FAC: {
-      type: "A500FAC",
+      type: 'A500FAC',
       stage1: 500,
       stage2: 417,
       stage3: 334,
@@ -65,13 +67,13 @@ module.exports = {
       defaultPrice: 500,
     },
     A1000FAC: {
-      type: "A1000FAC",
+      type: 'A1000FAC',
       stage1: 1200,
       stage2: 1000,
       stage3: 800,
       stage4: 600,
       stage5: 400,
       defaultPrice: 1000,
-    }
-  }
+    },
+  },
 };

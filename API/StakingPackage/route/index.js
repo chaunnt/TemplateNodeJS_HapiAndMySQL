@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const StakingRoute = require('./StakingPackageRoute');
 const UserStakingRoute = require('./StakingPackageUserRoute');
 
@@ -12,4 +14,4 @@ module.exports = [
   { method: 'POST', path: '/StakingPackage/user/getList', config: StakingRoute.userGetListStaking },
   { method: 'POST', path: '/StakingPackage/user/requestStaking', config: UserStakingRoute.userRequestStaking },
   { method: 'POST', path: '/StakingPackage/user/historyStaking', config: UserStakingRoute.getUserStakingHistory },
-]
+];

@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -13,9 +15,9 @@ chai.use(chaiHttp);
 const app = require('../../../server');
 
 describe(`Tests PaymentExchangeTransaction`, () => {
-  let staffToken = "";
-  let paymentMethodId = "";
-  let userToken = "";
+  let staffToken = '';
+  let paymentMethodId = '';
+  let userToken = '';
   let testUserId;
   let transactionId;
   before(done => {
@@ -31,12 +33,12 @@ describe(`Tests PaymentExchangeTransaction`, () => {
 
   it('user change FAC => USDT', done => {
     const body = {
-      "paymentAmount": 1
+      paymentAmount: 1,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/ExchangeFAC`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -50,12 +52,12 @@ describe(`Tests PaymentExchangeTransaction`, () => {
 
   it('user change POINT => FAC', done => {
     const body = {
-      "paymentAmount": 1
+      paymentAmount: 1,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/ExchangePOINT`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -71,7 +73,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/userExchangeFACHistory`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -87,7 +89,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/userExchangePOINTHistory`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -98,5 +100,4 @@ describe(`Tests PaymentExchangeTransaction`, () => {
         done();
       });
   });
-
-})
+});

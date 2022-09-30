@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const chai = require('chai');
 const expect = chai.expect;
 const jsonComparer = require('deep-diff');
@@ -6,15 +8,16 @@ const { readFile } = require('fs');
 function checkResponseStatus(res, expected) {
   expect(res).to.not.equal(undefined);
   if (res.body && res.body.statusCode !== expected) {
-    console.log('========Request=======');
-    console.log(res.request.url);
-    console.log(res.request.method);
-    console.log(res.request._header);
-    console.log(JSON.stringify(res.request._data));
-    console.log('========Response======');
-    console.log(res.body);
+    console.info('========Request=======');
+    console.info(res.request.url);
+    console.info(res.request.method);
+    console.info(res.request._header);
+    console.info(JSON.stringify(res.request._data));
+    console.info('========Response======');
+    console.info(res.body);
   }
   expect(res).to.have.status(expected);
+  expect(res.body.statusCode === expected);
 }
 
 var lhs = {
@@ -43,19 +46,17 @@ var lhs = {
 
 async function checkResponseBody(res, templatePath) {
   if (res.body === undefined) {
-    console.log('========Request=======');
-    console.log(res.request.url);
-    console.log(res.request.method);
-    console.log(res.request._header);
-    console.log(res.request._data);
-    console.log('========Response======');
-    console.log(res.body);
+    console.info('========Request=======');
+    console.info(res.request.url);
+    console.info(res.request.method);
+    console.info(res.request._header);
+    console.info(res.request._data);
   }
 
   return new Promise((resolve, reject) => {
     readFile(templatePath, 'utf8', (err, data) => {
       if (err) {
-        console.log(err);
+        console.error(`error`, err);
         reject(err);
       }
       let templateData = JSON.parse(data);
@@ -67,14 +68,12 @@ async function checkResponseBody(res, templatePath) {
         for (let i = 0; i < matchResult.length; i++) {
           const result = matchResult[i];
           if (result.kind === 'N' || result.kind === 'D') {
-            console.log(result);
+            console.info(result);
           }
           if (result.kind === 'E') {
             if (result.lhs && result.lhs !== null && result.lhs.it && result.lhs.an) {
-              console.log(result);
               expect(result.lhs.an).to.not.equal('array');
             } else if (result.rhs && result.rhs !== null && result.rhs.it && result.rhs.an) {
-              console.log(result);
               expect(result.rhs.an).to.not.equal('array');
             }
           }

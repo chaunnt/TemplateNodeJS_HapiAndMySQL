@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -13,9 +15,9 @@ chai.use(chaiHttp);
 const app = require('../../../server');
 
 describe(`Tests PlayGameExchange`, () => {
-  let staffToken = "";
-  let paymentMethodId = "";
-  let userToken = "";
+  let staffToken = '';
+  let paymentMethodId = '';
+  let userToken = '';
   let testUserId;
   let testPlayerId;
   let transactionId;
@@ -28,7 +30,7 @@ describe(`Tests PlayGameExchange`, () => {
       let userData = await TestFunctions.loginUser();
       testUserId = userData.appUserId;
       userToken = `Bearer ${userData.token}`;
-      let playerData = await TestFunctions.loginUser("player","player");
+      let playerData = await TestFunctions.loginUser('player', 'player');
       playerToken = `Bearer ${playerData.token}`;
       testPlayerId = playerData.appUserId;
       resolve();
@@ -38,12 +40,12 @@ describe(`Tests PlayGameExchange`, () => {
   it('user (agency - no refer username) request new PaymentExchangeTransaction', done => {
     const body = {
       paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      walletBalanceUnitId: 2, //always available
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/requestExchange`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -62,7 +64,7 @@ describe(`Tests PlayGameExchange`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/approveExchangeTransaction`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -76,12 +78,12 @@ describe(`Tests PlayGameExchange`, () => {
   it('user (agency - no refer username) request new PaymentExchangeTransaction', done => {
     const body = {
       paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      walletBalanceUnitId: 2, //always available
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/requestExchange`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -100,7 +102,7 @@ describe(`Tests PlayGameExchange`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/denyExchangeTransaction`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -119,26 +121,26 @@ describe(`Tests PlayGameExchange`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentDepositTransaction/insert`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        testDepositPaymentId = res.body.data[0]
+        testDepositPaymentId = res.body.data[0];
         done();
       });
   });
 
   it('staff approve deposit payment manually', done => {
     const body = {
-      id: testDepositPaymentId
+      id: testDepositPaymentId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentDepositTransaction/approveDepositTransaction`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -149,33 +151,33 @@ describe(`Tests PlayGameExchange`, () => {
       });
   });
 
-  it("player buy package", (done) => {
+  it('player buy package', done => {
     const body = {
       paymentServicePackageId: 1,
     };
     chai
-    .request(`0.0.0.0:${process.env.PORT}`)
-    .post(`/PaymentServicePackage/user/buyServicePackage`)
-    .set("Authorization", `${playerToken}`)
-    .send(body)
-    .end((err, res) => {
-      if (err) {
-        console.error(err);
-      }
-      checkResponseStatus(res, 200);
-      done();
-    });
+      .request(`0.0.0.0:${process.env.PORT}`)
+      .post(`/PaymentServicePackage/user/buyServicePackage`)
+      .set('Authorization', `${playerToken}`)
+      .send(body)
+      .end((err, res) => {
+        if (err) {
+          console.error(err);
+        }
+        checkResponseStatus(res, 200);
+        done();
+      });
   });
 
   it('player (normal user - have refer username) request new PaymentExchangeTransaction', done => {
     const body = {
       paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      walletBalanceUnitId: 2, //always available
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/requestExchange`)
-      .set("Authorization", `${playerToken}`)
+      .set('Authorization', `${playerToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -194,7 +196,7 @@ describe(`Tests PlayGameExchange`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/acceptExchangeRequest`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -209,12 +211,12 @@ describe(`Tests PlayGameExchange`, () => {
   it('player (normal user - have refer username) request new PaymentExchangeTransaction', done => {
     const body = {
       paymentAmount: 1,
-      walletBalanceUnitId: 2 //always available 
+      walletBalanceUnitId: 2, //always available
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/requestExchange`)
-      .set("Authorization", `${playerToken}`)
+      .set('Authorization', `${playerToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -233,7 +235,7 @@ describe(`Tests PlayGameExchange`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/denyExchangeRequest`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -246,12 +248,11 @@ describe(`Tests PlayGameExchange`, () => {
   });
 
   it('user get list PaymentExchangeTransaction', done => {
-    const body = {
-    };
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/exchangeHistory`)
-      .set("Authorization", `${playerToken}`)
+      .set('Authorization', `${playerToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -263,12 +264,11 @@ describe(`Tests PlayGameExchange`, () => {
   });
 
   it('user get list request PaymentExchangeTransaction', done => {
-    const body = {
-    };
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/viewExchangeRequests`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -278,4 +278,4 @@ describe(`Tests PlayGameExchange`, () => {
         done();
       });
   });
-})
+});

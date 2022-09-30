@@ -1,31 +1,35 @@
-"use strict";
-const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess')
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess');
 const LeaderBoardViews = require('../resourceAccess/LeaderBoardViews');
-const LeaderBoardFunction = require('../LeaderFunction')
+const LeaderBoardFunction = require('../LeaderFunction');
+const { ERROR } = require('../../Common/CommonConstant');
 async function userGetTopRank(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let order = {
-        "key": "ranking",
-        "value": "asc"
-      }
+        key: 'ranking',
+        value: 'asc',
+      };
 
       let result = await LeaderBoardViews.customSearch(undefined, 0, 3, undefined, undefined, undefined, order);
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error userGetTopRank: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error user get top rank`, e);
+      reject('failed');
     }
   });
-};
+}
 async function updateRanKingById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let appUserId = req.payload.appUserId
+      let appUserId = req.payload.appUserId;
       let ranking = req.payload.ranking;
       let totalScore = req.payload.totalScore;
 
@@ -33,39 +37,48 @@ async function updateRanKingById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error updateRanKingById: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error update RanKing By Id `, e);
+      reject('failed');
     }
   });
-};
+}
 async function find(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let filter = req.payload.filter
+      let filter = req.payload.filter;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = {
-        "key": "ranking",
-        "value": "asc"
-      }
+        key: 'ranking',
+        value: 'asc',
+      };
       let result = await LeaderBoardViews.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
       if (result && result.length > 0) {
-        let dataCount = await LeaderBoardViews.customCount(filter, undefined, undefined);
-        resolve({data: result, total: dataCount[0].count});
+        let dataCount = await LeaderBoardViews.customCount(
+          filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+        );
+        resolve({ data: result, total: dataCount[0].count });
       } else {
-        resolve({data: [], total: 0});
+        resolve({ data: [], total: 0 });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error:`, e);
+      reject('failed');
     }
   });
-};
+}
 module.exports = {
   userGetTopRank,
   updateRanKingById,
-  find
-}
+  find,
+};

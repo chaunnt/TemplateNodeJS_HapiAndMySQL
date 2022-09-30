@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "UserBonusPackage";
-const primaryKeyField = "userBonusPackageId";
+const tableName = 'UserBonusPackage';
+const primaryKeyField = 'userBonusPackageId';
 const { CLAIMABLE_STATUS } = require('../PaymentServicePackageConstant');
 
 async function createTable() {
@@ -71,43 +73,39 @@ async function count(filter, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
-async function customSum(filter, startDate, endDate) {
-  const _field = 'paymentAmount';
-
+async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   if (startDate) {
-    DB.where('createdAt', '>=', startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    DB.where('createdAt', '<=', endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (filter.referAgentId) {
-    DB.where('referId', referAgentId);
+    queryBuilder.where('referId', referAgentId);
   }
 
-  DB.where({
-    status: WITHDRAW_TRX_STATUS.COMPLETED
+  queryBuilder.where({
+    status: WITHDRAW_TRX_STATUS.COMPLETED,
   });
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${_field} as sumResult`)
-        .then(records => {
-          if (records && records[0].sumResult === null) {
-            resolve(undefined)
-          } else {
-            resolve(records);
-          }
-        });
-    }
-    catch (e) {
-      Logger.error("ResourceAccess", `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -126,5 +124,5 @@ module.exports = {
   deleteById,
   initDB,
   customSum,
-  sumAmountDistinctByDate
+  sumAmountDistinctByDate,
 };

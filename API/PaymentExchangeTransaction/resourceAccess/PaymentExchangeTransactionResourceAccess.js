@@ -1,13 +1,15 @@
-"use strict";
-require("dotenv").config();
-const { DB, timestamps } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { WITHDRAW_TRX_STATUS } = require("../../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant");
-const { EXCHANGE_TRX_STATUS } = require('../PaymentExchangeTransactionConstant');
-const tableName = "PaymentExchangeTransaction";
-const primaryKeyField = "paymentExchangeTransactionId";
+const { WITHDRAW_TRX_STATUS } = require('../../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant');
+const { EXCHANGE_TRX_STATUS, EXCHANGE_TRX_UNIT } = require('../PaymentExchangeTransactionConstant');
+const tableName = 'PaymentExchangeTransaction';
+const primaryKeyField = 'paymentExchangeTransactionId';
 async function createTable() {
-  console.log(`createTable ${tableName}`);
+  console.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -22,18 +24,18 @@ async function createTable() {
           table.float('paymentAmount', 48, 24).defaultTo(0); //so luong tien gui di
           table.float('receiveAmount', 48, 24).defaultTo(0); //so luong tien nhan lai
           table.float('sendWalletBalanceBefore', 48, 24).defaultTo(0); //balance vi gui truoc khi exchange
-          table.float('sendWalletBalanceAfter', 48, 24).defaultTo(0);  //balance vi gui sau khi exchange
-          table.float('receiveWalletBalanceBefore', 48, 24).defaultTo(0);  //balance vi nhan truoc khi exchange
-          table.float('receiveWalletBalanceAfter', 48, 24).defaultTo(0);  //balance vi nhan sau khi exchange
-          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //thuong 
-          table.string('paymentUnit'); //don vi tien
-          table.string('sendPaymentUnitId'); //don vi tien cua ben gui
-          table.string('receivePaymentUnitId'); //don vi tien cua ben nhan
+          table.float('sendWalletBalanceAfter', 48, 24).defaultTo(0); //balance vi gui sau khi exchange
+          table.float('receiveWalletBalanceBefore', 48, 24).defaultTo(0); //balance vi nhan truoc khi exchange
+          table.float('receiveWalletBalanceAfter', 48, 24).defaultTo(0); //balance vi nhan sau khi exchange
+          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //thuong
+          table.string('paymentUnit').defaultTo(EXCHANGE_TRX_UNIT.VND); //don vi tien
+          table.string('sendPaymentUnitId').defaultTo(EXCHANGE_TRX_UNIT.VND); //don vi tien cua ben gui
+          table.string('receivePaymentUnitId').defaultTo(EXCHANGE_TRX_UNIT.VND); //don vi tien cua ben nhan
           table.string('paymentStatus').defaultTo(EXCHANGE_TRX_STATUS.NEW);
           table.string('paymentNote').defaultTo(''); //Ghi chu hoa don
           table.string('paymentRef').defaultTo(''); //Ma hoa don ngoai thuc te
-          table.timestamp('paymentApproveDate',{ useTz: true }); // ngay duyet
-          table.integer('paymentPICId');  // nguoi duyet
+          table.timestamp('paymentApproveDate', { useTz: true }); // ngay duyet
+          table.integer('paymentPICId'); // nguoi duyet
           timestamps(table);
           table.index('appUserId');
           table.index('sendWalletId');
@@ -43,7 +45,7 @@ async function createTable() {
           table.index('referId');
         })
         .then(() => {
-          console.log(`${tableName} table created done`);
+          console.info(`${tableName} table created done`);
           resolve();
         });
     });
@@ -72,40 +74,36 @@ async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
 
-async function customSum(filter, startDate, endDate) {
-  const _field = 'paymentAmount';
-
+async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   if (startDate) {
-    DB.where('createdAt', '>=', startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    DB.where('createdAt', '<=', endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (filter.referAgentId) {
-    DB.where('referId', referAgentId);
+    queryBuilder.where('referId', referAgentId);
   }
 
-  DB.where({
-    status: WITHDRAW_TRX_STATUS.COMPLETED
+  queryBuilder.where({
+    paymentStatus: WITHDRAW_TRX_STATUS.COMPLETED,
   });
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${_field} as sumResult`)
-        .then(records => {
-          if (records && records[0].sumResult === null) {
-            resolve(undefined)
-          } else {
-            resolve(records);
-          }
-        });
-    }
-    catch (e) {
-      Logger.error("ResourceAccess", `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -121,10 +119,10 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filter);
@@ -140,7 +138,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -151,11 +149,10 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
-
 
 module.exports = {
   insert,
@@ -166,5 +163,5 @@ module.exports = {
   customSum,
   sumAmountDistinctByDate,
   customSearch,
-  customCount
+  customCount,
 };

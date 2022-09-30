@@ -1,37 +1,38 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'Wallet';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const { WALLET_TYPE } = require('../WalletConstant');
 
-
 const insertSchema = {
   userId: Joi.number(),
-  walletType: Joi.string(),
+  walletType: Joi.string().max(255),
 };
 
 const updateSchema = {
-  ...insertSchema
-}
+  ...insertSchema,
+};
 
 const filterSchema = {
-  ...insertSchema
+  ...insertSchema,
 };
 
 const bodyAdjustBalance = {
   appUserId: Joi.number().required().min(0),
   paymentAmount: Joi.number().required().min(0),
-  walletType: Joi.string().required().allow([WALLET_TYPE.USDT, WALLET_TYPE.FAC, WALLET_TYPE.POINT, WALLET_TYPE.BTC])
-}
+  walletType: Joi.string().required().example(WALLET_TYPE.POINT).max(255),
+};
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -41,14 +42,14 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(insertSchema)
+      payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -61,14 +62,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -83,21 +84,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -108,15 +105,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
   increaseBalance: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -126,14 +123,14 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(bodyAdjustBalance)
+      payload: Joi.object(bodyAdjustBalance),
     },
     handler: function (req, res) {
-      Response(req, res, "increaseBalance");
-    }
+      Response(req, res, 'increaseBalance');
+    },
   },
   decreaseBalance: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -143,10 +140,10 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(bodyAdjustBalance)
+      payload: Joi.object(bodyAdjustBalance),
     },
     handler: function (req, res) {
-      Response(req, res, "decreaseBalance");
-    }
+      Response(req, res, 'decreaseBalance');
+    },
   },
 };

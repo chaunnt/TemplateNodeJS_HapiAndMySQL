@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB, timestamps } = require("../../../config/database")
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "SummaryUserPaymentBonusTransactionView";
+const tableName = 'SummaryUserPaymentBonusTransactionView';
 
 const rootTableName = 'AppUser';
-const primaryKeyField = "appUserId";
+const primaryKeyField = 'appUserId';
 async function createUserDepositTransactionView() {
   const depositTableName = 'PaymentBonusTransaction';
   let fields = [
@@ -29,17 +31,17 @@ async function createUserDepositTransactionView() {
   ];
 
   var viewDefinition = DB.select(fields)
-  .from(depositTableName)
-  .sum('paymentAmount as totalSum')
-  .sum('totalReferAmount as totalReferAmount')
-  .count('paymentBonusTransactionId as totalCount')
-  .groupBy(`${rootTableName}.appUserId`)
-  .groupBy(`${depositTableName}.paymentStatus`)
-  .orderBy(`${rootTableName}.appUserId`)
-  .leftJoin(rootTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${depositTableName}.appUserId`)
-  })
-  Common.createOrReplaceView(tableName, viewDefinition)
+    .from(depositTableName)
+    .sum('paymentAmount as totalSum')
+    .sum('totalReferAmount as totalReferAmount')
+    .count('paymentBonusTransactionId as totalCount')
+    .groupBy(`${rootTableName}.appUserId`)
+    .groupBy(`${depositTableName}.paymentStatus`)
+    .orderBy(`${rootTableName}.appUserId`)
+    .leftJoin(rootTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${depositTableName}.appUserId`);
+    });
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {

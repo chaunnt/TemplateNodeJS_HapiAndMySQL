@@ -1,22 +1,24 @@
-const faker = require("faker");
-const chai = require("chai");
-const chaiHttp = require("chai-http");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const faker = require('faker');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 // const fs = require('fs');
 
-const { checkResponseStatus } = require("../../Common/test/Common");
-const TestFunctions = require("../../Common/test/CommonTestFunctions");
-const Constant = require("../PaymentServicePackageConstant");
+const { checkResponseStatus } = require('../../Common/test/Common');
+const TestFunctions = require('../../Common/test/CommonTestFunctions');
+const Constant = require('../PaymentServicePackageConstant');
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-const app = require("../../../server");
+const app = require('../../../server');
 
 describe(`Tests PaymentServicePackage`, () => {
-  let staffToken = "";
-  let userToken = "";
+  let staffToken = '';
+  let userToken = '';
   let id;
-  before((done) => {
+  before(done => {
     new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
       staffToken = staffData.token;
@@ -26,32 +28,32 @@ describe(`Tests PaymentServicePackage`, () => {
     }).then(() => done());
   });
 
-  it("insert payment service package", (done) => {
+  it('insert payment service package', done => {
     let price = faker.random.number({
       min: 100000,
       max: 500000,
     });
-    let discountPrice = price - price * faker.random.number(20) / 100;
+    let discountPrice = price - (price * faker.random.number(20)) / 100;
     const body = {
       packageName: faker.random.words(),
       packagePrice: price,
-      packageDiscountPrice: discountPrice + "",
+      packageDiscountPrice: discountPrice + '',
       packagePerformance: faker.random.number({
         min: 1,
-        max: 10
+        max: 10,
       }),
       packageUnitId: 1,
       packageStatus: Constant.PACKAGE_STATUS.NEW,
       packageDuration: faker.random.number({
         min: 1,
-        max: 20
+        max: 20,
       }),
-      packageType : Constant.PACKAGE_TYPE.A1000FAC.type
+      packageType: Constant.PACKAGE_TYPE.A1000FAC.type,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/insert`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -63,12 +65,12 @@ describe(`Tests PaymentServicePackage`, () => {
       });
   });
 
-  it("find payment service package", (done) => {
+  it('find payment service package', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -79,7 +81,7 @@ describe(`Tests PaymentServicePackage`, () => {
       });
   });
 
-  it("update payment service package", (done) => {
+  it('update payment service package', done => {
     const body = {
       id: id,
       data: {
@@ -90,7 +92,7 @@ describe(`Tests PaymentServicePackage`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/updateById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -101,14 +103,14 @@ describe(`Tests PaymentServicePackage`, () => {
       });
   });
 
-  it("get payment service package by id", (done) => {
+  it('get payment service package by id', done => {
     const body = {
       id: id,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/findById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -119,12 +121,12 @@ describe(`Tests PaymentServicePackage`, () => {
       });
   });
 
-  it("user get payment service package", (done) => {
+  it('user get payment service package', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/getList`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -134,12 +136,12 @@ describe(`Tests PaymentServicePackage`, () => {
         done();
       });
   });
-  it("user get payment service package (no token)", (done) => {
+  it('user get payment service package (no token)', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/getList`)
-      .set("Authorization", ``)
+      .set('Authorization', ``)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -149,7 +151,7 @@ describe(`Tests PaymentServicePackage`, () => {
         done();
       });
   });
-  it("delete payment service package", (done) => {
+  it('delete payment service package', done => {
     const body = {
       id: id,
     };
@@ -157,7 +159,7 @@ describe(`Tests PaymentServicePackage`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/deleteById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

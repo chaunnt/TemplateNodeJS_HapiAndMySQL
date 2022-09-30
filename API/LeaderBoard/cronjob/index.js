@@ -1,7 +1,9 @@
-const { CronInstance, executeJob } = require("../../../ThirdParty/Cronjob/CronInstance");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const { CronInstance, executeJob } = require('../../../ThirdParty/Cronjob/CronInstance');
 
 async function startSchedule() {
-  console.log("start LeaderBoardSchedule");
+  console.info('start LeaderBoardSchedule');
   //every 23h chủ nhật
   CronInstance.schedule('* 23 * * 0', async function () {
     executeJob('./API/LeaderBoard/cronjob/Job_CalculateScoreForAllUsers.js');

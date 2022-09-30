@@ -1,15 +1,17 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const AppUserResource = require("../../AppUsers/resourceAccess/AppUsersResourceAccess");
+'use strict';
+const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const WalletFunctions = require('../WalletFunctions');
 
 async function InitWalletForAllUser() {
   console.info(`Start InitWalletForAllUser`);
   let userCount = await AppUserResource.count({});
   if (userCount === undefined || userCount.length < 1) {
-    console.info("There is no user to init wallet");
+    console.info('There is no user to init wallet');
     return;
   }
 
@@ -34,7 +36,7 @@ async function InitWalletForAllUser() {
       WalletFunctions.createWalletForUser(userData.appUserId);
     }
   }
-};
+}
 
 InitWalletForAllUser();
 

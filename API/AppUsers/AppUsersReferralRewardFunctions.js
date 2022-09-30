@@ -1,13 +1,14 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 
-const AppUsersResourceAccess = require("./resourceAccess/AppUsersResourceAccess");
+const AppUsersResourceAccess = require('./resourceAccess/AppUsersResourceAccess');
 const Logger = require('../../utils/logging');
 
-
-// - nếu f1 đăng kí và kyc thành công thì người giới thiệu nhận được 10 FAC và f1 đó cũng nhận được 10FAC, 
+// - nếu f1 đăng kí và kyc thành công thì người giới thiệu nhận được 10 FAC và f1 đó cũng nhận được 10FAC,
 // - Tiền hoa hồng sẽ chuyển về ví hoa hồng.
 async function rewardForVerifiedInfo(appUserId, referUserId) {
   const VERIFIED_INFO_REWARD_AMOUNT = 10; //10 FAC
@@ -21,7 +22,6 @@ async function rewardForVerifiedInfo(appUserId, referUserId) {
     Logger.error(`rewardForVerifiedInfo Failed for user ${appUserId}`);
   }
 
-
   //thuong cho nguoi gioi thieu
   if (referUserId && referUserId !== null) {
     let rewardReferalResult = WalletRecordFunctions.addReferralBonus(referUserId, _rewardAmount);
@@ -31,18 +31,17 @@ async function rewardForVerifiedInfo(appUserId, referUserId) {
   }
 }
 
-
 async function rewardByTotalReferalUser(appUserId) {
   //gioi thieu 100 nguoi thi duoc thuong
-  const REQUIRED_TOTAL_REFERAL_USER = 100; 
+  const REQUIRED_TOTAL_REFERAL_USER = 100;
 
   if (!appUserId || appUserId === null) {
-    Logger.info(`do not rewardByTotalReferalUser for null user`)
+    Logger.info(`do not rewardByTotalReferalUser for null user`);
     return;
   }
 
   let _totalReferredUser = await AppUsersResourceAccess.count({
-    referUserId: appUserId
+    referUserId: appUserId,
   });
 
   if (!_totalReferredUser || _totalReferredUser[0].count !== REQUIRED_TOTAL_REFERAL_USER) {
@@ -60,4 +59,4 @@ async function rewardByTotalReferalUser(appUserId) {
 module.exports = {
   rewardForVerifiedInfo,
   rewardByTotalReferalUser,
-}
+};

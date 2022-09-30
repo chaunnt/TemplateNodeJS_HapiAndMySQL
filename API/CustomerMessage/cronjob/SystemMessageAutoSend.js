@@ -1,14 +1,15 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 // const StationsResource = require('../../Stations/resourceAccess/StationsResourceAccess');
 // const CustomerMessageEmailProcess = require('./CustomerMessageEmailJob');
 // const CustomerMessageSMSProcess = require('./CustomerMessageSMSJob');
 const GenerateMessageProcess = require('./GenerateCustomerMessage');
 
 async function systemAutoGenerateMessage() {
-  console.log(`systemAutoGenerateMessage`);
   let promiseList = [];
 
   //tao ra message cho tung customer tu group message
@@ -32,11 +33,10 @@ async function systemAutoGenerateMessage() {
   // });
   // promiseList.push(promiseSMS);
 
-
-  Promise.all(promiseList).then((values) => {
-    console.log(`systemAutoGenerateMessage response ${values}`);
+  Promise.all(promiseList).then(values => {
+    console.info(`systemAutoGenerateMessage response ${values}`);
   });
-};
+}
 
 module.exports = {
   systemAutoGenerateMessage,

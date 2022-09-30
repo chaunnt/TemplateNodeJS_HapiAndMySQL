@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "SummaryUserWithdrawTransactionView";
+const tableName = 'SummaryUserWithdrawTransactionView';
 const rootTableName = 'AppUser';
-const primaryKeyField = "appUserId";
+const primaryKeyField = 'appUserId';
 async function createUserWithdrawTransactionView() {
   const withdrawTableName = 'PaymentWithdrawTransaction';
   let fields = [
@@ -29,21 +31,21 @@ async function createUserWithdrawTransactionView() {
     `${rootTableName}.isHidden`,
     `${rootTableName}.referUserId`,
 
-    `${withdrawTableName}.paymentStatus`
+    `${withdrawTableName}.paymentStatus`,
   ];
 
   var viewDefinition = DB.select(fields)
-  .from(withdrawTableName)
-  .sum('paymentAmount as totalSum')
-  .count('paymentWithdrawTransactionId as totalCount')
-  .groupBy(`${rootTableName}.appUserId`)
-  .groupBy(`${withdrawTableName}.paymentStatus`)
-  .orderBy(`${rootTableName}.appUserId`)
-  .leftJoin(rootTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${withdrawTableName}.appUserId`)
-  })
+    .from(withdrawTableName)
+    .sum('paymentAmount as totalSum')
+    .count('paymentWithdrawTransactionId as totalCount')
+    .groupBy(`${rootTableName}.appUserId`)
+    .groupBy(`${withdrawTableName}.paymentStatus`)
+    .orderBy(`${rootTableName}.appUserId`)
+    .leftJoin(rootTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${withdrawTableName}.appUserId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -77,5 +79,5 @@ module.exports = {
   count,
   updateById,
   initViews,
-  sum
+  sum,
 };

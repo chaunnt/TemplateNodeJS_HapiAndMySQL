@@ -1,11 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database")
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "Staff";
-const primaryKeyField = "staffId";
+
+const tableName = 'Staff';
+const primaryKeyField = 'staffId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -46,7 +49,7 @@ async function createTable() {
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then((result) => {
+          seeding().then(result => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
           });
@@ -61,32 +64,33 @@ async function initDB() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    let initialStaff =
-      [
-        {
-          "lastName": "string",
-          "firstName": "string",
-          "username": "string",
-          "email": "string@string.com",
-          "password": "fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614",
-          "phoneNumber": "string",
-          "roleId": 1
-        },
-        {
-          "lastName": "agency",
-          "firstName": "agency",
-          "username": "agency",
-          "email": "agency@string.com",
-          "password": "fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614",
-          "phoneNumber": "agency",
-          "roleId": 5,
-          "stationsId": 1
-        }
-      ]
-    DB(`${tableName}`).insert(initialStaff).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    let initialStaff = [
+      {
+        lastName: 'string',
+        firstName: 'string',
+        username: 'string',
+        email: 'string@string.com',
+        password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
+        phoneNumber: 'string',
+        roleId: 1,
+      },
+      {
+        lastName: 'agency',
+        firstName: 'agency',
+        username: 'agency',
+        email: 'agency@string.com',
+        password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
+        phoneNumber: 'agency',
+        roleId: 5,
+        stationsId: 1,
+      },
+    ];
+    DB(`${tableName}`)
+      .insert(initialStaff)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -104,6 +108,10 @@ async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
 
+async function findById(id) {
+  return await Common.findById(tableName, primaryKeyField, id);
+}
+
 async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
@@ -114,5 +122,6 @@ module.exports = {
   count,
   updateById,
   initDB,
-  modelName: tableName
+  modelName: tableName,
+  findById,
 };

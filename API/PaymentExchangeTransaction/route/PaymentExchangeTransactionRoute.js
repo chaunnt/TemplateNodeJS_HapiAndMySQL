@@ -1,11 +1,13 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'PaymentExchangeTransaction';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;
 
@@ -16,24 +18,24 @@ const insertSchema = {
 
 const updateSchema = {
   status: Joi.string(),
-}
+};
 
 const filterSchema = {
   appUserId: Joi.number(),
-  walletAddress: Joi.string(),
-  walletTypeBefore: Joi.string(),
-  createdAt: Joi.string(),
-  firstName: Joi.string(),
-  lastName: Joi.string(),
-  email: Joi.string(),
-  memberLevelName: Joi.string(),
+  walletAddress: Joi.string().max(255),
+  walletTypeBefore: Joi.string().max(255),
+  createdAt: Joi.string().max(255),
+  firstName: Joi.string().max(255),
+  lastName: Joi.string().max(255),
+  email: Joi.string().max(255),
+  memberLevelName: Joi.string().max(255),
   active: Joi.number(),
-  phoneNumber: Joi.string()
+  phoneNumber: Joi.string().min(8).max(25),
 };
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -43,18 +45,18 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(insertSchema)
+      payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
       if (SystemStatus.exchange === false) {
-        res("maintain").code(500);
+        res('maintain').code(500);
         return;
       }
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -67,14 +69,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -92,21 +94,17 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -117,15 +115,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
   approveExchangeTransaction: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `approveExchangeTransaction ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -136,19 +134,19 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
       if (SystemStatus.exchange === false) {
-        res("maintain").code(500);
+        res('maintain').code(500);
         return;
       }
-      Response(req, res, "approveExchangeTransaction");
-    }
+      Response(req, res, 'approveExchangeTransaction');
+    },
   },
   denyExchangeTransaction: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `denyExchangeTransaction ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -159,19 +157,19 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
       if (SystemStatus.exchange === false) {
-        res("maintain").code(500);
+        res('maintain').code(500);
         return;
       }
-      Response(req, res, "denyExchangeTransaction");
-    }
+      Response(req, res, 'denyExchangeTransaction');
+    },
   },
   viewExchangeRequests: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `viewExchangeRequests ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -187,25 +185,21 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
       if (SystemStatus.exchange === false) {
-        res("maintain").code(500);
+        res('maintain').code(500);
         return;
       }
-      Response(req, res, "viewExchangeRequests");
-    }
+      Response(req, res, 'viewExchangeRequests');
+    },
   },
   exchangeHistory: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `exchangeHistory ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -221,21 +215,17 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "exchangeHistory");
-    }
+      Response(req, res, 'exchangeHistory');
+    },
   },
   receiveHistory: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `receiveHistory ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -251,17 +241,13 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "receiveHistory");
-    }
+      Response(req, res, 'receiveHistory');
+    },
   },
 };

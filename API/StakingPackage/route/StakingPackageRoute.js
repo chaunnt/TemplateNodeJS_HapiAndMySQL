@@ -1,31 +1,33 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'StakingPackage';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const { STAKING_PAYMENT_TYPE } = require('../StakingPackageConstant');
 
 const insertSchema = {
-  stakingPackageName: Joi.string(),
-  stakingPackageDescription: Joi.string().required(),
+  stakingPackageName: Joi.string().max(255),
+  stakingPackageDescription: Joi.string().required().max(500),
   stakingPackagePrice: Joi.number().required().min(0),
   stakingPeriod: Joi.number().min(0).required(),
   stakingInterestRate: Joi.number().min(0.1).required(),
   stakingPaymentType: Joi.number().min(0).default(STAKING_PAYMENT_TYPE.FULL_PERIOD),
   stakingPaymentPeriod: Joi.number().min(0),
-}
+};
 
 const filterSchema = {
   //tam thoi chua can filter gi
-}
+};
 
 const updateSchema = {
-  stakingPackageName: Joi.string(),
-  stakingPackageDescription: Joi.string(),
+  stakingPackageName: Joi.string().max(255),
+  stakingPackageDescription: Joi.string().max(500),
   stakingPackagePrice: Joi.number().min(0),
   stakingPeriod: Joi.number().min(0),
   stakingInterestRate: Joi.number().min(0.1),
@@ -35,14 +37,11 @@ const updateSchema = {
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -51,18 +50,15 @@ module.exports = {
       payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
+      Response(req, res, 'insert');
     },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -74,16 +70,13 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
+      Response(req, res, 'updateById');
     },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken }
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -99,26 +92,19 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken }
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -127,22 +113,19 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
   deleteById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `delete ${moduleName} by id`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -153,11 +136,11 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "deleteById");
+      Response(req, res, 'deleteById');
     },
   },
   userGetListStaking: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -175,17 +158,13 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
 };

@@ -1,7 +1,10 @@
-const BetRecordsViews = require('../BetRecords/resourceAccess/UserBetRecordsView')
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const BetRecordsViews = require('../BetRecords/resourceAccess/UserBetRecordsView');
 const LeaderBoardViews = require('./resourceAccess/LeaderBoardViews');
-const LeaderBoardResourAccess = require('./resourceAccess/LeaderBoardResourAccess')
+const LeaderBoardResourAccess = require('./resourceAccess/LeaderBoardResourAccess');
 const moment = require('moment');
+const { ERROR } = require('../Common/CommonConstant');
 async function _calculatePlayScore(appUserId) {
   let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
   let lastWeekEnd = moment().subtract(1, 'weeks').endOf('week').add(1, 'day').format();
@@ -9,18 +12,17 @@ async function _calculatePlayScore(appUserId) {
   console.info(`start _calculatePlayScore ${lastWeekStart} -- ${lastWeekEnd}`);
 
   let filter = {};
-  filter.appUserId = appUserId
+  filter.appUserId = appUserId;
   let result = await BetRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
   if (result && result.length) {
     let sumResult;
     if (result[0].sumResult === null) {
-      return sumResult = 0
+      return (sumResult = 0);
     }
-    sumResult = result[0].sumResult
-    return sumResult
-  }
-  else {
-    return 0
+    sumResult = result[0].sumResult;
+    return sumResult;
+  } else {
+    return 0;
   }
 }
 async function _calculateReferScore(appUserId) {
@@ -30,18 +32,17 @@ async function _calculateReferScore(appUserId) {
   console.info(`start _calculateReferScore ${lastWeekStart} -- ${lastWeekEnd}`);
 
   let filter = {};
-  filter.memberReferIdF1 = appUserId
+  filter.memberReferIdF1 = appUserId;
   let result = await BetRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
   if (result && result.length > 0) {
     let sumResult;
     if (result[0].sumResult === null) {
-      return sumResult = 0
+      return (sumResult = 0);
     }
-    sumResult = result[0].sumResult
-    return sumResult
-  }
-  else {
-    return 0
+    sumResult = result[0].sumResult;
+    return sumResult;
+  } else {
+    return 0;
   }
 }
 
@@ -50,16 +51,16 @@ async function calculateRankingScoreByUserId(appUserId) {
   let resultPlayScore = await _calculatePlayScore(appUserId);
   let resultReferScore = await _calculateReferScore(appUserId);
   data.totalPlayScore = resultPlayScore;
-  data.totalReferScore = resultReferScore
+  data.totalReferScore = resultReferScore;
   data.totalScore = data.totalReferScore + data.totalPlayScore;
-  return data
+  return data;
 }
 
 async function updateRankingForAllUsers() {
   let order = {
-    "key": "totalScore",
-    "value": "desc"
-  }
+    key: 'totalScore',
+    value: 'desc',
+  };
   let limit = 10;
 
   let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
@@ -67,7 +68,15 @@ async function updateRankingForAllUsers() {
 
   console.info(`start updateRankingForAllUsers ${lastWeekStart} -- ${lastWeekEnd}`);
 
-  let result = await LeaderBoardViews.customSearch(undefined, undefined, limit, lastWeekStart, lastWeekEnd, undefined, order);
+  let result = await LeaderBoardViews.customSearch(
+    undefined,
+    undefined,
+    limit,
+    lastWeekStart,
+    lastWeekEnd,
+    undefined,
+    order,
+  );
   if (result && result.length > 0) {
     let dataUpdate = {};
     for (var i = 0; i < result.length; i++) {
@@ -75,13 +84,12 @@ async function updateRankingForAllUsers() {
 
       let resultUpdate = await LeaderBoardResourAccess.updateById(result[i].appUserId, dataUpdate);
       if (!resultUpdate) {
-        continue
+        continue;
       }
     }
-    return result
-  }
-  else {
-    return undefined
+    return result;
+  } else {
+    return undefined;
   }
 }
 
@@ -89,13 +97,13 @@ async function adminUpdateRanking(appUserId, ranking, totalScore) {
   return new Promise(async (resolve, reject) => {
     try {
       let order = {
-        "key": "ranking",
-        "value": "asc"
-      }
+        key: 'ranking',
+        value: 'asc',
+      };
       let limit = 10;
       let dataUpdate = {
-        ranking: ranking
-      }
+        ranking: ranking,
+      };
 
       if (totalScore) {
         dataUpdate.totalScore = totalScore;
@@ -103,44 +111,52 @@ async function adminUpdateRanking(appUserId, ranking, totalScore) {
 
       let resultUpdate = await LeaderBoardResourAccess.updateById(appUserId, dataUpdate);
       if (!resultUpdate) {
-        reject("failed");
+        console.error(`error Leader adminUpdateRanking: ${ERROR}`);
+        reject('failed');
       } else {
-        let resultFind = await LeaderBoardViews.customSearch(undefined, undefined, limit, undefined, undefined, ranking, order);
+        let resultFind = await LeaderBoardViews.customSearch(
+          undefined,
+          undefined,
+          limit,
+          undefined,
+          undefined,
+          ranking,
+          order,
+        );
         if (resultFind && resultFind.length > 0) {
           let newArray = [];
           for (var i = 0; i < resultFind.length; i++) {
             if (resultFind[i].appUserId !== appUserId) {
-              newArray.push(resultFind[i])
+              newArray.push(resultFind[i]);
             }
           }
           if (newArray.length > 0) {
             for (var i = 0; i < newArray.length; i++) {
-              let resultUpdate = await LeaderBoardResourAccess.updateById(newArray[i].appUserId, { ranking: ranking + i + 1 });
+              let resultUpdate = await LeaderBoardResourAccess.updateById(newArray[i].appUserId, {
+                ranking: ranking + i + 1,
+              });
               if (!resultUpdate) {
-                continue
+                continue;
               }
             }
           }
-          resolve("update complete")
+          resolve('update complete');
         }
       }
-
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error admin Update Ranking`, e);
+      reject('failed');
     }
   });
-
 }
 
 async function rewardForTopRanking() {
   let order = {
-    "key": "ranking",
-    "value": "asc"
-  }
+    key: 'ranking',
+    value: 'asc',
+  };
 
   let topRankUsers = await LeaderBoardViews.customSearch(undefined, 0, 3, undefined, undefined, undefined, order);
-  console.log(topRankUsers)
   const { addEventBonus } = require('../WalletRecord/WalletRecordFunction');
   const FIRST_PRIZE = 1000; //thuong 1000 USDT
   const SECOND_PRIZE = 300; //thuong 1000 USDT
@@ -154,7 +170,7 @@ async function rewardForTopRanking() {
       await addEventBonus(_topUser.appUserId, SECOND_PRIZE);
     } else if (_topUser.ranking === 3) {
       await addEventBonus(_topUser.appUserId, THIRD_PRIZE);
-    } 
+    }
   }
 }
 
@@ -162,5 +178,5 @@ module.exports = {
   calculateRankingScoreByUserId,
   updateRankingForAllUsers,
   adminUpdateRanking,
-  rewardForTopRanking, 
-}
+  rewardForTopRanking,
+};

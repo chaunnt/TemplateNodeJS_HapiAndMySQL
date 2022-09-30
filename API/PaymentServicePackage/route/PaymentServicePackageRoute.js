@@ -1,25 +1,29 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by Huu on 12/06/21.
  */
-"use strict";
-const moduleName = "PaymentServicePackage";
+'use strict';
+const moduleName = 'PaymentServicePackage';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
-const CommonFunctions = require("../../Common/CommonFunctions");
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
+const CommonFunctions = require('../../Common/CommonFunctions');
 const { PACKAGE_STATUS, PACKAGE_CATEGORY, PACKAGE_TYPE } = require('../PaymentServicePackageConstant');
 
 const insertSchema = {
   packageName: Joi.string().required(),
-  packageType: Joi.string().required().allow([PACKAGE_TYPE.A1000FAC.type, PACKAGE_TYPE.A100FAC.type, PACKAGE_TYPE.A500FAC.type]),
-  packageDescription: Joi.string(),
+  packageType: Joi.string()
+    .required()
+    .allow([PACKAGE_TYPE.A1000FAC.type, PACKAGE_TYPE.A100FAC.type, PACKAGE_TYPE.A500FAC.type]),
+  packageDescription: Joi.string().max(500),
   packagePrice: Joi.number().required(),
   packageDiscountPrice: Joi.string().allow(''),
   packagePerformance: Joi.number().required().min(1),
   packageCategory: Joi.string(),
   packageUnitId: Joi.number().required().min(0),
   packageDuration: Joi.number().default(360).required().min(1),
-  packageStatus: Joi.number().default(PACKAGE_STATUS.NEW)
+  packageStatus: Joi.number().default(PACKAGE_STATUS.NEW),
 };
 
 const filterSchema = {
@@ -27,11 +31,11 @@ const filterSchema = {
   packageStatus: Joi.number(),
   packageType: Joi.string(),
   packageCategory: Joi.string(),
-}
+};
 
 const updateSchema = {
   packageName: Joi.string(),
-  packageDescription: Joi.string(),
+  packageDescription: Joi.string().max(500),
   packageType: Joi.string(),
   packagePrice: Joi.number(),
   packageDiscountPrice: Joi.number(),
@@ -43,14 +47,11 @@ const updateSchema = {
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -59,18 +60,15 @@ module.exports = {
       payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
+      Response(req, res, 'insert');
     },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -82,18 +80,15 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
+      Response(req, res, 'updateById');
     },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `get list ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -105,25 +100,22 @@ module.exports = {
         limit: Joi.number().default(20).max(100),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string().default("createdAt").allow(""),
-          value: Joi.string().default("desc").allow(""),
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
+      Response(req, res, 'find');
     },
   },
-  
+
   deleteById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `delete ${moduleName} by id`,
-    pre: [
-      { method: CommonFunctions.verifyToken },
-      { method: CommonFunctions.verifyStaffToken },
-    ],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -134,15 +126,15 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "deleteById");
+      Response(req, res, 'deleteById');
     },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -153,15 +145,15 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
+      Response(req, res, 'findById');
     },
   },
   activatePackagesByIdList: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -172,15 +164,15 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "activatePackagesByIdList");
+      Response(req, res, 'activatePackagesByIdList');
     },
   },
   deactivatePackagesByIdList: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -191,15 +183,15 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "deactivatePackagesByIdList");
+      Response(req, res, 'deactivatePackagesByIdList');
     },
   },
   rewardProfitBonusForUser: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `admin add reward (profitBonus) for user ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
-      strategy: "jwt",
+      strategy: 'jwt',
     },
     validate: {
       headers: Joi.object({
@@ -211,15 +203,13 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "rewardProfitBonusForUser");
+      Response(req, res, 'rewardProfitBonusForUser');
     },
   },
   userGetListPaymentPackage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `user get list ${moduleName}`,
-    pre: [
-      { method: CommonFunctions.verifyTokenOrAllowEmpty }
-    ],
+    pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
       headers: Joi.object({
         authorization: Joi.string().allow(''),
@@ -229,13 +219,13 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string().default("createdAt").allow(""),
-          value: Joi.string().default("desc").allow(""),
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetListPaymentPackage");
+      Response(req, res, 'userGetListPaymentPackage');
     },
   },
 };

@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -10,10 +12,9 @@ chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-
 describe(`Tests PaymentExchangeTransaction`, () => {
-  let staffToken = "";
-  let userToken = "";
+  let staffToken = '';
+  let userToken = '';
   let testUserId;
   before(done => {
     new Promise(async (resolve, reject) => {
@@ -27,12 +28,11 @@ describe(`Tests PaymentExchangeTransaction`, () => {
   });
 
   it('find PaymentExchangeTransaction', done => {
-    const body = {
-    };
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/find`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -43,11 +43,18 @@ describe(`Tests PaymentExchangeTransaction`, () => {
       });
   });
   it('find PaymentExchangeTransaction (with filter)', done => {
-    const body = {"filter":{},"skip":0,"startDate":"2021-11-30T17:00:00.000Z","endDate":"2021-12-31T16:59:59.999Z","limit":20,"order":{"key":"createdAt","value":"desc"}};
+    const body = {
+      filter: {},
+      skip: 0,
+      startDate: '2021-11-30T17:00:00.000Z',
+      endDate: '2021-12-31T16:59:59.999Z',
+      limit: 20,
+      order: { key: 'createdAt', value: 'desc' },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/find`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -58,11 +65,11 @@ describe(`Tests PaymentExchangeTransaction`, () => {
       });
   });
   it('find PaymentExchangeTransaction (with searchText)', done => {
-    const body = {"filter":{},"skip":0,"searchText":"aaa","limit":20,"order":{"key":"createdAt","value":"desc"}};
+    const body = { filter: {}, skip: 0, searchText: 'aaa', limit: 20, order: { key: 'createdAt', value: 'desc' } };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/find`)
-      .set("Authorization", `${staffToken}`)
+      .set('Authorization', `${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -89,7 +96,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
   //       done();
   //     });
   // });
-  
+
   // it('POST /PaymentExchangeTransaction/receiveHistory', done => {
   //   const body = {
   //   };
@@ -106,11 +113,11 @@ describe(`Tests PaymentExchangeTransaction`, () => {
   //       done();
   //     });
   // });
-  
+
   // it('user (agency - no refer username) request new PaymentExchangeTransaction', done => {
   //   const body = {
   //     paymentAmount: 1,
-  //     walletBalanceUnitId: 2 //always available 
+  //     walletBalanceUnitId: 2 //always available
   //   };
   //   chai
   //     .request(`0.0.0.0:${process.env.PORT}`)
@@ -134,7 +141,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/ExchangePOINT`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -152,7 +159,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentExchangeTransaction/user/ExchangeFAC`)
-      .set("Authorization", `${userToken}`)
+      .set('Authorization', `${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -182,7 +189,7 @@ describe(`Tests PaymentExchangeTransaction`, () => {
   //       done();
   //     });
   // });
-  
+
   // it('POST /PaymentExchangeTransaction/approveExchangeTransaction', done => {
   //   const body = {
   //     id: approveTransactionId,
@@ -218,4 +225,4 @@ describe(`Tests PaymentExchangeTransaction`, () => {
   //       done();
   //     });
   // });
-})
+});

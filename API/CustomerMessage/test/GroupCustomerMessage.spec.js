@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -16,12 +18,12 @@ const app = require('../../../server');
 
 describe(`Tests GroupCustomerMessage`, function () {
   let messageId;
-  let staffToken = "";
+  let staffToken = '';
   before(done => {
     new Promise(async function (resolve, reject) {
       let staffData = await TestFunctions.loginStaff();
       staffToken = staffData.token;
-      done()
+      done();
       resolve();
     });
   });
@@ -34,7 +36,7 @@ describe(`Tests GroupCustomerMessage`, function () {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GroupCustomerMessage/insert`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -49,7 +51,7 @@ describe(`Tests GroupCustomerMessage`, function () {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GroupCustomerMessage/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -57,19 +59,19 @@ describe(`Tests GroupCustomerMessage`, function () {
         }
         checkResponseStatus(res, 200);
         if (res.body.data && res.body.data.data.length > 0) {
-          messageId = res.body.data.data[0].groupCustomerMessageId
+          messageId = res.body.data.data[0].groupCustomerMessageId;
         }
         done();
       });
   });
   it('POST /GroupCustomerMessage/findById', done => {
     const body = {
-      id: messageId
+      id: messageId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GroupCustomerMessage/findById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

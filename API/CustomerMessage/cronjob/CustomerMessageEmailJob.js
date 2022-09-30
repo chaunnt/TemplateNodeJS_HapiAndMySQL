@@ -1,8 +1,10 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const Joi = require('joi')
+'use strict';
+const Joi = require('joi');
 // const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
 // const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
 const CustomerMessage = require('../resourceAccess/CustomerMessageResourceAccess');
@@ -15,7 +17,7 @@ const Logger = require('../../../utils/logging');
 async function _cancelAllEmailMessage(station) {
   let messageList = await CustomerMessage.find({
     customerMessageCategories: MESSAGE_CATEGORY.EMAIL,
-    customerMessageStatus: MESSAGE_STATUS.NEW
+    customerMessageStatus: MESSAGE_STATUS.NEW,
   });
 
   for (let i = 0; i < messageList.length; i++) {
@@ -23,27 +25,26 @@ async function _cancelAllEmailMessage(station) {
     let failureFilter = {
       messageSendStatus: MESSAGE_STATUS.NEW,
       messageId: messageObj.customerMessageId,
-      customerStationId: station.stationsId
+      customerStationId: station.stationsId,
     };
-  
+
     let updatedMessageData = {
       messageSendStatus: MESSAGE_STATUS.CANCELED,
       messageNote: `Something wrong with Email Config.`,
-    }
+    };
     await MessageCustomer.updateAll(updatedMessageData, failureFilter);
     await CustomerMessage.updateById(messageObj.customerMessageId, {
-      customerMessageStatus: MESSAGE_STATUS.CANCELED
+      customerMessageStatus: MESSAGE_STATUS.CANCELED,
     });
   }
 }
 
 async function sendMessageEmailToCustomer(station) {
-  console.log(`sendMessageEmailToCustomer ${station.stationsId}`);
+  console.info(`sendMessageEmailToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
-
     //Skip TEST station
     if (station.stationsId === 0) {
-      resolve("OK");
+      resolve('OK');
       return;
     }
 
@@ -52,41 +53,51 @@ async function sendMessageEmailToCustomer(station) {
     let customEmailClient = undefined;
     if (station.stationUseCustomSMTP === ENABLED) {
       //check if use custom smtp but wrong smtp info
-      if (station.stationCustomSMTPConfig && station.stationCustomSMTPConfig !== "" && station.stationCustomSMTPConfig !== null) {
+      if (
+        station.stationCustomSMTPConfig &&
+        station.stationCustomSMTPConfig !== '' &&
+        station.stationCustomSMTPConfig !== null
+      ) {
         try {
           let _smtpConfig = JSON.parse(stationConfigs.stationCustomSMTPConfig);
           customEmailClient = await EmailClient.createNewClient(
-            _smtpConfig.smtpHost, 
-            _smtpConfig.smtpPort, 
+            _smtpConfig.smtpHost,
+            _smtpConfig.smtpPort,
             _smtpConfig.smtpSecure,
-            _smtpConfig.smtpAuth.user, 
-            _smtpConfig.smtpAuth.pass
+            _smtpConfig.smtpAuth.user,
+            _smtpConfig.smtpAuth.pass,
           );
           if (customEmailClient === undefined || customEmailClient === null) {
             await _cancelAllEmailMessage(station);
-            Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not create new smtp client`)
-            resolve("OK");
+            Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not create new smtp client`);
+            resolve('OK');
             return;
           }
         } catch (error) {
           await _cancelAllEmailMessage(station);
-          Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not convert stationCustomSMTPConfig`)
-          resolve("OK");
+          Logger.error(
+            `Station ${station.stationsId} enable use Custom SMTP but can not convert stationCustomSMTPConfig`,
+          );
+          resolve('OK');
           return;
         }
       } else {
         await _cancelAllEmailMessage(station);
-        Logger.error(`Station ${station.stationsId} enable use Custom SMTP but do not have stationCustomSMTPConfig`)
-        resolve("OK");
+        Logger.error(`Station ${station.stationsId} enable use Custom SMTP but do not have stationCustomSMTPConfig`);
+        resolve('OK');
         return;
       }
     }
 
-    let messageList = await MessageCustomerView.find({
-      messageSendStatus: MESSAGE_STATUS.NEW,
-      customerMessageCategories: MESSAGE_CATEGORY.EMAIL,
-      customerStationId: station.stationsId
-    }, 0, 100);
+    let messageList = await MessageCustomerView.find(
+      {
+        messageSendStatus: MESSAGE_STATUS.NEW,
+        customerMessageCategories: MESSAGE_CATEGORY.EMAIL,
+        customerStationId: station.stationsId,
+      },
+      0,
+      100,
+    );
 
     if (messageList && messageList.length > 0) {
       for (let i = 0; i < messageList.length; i++) {
@@ -95,7 +106,7 @@ async function sendMessageEmailToCustomer(station) {
         let messageContent = _customerMessage.customerMessageContent;
 
         //if using template, then generate content based on template
-        if (_templateId && _templateId !== null && _templateId !== "") {
+        if (_templateId && _templateId !== null && _templateId !== '') {
           let customer = await CustomerRecord.findById(_customerMessage.customerId);
           if (customer) {
             let templateContent = await MessageFunction.getMessageContentByTemplate(_templateId, station, customer);
@@ -106,17 +117,17 @@ async function sendMessageEmailToCustomer(station) {
         }
 
         let updatedMessageData = {
-          messageSendStatus: MESSAGE_STATUS.FAILED
-        }
+          messageSendStatus: MESSAGE_STATUS.FAILED,
+        };
 
         //if valid email then process
         if (Joi.string().email().validate(_customerMessage.customerMessageEmail).error === null) {
           let sendResult = undefined;
           sendResult = await EmailClient.sendEmail(
-            _customerMessage.customerMessageEmail, 
-            _customerMessage.customerMessageTitle, 
-            messageContent, 
-            customEmailClient
+            _customerMessage.customerMessageEmail,
+            _customerMessage.customerMessageTitle,
+            messageContent,
+            customEmailClient,
           );
 
           //if send success
@@ -124,7 +135,7 @@ async function sendMessageEmailToCustomer(station) {
             updatedMessageData.messageSendStatus = MESSAGE_STATUS.COMPLETED;
             updatedMessageData.messageNote = sendResult;
             await CustomerRecord.updateById(_customerMessage.customerId, {
-              customerRecordEmailNotifyDate: new Date()
+              customerRecordEmailNotifyDate: new Date(),
             });
           } else {
             updatedMessageData.messageNote = `Send fail`;
@@ -136,12 +147,12 @@ async function sendMessageEmailToCustomer(station) {
         await MessageCustomer.updateById(_customerMessage.messageCustomerId, updatedMessageData);
       }
 
-      resolve("OK");
+      resolve('OK');
     } else {
-      resolve("DONE");
+      resolve('DONE');
     }
   });
-};
+}
 
 module.exports = {
   sendMessageEmailToCustomer,

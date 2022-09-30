@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database")
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "LeaderBoardViews";
+const tableName = 'LeaderBoardViews';
 const rootTableName = 'LeaderBoard';
-const primaryKeyField = "appUserId";
+const primaryKeyField = 'appUserId';
 
 const UserTableName = 'AppUserViews';
 
@@ -48,12 +50,13 @@ async function createView() {
     `${UserTableName}.memberReferIdF5`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName)
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
     .leftJoin(UserTableName, function () {
-      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
+      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`);
     });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -87,28 +90,28 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, star
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
   if (filterData.username) {
     queryBuilder.where('username', 'like', `%${filterData.username}%`);
-    delete filterData.username
+    delete filterData.username;
   }
   if (filterData.firstName) {
     queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`);
-    delete filterData.firstName
+    delete filterData.firstName;
   }
   if (filterData.phoneNumber) {
     queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`);
-    delete filterData.phoneNumber
+    delete filterData.phoneNumber;
   }
   if (filterData.email) {
     queryBuilder.where('email', 'like', `%${filterData.email}%`);
-    delete filterData.email
+    delete filterData.email;
   }
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
   if (startRanKing) {
-    queryBuilder.where("ranking", ">=", startRanKing);
+    queryBuilder.where('ranking', '>=', startRanKing);
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });
@@ -123,7 +126,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, star
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -134,8 +137,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, startRanKin
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, order);
+async function customCount(filter, skip, limit, startDate, endDate, startRanKing, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, startRanKing, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -154,5 +157,5 @@ module.exports = {
   sum,
   customSearch,
   customCount,
-  findById
+  findById,
 };

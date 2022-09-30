@@ -1,36 +1,38 @@
-"use strict";
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
 const SystemConfigurationsResourceAccess = require('../resourceAccess/SystemConfigurationsResourceAccess');
 const SystemConfigurationsFunction = require('../SystemConfigurationsFunction');
 const Logger = require('../../../utils/logging');
 
 async function statisticalFAC() {
-  console.log("update systemconfig")
+  console.info('update systemconfig');
   return new Promise(async (resolve, reject) => {
     try {
-      let dataUpdate = {}
+      let dataUpdate = {};
       dataUpdate.totalWorkingServicePackages = await SystemConfigurationsFunction.totalUserExploitFAC();
       dataUpdate.totalBetRecordWinAmount = await SystemConfigurationsFunction.totalExploitFAC();
       let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
       if (dataUpdate.totalWorkingServicePackages <= config[0].totalWorkingServicePackages) {
-        dataUpdate.totalWorkingServicePackages = config[0].totalWorkingServicePackages
+        dataUpdate.totalWorkingServicePackages = config[0].totalWorkingServicePackages;
       }
       if (dataUpdate.totalBetRecordWinAmount <= config[0].totalBetRecordWinAmount) {
-        dataUpdate.totalBetRecordWinAmount = config[0].totalBetRecordWinAmount
+        dataUpdate.totalBetRecordWinAmount = config[0].totalBetRecordWinAmount;
       }
       let result = await SystemConfigurationsResourceAccess.updateById(config[0].systemConfigurationsId, dataUpdate);
       if (result) {
-        resolve("DONE");
+        resolve('DONE');
         Logger.info(`DONE`);
-      }
-      else {
-        reject("failed");
+      } else {
+        console.error(`error SystemConfigurationJob statisticalFAC`);
+        reject('failed');
       }
     } catch (e) {
       console.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateCurrentStage() {
   const moment = require('moment');
@@ -46,14 +48,14 @@ async function updateCurrentStage() {
   } else if (currentStage === 3 && today > _systemConfigurations.stage3LastDate) {
     newStage = 4;
   } else if (currentStage === 4 && today > _systemConfigurations.stage4LastDate) {
-    newStage = 5
+    newStage = 5;
   } else if (currentStage === 5 && today > _systemConfigurations.stage5LastDate) {
-    newStage = 5
+    newStage = 5;
   }
 
   if (newStage) {
     await SystemConfigurationsResourceAccess.updateById(_systemConfigurations.systemConfigurationsId, {
-      packageCurrentStage: newStage
+      packageCurrentStage: newStage,
     });
     const PackageFunction = require('../../PaymentServicePackage/PaymentServicePackageFunctions');
     await PackageFunction.regenerateAllPresalePackage();
@@ -62,5 +64,5 @@ async function updateCurrentStage() {
 
 module.exports = {
   statisticalFAC,
-  updateCurrentStage
+  updateCurrentStage,
 };

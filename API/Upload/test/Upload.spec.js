@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -11,30 +13,30 @@ chai.use(chaiHttp);
 
 const app = require('../../../server');
 
-describe(`Tests Upload`, function() {
-  let token = "";
+describe(`Tests Upload`, function () {
+  let token = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
   before(done => {
-    new Promise(async function(resolve, reject) {
+    new Promise(async function (resolve, reject) {
       resolve();
     }).then(() => done());
   });
 
   it('Register user', done => {
     const body = {
-      "lastName": "string",
-      "firstName": "string",
-      "username": fakeUserName,
-      "email": faker.internet.email(),
-      "password": "string",
-      "phoneNumber": "string",
+      lastName: 'string',
+      firstName: 'string',
+      username: fakeUserName,
+      email: faker.internet.email(),
+      password: 'string',
+      phoneNumber: 'string',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/AppUsers/registerUser`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -52,7 +54,7 @@ describe(`Tests Upload`, function() {
       var base64data = Buffer.from(data, 'binary').toString('base64');
       const body = {
         image: base64data,
-        imageFormat: "jpg",
+        imageFormat: 'jpg',
       };
       chai
         .request(`0.0.0.0:${process.env.PORT}`)
@@ -60,7 +62,7 @@ describe(`Tests Upload`, function() {
         .set('Authorization', token)
         .send(body)
         .end((err, res) => {
-          if ( err ) {
+          if (err) {
             console.error(err);
           }
           checkResponseStatus(res, 200);
@@ -68,7 +70,7 @@ describe(`Tests Upload`, function() {
         });
     });
   });
-  
+
   it('Upload media file', done => {
     fs.readFile('uploads/sampleAvatar.jpg', function read(err, data) {
       if (err) {
@@ -78,7 +80,7 @@ describe(`Tests Upload`, function() {
       var base64data = Buffer.from(data, 'binary').toString('base64');
       const body = {
         imageData: base64data,
-        imageFormat: "jpg",
+        imageFormat: 'jpg',
       };
       chai
         .request(`0.0.0.0:${process.env.PORT}`)
@@ -86,7 +88,7 @@ describe(`Tests Upload`, function() {
         .set('Authorization', token)
         .send(body)
         .end((err, res) => {
-          if ( err ) {
+          if (err) {
             console.error(err);
           }
           checkResponseStatus(res, 200);

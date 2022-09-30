@@ -1,7 +1,9 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const CustomerMessage = require('../resourceAccess/CustomerMessageResourceAccess');
 const GroupCustomerMessage = require('../resourceAccess/GroupCustomerMessageResourceAccess');
 const AppUser = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
@@ -12,13 +14,13 @@ const Logger = require('../../../utils/logging');
 async function _createNewMessageForAllCustomer(groupMessage) {
   //cap nhat trang thai cua message thanh WAITING
   await GroupCustomerMessage.updateById(groupMessage.groupCustomerMessageId, {
-    groupCustomerMessageStatus: MESSAGE_STATUS.SENDING
+    groupCustomerMessageStatus: MESSAGE_STATUS.SENDING,
   });
-  
+
   //lay danh sach customer cua tung tram
   let _filter = {
     // stationsId: station.stationsId,
-  }
+  };
 
   let _countCustomer = await AppUser.customCount(_filter);
   if (_countCustomer && _countCustomer.length > 0) {
@@ -29,9 +31,9 @@ async function _createNewMessageForAllCustomer(groupMessage) {
 
   if (_countCustomer <= 0) {
     Logger.info(`No customer for station ${station.stationsId}`);
-    resolve("OK");
+    resolve('OK');
     return;
-  } 
+  }
 
   for (let i = 0; i < _countCustomer; i++) {
     let customerList = await AppUser.find(_filter, 100 * i, 100);
@@ -53,7 +55,7 @@ async function _createNewMessageForAllCustomer(groupMessage) {
         staffId: groupMessage.staffId,
         groupCustomerMessageId: groupMessage.groupCustomerMessageId,
         templateCustomerMessageId: groupMessage.groupCustomerMessageTemplateId,
-        customerMessageImage: groupMessage.groupCustomerMessageImage
+        customerMessageImage: groupMessage.groupCustomerMessageImage,
       };
       _newMessageList.push(_newMessage);
     }
@@ -61,27 +63,26 @@ async function _createNewMessageForAllCustomer(groupMessage) {
     if (_newMessageList.length > 0) {
       await CustomerMessage.insert(_newMessageList);
     }
-    
+
     if (100 * i > _countCustomer) {
       break;
     }
   }
-  
+
   //cap nhat trang thai cua message thanh COMPLETED
   await GroupCustomerMessage.updateById(groupMessage.groupCustomerMessageId, {
-    groupCustomerMessageStatus: MESSAGE_STATUS.COMPLETED
+    groupCustomerMessageStatus: MESSAGE_STATUS.COMPLETED,
   });
 }
 
 async function generateCustomerMessageFromGroupMessage(station) {
   return new Promise(async (resolve, reject) => {
-
     if (station) {
       Logger.info(`generateCustomerMessageFromGroupMessage ${station.stationsId}`);
     }
     //Skip TEST station
     if (station && station.stationsId === 0) {
-      resolve("OK");
+      resolve('OK');
       return;
     }
 
@@ -89,7 +90,7 @@ async function generateCustomerMessageFromGroupMessage(station) {
     let _filter = {
       groupCustomerMessageStatus: MESSAGE_STATUS.NEW,
       // stationsId: station.stationsId
-    }
+    };
 
     let _countGroupMessage = await GroupCustomerMessage.count(_filter);
     if (_countGroupMessage && _countGroupMessage.length > 0) {
@@ -100,13 +101,13 @@ async function generateCustomerMessageFromGroupMessage(station) {
 
     if (_countGroupMessage <= 0) {
       if (station) {
-         Logger.info(`No NEW groupMessage for station ${station.stationsId}`);
+        Logger.info(`No NEW groupMessage for station ${station.stationsId}`);
       } else {
         Logger.info(`No NEW groupMessage`);
       }
-      resolve("OK");
+      resolve('OK');
       return;
-    } 
+    }
 
     let messageList = await GroupCustomerMessage.find(_filter, 0, 100);
 
@@ -115,12 +116,12 @@ async function generateCustomerMessageFromGroupMessage(station) {
         const _groupCustomerMessage = messageList[i];
         _createNewMessageForAllCustomer(_groupCustomerMessage);
       }
-      resolve("OK");
+      resolve('OK');
     } else {
-      resolve("DONE");
+      resolve('DONE');
     }
   });
-};
+}
 
 module.exports = {
   generateCustomerMessageFromGroupMessage,

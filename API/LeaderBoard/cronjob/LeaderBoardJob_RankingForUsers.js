@@ -1,9 +1,11 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const LeaderBoardFunction = require('../LeaderFunction');
 const UserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const Logger = require('../../../utils/logging');
-const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess')
+const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess');
 async function calculateScoreForAllUsers() {
-  Logger.info(`start calculateScoreForAllUsers ${new Date}`)
+  Logger.info(`start calculateScoreForAllUsers ${new Date()}`);
   return new Promise(async (resolve, reject) => {
     try {
       let dataInsert = {};
@@ -13,7 +15,7 @@ async function calculateScoreForAllUsers() {
       }
       if (countAllIUser < 1) {
         Logger.info(`There is no User in-progress`);
-        resolve("OK");
+        resolve('OK');
         return;
       } else {
         Logger.info(`There is ${countAllIUser} user in-progress`);
@@ -40,7 +42,7 @@ async function calculateScoreForAllUsers() {
             dataInsert.appUserId = _user.appUserId;
             dataInsert.totalPlayScore = resultTotal.totalPlayScore;
             dataInsert.totalReferScore = resultTotal.totalReferScore;
-            dataInsert.totalScore = resultTotal.totalScore
+            dataInsert.totalScore = resultTotal.totalScore;
 
             let resultInsert = await LeaderBoardResourAccess.insert(dataInsert);
             if (!resultInsert) {
@@ -49,32 +51,31 @@ async function calculateScoreForAllUsers() {
           }
         }
       }
-      Logger.info(`end calculateScoreForAllUsers ${new Date}`);
-      resolve("OK");
+      Logger.info(`end calculateScoreForAllUsers ${new Date()}`);
+      resolve('OK');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateLeaderboardRanks() {
   return new Promise(async (resolve, reject) => {
     try {
       let result = await LeaderBoardFunction.updateRankingForAllUsers();
       if (!result) {
-        resolve("updateRankingForAllUsers failed");
+        resolve('updateRankingForAllUsers failed');
       } else {
-        resolve("Complete update")
-        Logger.info(`Complete update Ranking LeaderBoard ${new Date}`);
+        resolve('Complete update');
+        Logger.info(`Complete update Ranking LeaderBoard ${new Date()}`);
       }
-
     } catch (e) {
       Logger.error(e);
-      resolve("failed");
+      resolve('failed');
     }
   });
-};
+}
 
 async function rewardRankingBonusForAllUser() {
   await LeaderBoardFunction.rewardForTopRanking();

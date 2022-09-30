@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "Upload";
-const primaryKeyField = "uploadId";
+const tableName = 'Upload';
+const primaryKeyField = 'uploadId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -59,5 +61,5 @@ module.exports = {
   find,
   count,
   updateById,
-  initDB
+  initDB,
 };

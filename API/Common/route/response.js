@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -15,20 +17,22 @@ module.exports = {
   errorCodes,
   setup: function (manager) {
     return function (request, reply, method) {
-      manager[method](request).then((data) => {
-        let responseData = errorCodes[200];
-        if (data !== undefined) {
-          responseData.data = data;
-          reply(responseData).code(200);
-        } else {
-          reply(errorCodes[500]).code(500);
-        }
-      }).catch(data => {
-        Logger.error(data);
-        let error = errorCodes[500];
-        error.error = data;
-        reply(error).code(500);
-      });
-    }
+      manager[method](request)
+        .then(data => {
+          let responseData = errorCodes[200];
+          if (data !== undefined) {
+            responseData.data = data;
+            reply(responseData).code(200);
+          } else {
+            reply(errorCodes[500]).code(500);
+          }
+        })
+        .catch(data => {
+          Logger.error(data);
+          let error = errorCodes[500];
+          error.error = data;
+          reply(error).code(500);
+        });
+    };
   },
 };

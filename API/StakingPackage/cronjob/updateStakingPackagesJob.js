@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -17,9 +19,13 @@ async function collectStakingPackage(packageId) {
 
   const FUNC_FAILED = undefined;
   //find user selecting package
-  let package = await StakingPackageUserResourceAccess.find({
-    userStakingPackageId: packageId
-  }, 0, 1);
+  let package = await StakingPackageUserResourceAccess.find(
+    {
+      userStakingPackageId: packageId,
+    },
+    0,
+    1,
+  );
   if (package === undefined || package.length < 1) {
     Logger.error(`collectStakingPackage invalid package ${packageId}`);
     return FUNC_FAILED;
@@ -27,13 +33,17 @@ async function collectStakingPackage(packageId) {
   package = package[0];
 
   //retrieve wallet info to check balance
-  let userWallet = await WalletResource.find({
-    appUserId: package.appUserId,
-    walletType: WALLET_TYPE.FAC, //vi fac
-  }, 0, 1);
+  let userWallet = await WalletResource.find(
+    {
+      appUserId: package.appUserId,
+      walletType: WALLET_TYPE.FAC, //vi fac
+    },
+    0,
+    1,
+  );
 
   if (userWallet === undefined || userWallet.length < 1) {
-    Logger.error(`collectStakingPackage can not find wallet POINT ${package.appUserId}`)
+    Logger.error(`collectStakingPackage can not find wallet POINT ${package.appUserId}`);
     return FUNC_FAILED;
   }
   userWallet = userWallet[0];
@@ -44,7 +54,7 @@ async function collectStakingPackage(packageId) {
     profitActual: 0,
     profitClaimed: claimedAmount,
     stakingActivityStatus: STACKING_ACTIVITY_STATUS.STAKING,
-  }
+  };
 
   //neu da nhan du tien thi close package
   if (package.profitEstimate <= claimedAmount) {
@@ -53,40 +63,39 @@ async function collectStakingPackage(packageId) {
 
   let collectUpdated = await StakingPackageUserResourceAccess.updateById(packageId, updatedPackageData);
   if (collectUpdated === undefined) {
-    Logger.error(`collectStakingPackage can not collect`)
+    Logger.error(`collectStakingPackage can not collect`);
     return FUNC_FAILED;
   }
 
   //update wallet balance
   let updateWallet = await WalletResource.incrementBalance(userWallet.walletId, collectAmount);
   if (updateWallet) {
-
     //neu da nhan du tien thi close package va hoan tra tien goc cho user
     if (package.profitEstimate <= claimedAmount) {
       let updateWallet = await WalletResource.incrementBalance(userWallet.walletId, package.stackingAmount);
       if (updateWallet) {
         return collectAmount;
       } else {
-        Logger.error(`collectStakingPackage can not pay to wallet ${userWallet.walletId}, ${paymentAmount}`)
+        Logger.error(`collectStakingPackage can not pay to wallet ${userWallet.walletId}, ${paymentAmount}`);
       }
     }
     return collectAmount;
   } else {
-    Logger.error(`collectStakingPackage can not pay to wallet ${userWallet.walletId}, ${paymentAmount}`)
+    Logger.error(`collectStakingPackage can not pay to wallet ${userWallet.walletId}, ${paymentAmount}`);
     return FUNC_FAILED;
   }
 }
 
 async function calculateProfit() {
-  Logger.info(`start calculateProfit ${new Date}`);
+  Logger.info(`start calculateProfit ${new Date()}`);
 
   let _packagesFilter = {
-    stakingActivityStatus: STACKING_ACTIVITY_STATUS.STAKING
+    stakingActivityStatus: STACKING_ACTIVITY_STATUS.STAKING,
   };
 
   let userCount = await StakingPackageUserView.count(_packagesFilter);
   if (userCount === undefined || userCount.length < 1) {
-    console.info("There is no user to init wallet");
+    console.info('There is no user to init wallet');
     return;
   }
 
@@ -111,27 +120,26 @@ async function calculateProfit() {
       let today = new Date();
 
       //today = moment().add(361,'days').toDate();
-      //console.log(today);
 
       //tinh so ngay da thuc hien staking
       let _actualDuration = moment(today).diff(new Date(_package.packageLastActiveDate), 'days');
       console.info(_actualDuration);
       console.info(`_package.stakingPaymentPeriod: ${_package.stakingPaymentPeriod}`);
       //kiem tra xem da du chu ky chua
-      if (_actualDuration < _package.stakingPaymentPeriod)  {
+      if (_actualDuration < _package.stakingPaymentPeriod) {
         continue;
       }
 
       //ti le hoan thanh staking
       let _percentCompleted = _actualDuration / _package.stakingPeriod;
       if (_percentCompleted >= 1) {
-        _percentCompleted = 1
+        _percentCompleted = 1;
       }
       console.info(`_percentCompleted: ${_percentCompleted}`);
 
       console.info(_package.stakingInterestRate);
       //loi nhuan du kien theo so ngay da staking
-      let _planedProfit = _percentCompleted * _package.stackingAmount * _package.stakingInterestRate * 1 / 100;
+      let _planedProfit = (_percentCompleted * _package.stackingAmount * _package.stakingInterestRate * 1) / 100;
 
       //neu tra lai cuoi ky thi khong can xu ly loi nhuan giua ky
       //neu du so ngay tra lai cuoi ky thi thuc hien tra lai
@@ -173,19 +181,24 @@ async function calculateProfit() {
         _updateData.packageLastActiveDate = _planActiveDate;
       }
 
-      _updateData.profitActual = _shouldBeMoreProfit
+      _updateData.profitActual = _shouldBeMoreProfit;
 
-      let updateProfitResult = await StakingPackageUserResourceAccess.updateById(_package.userStakingPackageId, _updateData);
+      let updateProfitResult = await StakingPackageUserResourceAccess.updateById(
+        _package.userStakingPackageId,
+        _updateData,
+      );
       if (!updateProfitResult) {
-        Logger.error(`can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`);
+        Logger.error(
+          `can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`,
+        );
       }
 
       await collectStakingPackage(_package.userStakingPackageId);
     }
   }
-  Logger.info(`End calculateProfit ${new Date}`);
-};
+  Logger.info(`End calculateProfit ${new Date()}`);
+}
 
 module.exports = {
-  calculateProfit
+  calculateProfit,
 };

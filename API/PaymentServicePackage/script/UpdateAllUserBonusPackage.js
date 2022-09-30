@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const moment = require('moment');
 
 const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
@@ -7,7 +9,7 @@ async function InitBonusForAllUser() {
   console.info(`Start InitBonusForAllUser`);
   let userCount = await AppUserResource.count({});
   if (userCount === undefined || userCount.length < 1) {
-    console.info("There is no user to init wallet");
+    console.info('There is no user to init wallet');
     return;
   }
 
@@ -32,7 +34,7 @@ async function InitBonusForAllUser() {
       BonusFunctions.checkBonusAvaibility(userData.appUserId);
     }
   }
-};
+}
 
 InitBonusForAllUser();
 

@@ -1,26 +1,27 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'WalletRecord';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const filterSchema = {
   appUserId: Joi.number(),
   walletId: Joi.number(),
-  WalletRecordType: Joi.string(),
-  walletType: Joi.string(),
-  WalletRecordType: Joi.string()
+  WalletRecordType: Joi.string().max(255),
+  walletType: Joi.string().max(255),
 };
 const filterUser = {
-  WalletRecordType: Joi.string()
-}
+  WalletRecordType: Joi.string().max(255),
+};
 module.exports = {
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -38,18 +39,13 @@ module.exports = {
         limit: Joi.number().default(20).max(100),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
 };
-

@@ -1,14 +1,15 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database")
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AppUserViews";
+const tableName = 'AppUserViews';
 const rootTableName = 'AppUser';
-const primaryKeyField = "appUserId";
-const tableMemberShip = "AppUserMembership"
+const primaryKeyField = 'appUserId';
+const tableMemberShip = 'AppUserMembership';
 async function createViews() {
-    // const AreaDataTable = 'AreaData';
-    let fields = [
+  let fields = [
     `${rootTableName}.appUserId`,
     `${rootTableName}.sotaikhoan`,
     `${rootTableName}.tentaikhoan`,
@@ -18,6 +19,7 @@ async function createViews() {
     `${rootTableName}.isDeleted`,
     `${rootTableName}.lastName`,
     `${rootTableName}.phoneNumber`,
+    `${rootTableName}.userHomeAddress`,
     `${rootTableName}.companyName`,
     `${rootTableName}.email`,
     `${rootTableName}.birthDay`,
@@ -46,11 +48,11 @@ async function createViews() {
     `${rootTableName}.telegramId`, //luu telegram id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.facebookId`, //luu facebook id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.appleId`, //luu apple id - phong khi 1 user co nhieu tai khoan
-      `${rootTableName}.createdAt`,
-      `${rootTableName}.isDeleted`,
+    `${rootTableName}.createdAt`,
     `${rootTableName}.appUserNote`,
     `${rootTableName}.activeOTPCode`,
     `${rootTableName}.activeOTPAt`,
+    `${rootTableName}.referCode`,
 
     `${rootTableName}.diachiviUSDT`, // su dung tam
     `${rootTableName}.diachiviBTC`, //su dung tam
@@ -68,13 +70,14 @@ async function createViews() {
     `${tableMemberShip}.appUserMembershipAssetF1Required`,
     `${tableMemberShip}.appUserMembershipDescription`,
     `${tableMemberShip}.appUserMembershipImage`,
-    ];
+  ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName)
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
     .leftJoin(tableMemberShip, function () {
-      this.on(`${rootTableName}.appUserMembershipId`, '=', `${tableMemberShip}.appUserMembershipId`)
-    })
-  Common.createOrReplaceView(tableName, viewDefinition)
+      this.on(`${rootTableName}.appUserMembershipId`, '=', `${tableMemberShip}.appUserMembershipId`);
+    });
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -116,18 +119,17 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
-        .orWhere('companyName', 'like', `%${searchText}%`)
-    })
+        .orWhere('companyName', 'like', `%${searchText}%`);
+    });
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -144,7 +146,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
   return queryBuilder;
 }
@@ -154,7 +156,7 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
@@ -169,7 +171,8 @@ async function countUserMonthByYear(filter, startDate, endDate) {
     .count(`createMonth as countCreateMonth`)
     .groupBy('createMonth')
     .groupBy('createYear')
-    .orderBy('createMonth', 'desc').orderBy('createYear', 'desc');
+    .orderBy('createMonth', 'desc')
+    .orderBy('createYear', 'desc');
   return query;
 }
 
@@ -182,7 +185,7 @@ async function findAllUsersFollowingReferId(filter, skip, limit, startDate, endD
 async function countAllUsersByReferId(filter, startDate, endDate, searchText, order) {
   let queryAllUser = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   queryAllUser.where('appUserMembershipId', '>', 1);
-  return await queryAllUser.count("appUserId as count");
+  return await queryAllUser.count('appUserId as count');
 }
 
 module.exports = {
@@ -197,5 +200,5 @@ module.exports = {
   findById,
   countUserMonthByYear,
   findAllUsersFollowingReferId,
-  countAllUsersByReferId
+  countAllUsersByReferId,
 };

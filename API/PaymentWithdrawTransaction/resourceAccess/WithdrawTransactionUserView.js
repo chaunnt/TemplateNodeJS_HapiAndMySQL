@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "WithdrawTransactionUserView";
+const tableName = 'WithdrawTransactionUserView';
 const rootTableName = 'PaymentWithdrawTransaction';
-const primaryKeyField = "paymentWithdrawTransactionId";
+const primaryKeyField = 'paymentWithdrawTransactionId';
 async function createView() {
   const WalletTableName = 'Wallet';
   const UserTableName = 'AppUserViews';
@@ -43,27 +45,27 @@ async function createView() {
     `${rootTableName}.paymentStatus`,
     `${rootTableName}.paymentNote`,
     `${rootTableName}.paymentRef`,
+    `${rootTableName}.paymentRefAmount`,
     `${rootTableName}.paymentApproveDate`,
     `${rootTableName}.paymentPICId`,
-    `${rootTableName}.paymentCategory`,
-    `${rootTableName}.paymentRefAmount`,
-    `${rootTableName}.paymentType`,
     `${rootTableName}.paymentOwner`,
     `${rootTableName}.paymentOriginSource`,
     `${rootTableName}.paymentOriginName`,
-    
+    `${rootTableName}.paymentFeeAmount`,
+
     `${WalletTableName}.walletType`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName)
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
     .leftJoin(UserTableName, function () {
-      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
+      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`);
     })
     .leftJoin(WalletTableName, function () {
-      this.on(`${rootTableName}.walletId`, '=', `${WalletTableName}.walletId`)
+      this.on(`${rootTableName}.walletId`, '=', `${WalletTableName}.walletId`);
     });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -106,17 +108,19 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
-    })
+        .orWhere('paymentOwner', 'like', `%${searchText}%`)
+        .orWhere('paymentOriginSource', 'like', `%${searchText}%`)
+        .orWhere('paymentOriginName', 'like', `%${searchText}%`);
+    });
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -132,7 +136,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -143,14 +147,14 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
-async function customSum(field, filter, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, undefined, order);
-  return await query.sum(`${field} as sumResult`)
+async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+  return await query.sum(`${sumField} as sumResult`);
 }
 
 module.exports = {
@@ -163,5 +167,5 @@ module.exports = {
   customSearch,
   customCount,
   sumAmountDistinctByDate,
-  customSum
+  customSum,
 };

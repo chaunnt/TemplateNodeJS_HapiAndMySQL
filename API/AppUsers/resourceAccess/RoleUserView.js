@@ -1,10 +1,12 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database")
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "RoleUserView";
+const tableName = 'RoleUserView';
 const rootTableName = 'AppUser';
-const primaryKeyField = "appUserId";
+const primaryKeyField = 'appUserId';
 
 async function createRoleStaffView() {
   const RoleTableName = 'AppUserRole';
@@ -29,19 +31,21 @@ async function createRoleStaffView() {
     `${rootTableName}.createdAt`,
     `${rootTableName}.isDeleted`,
     `${rootTableName}.appUserNote`,
-    
+
     `${rootTableName}.diachiviUSDT`, // su dung tam
     `${rootTableName}.diachiviBTC`, //su dung tam
-    
+
     `${RoleTableName}.appUserRoleName`,
     `${RoleTableName}.permissions`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(RoleTableName, function () {
-    this.on(`${rootTableName}.appUserRoleId`, '=', `${RoleTableName}.appUserRoleId`);
-  });
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(RoleTableName, function () {
+      this.on(`${rootTableName}.appUserRoleId`, '=', `${RoleTableName}.appUserRoleId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -68,8 +72,7 @@ async function updateAll(data, filter) {
   return await Common.updateAll(tableName, data, filter);
 }
 
-
-function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -77,10 +80,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`)
-    })
+        .orWhere('email', 'like', `%${searchText}%`);
+    });
   }
 
   queryBuilder.where(filterData);
@@ -95,29 +97,38 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
     queryBuilder.offset(skip);
   }
 
+  if (startDate) {
+    queryBuilder.where('createdAt', '>=', startDate);
+  }
+  if (endDate) {
+    queryBuilder.where('createdAt', '<=', endDate);
+  }
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
-async function customSearch(filter, skip, limit, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
-async function customCount(filter, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error(
+        'ResourceAccess',
+        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
+      );
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });

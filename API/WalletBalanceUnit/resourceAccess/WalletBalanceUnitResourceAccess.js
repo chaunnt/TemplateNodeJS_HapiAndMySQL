@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
-const { DB, timestamps } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "WalletBalanceUnit";
-const primaryKeyField = "walletBalanceUnitId";
+const tableName = 'WalletBalanceUnit';
+const primaryKeyField = 'walletBalanceUnitId';
 
 async function createTable() {
-  console.log(`createTable ${tableName}`);
+  console.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -22,11 +24,11 @@ async function createTable() {
           timestamps(table);
         })
         .then(() => {
-          console.log(`${tableName} table created done`);
-          seeding().then((result) => {
-            console.log(`${tableName} table seeding done`);
+          console.info(`${tableName} table created done`);
+          seeding().then(result => {
+            console.info(`${tableName} table seeding done`);
             resolve();
-          })
+          });
         });
     });
   });
@@ -35,43 +37,33 @@ async function createTable() {
 async function seeding() {
   let listUnit = [
     {
-      walletBalanceUnitCode: "USD",
+      walletBalanceUnitCode: 'FAC',
       walletBalanceUnitAvatar: `https://${process.env.HOST_NAME}/uploads/sampleIcon.png`,
-      walletBalanceUnitDisplayName: "USD",
-      convertPrice: 1,
-      originalPrice: 1,
-      userSellPrice: 1,
-      agencySellPrice: 1,
-      isDeleted: 1
+      walletBalanceUnitDisplayName: 'FAC Coin',
+      convertPrice: 3,
+      originalPrice: 3,
+      userSellPrice: 2,
+      agencySellPrice: 3,
     },
     {
-      walletBalanceUnitCode: "BTC",
+      walletBalanceUnitCode: 'BTC',
       walletBalanceUnitAvatar: `https://${process.env.HOST_NAME}/uploads/sampleIcon.png`,
-      walletBalanceUnitDisplayName: "Bitcoin",
+      walletBalanceUnitDisplayName: 'Bitcoin',
       convertPrice: 50000,
       originalPrice: 50000,
       userSellPrice: 40000,
       agencySellPrice: 50000,
     },
     {
-      walletBalanceUnitCode: "ETH",
+      walletBalanceUnitCode: 'USDT',
       walletBalanceUnitAvatar: `https://${process.env.HOST_NAME}/uploads/sampleIcon.png`,
-      walletBalanceUnitDisplayName: "ETH Coin",
-      convertPrice: 4000,
-      originalPrice: 4000,
-      userSellPrice: 3000,
-      agencySellPrice: 4000,
+      walletBalanceUnitDisplayName: 'USDT',
+      convertPrice: 1,
+      originalPrice: 1,
+      userSellPrice: 1,
+      agencySellPrice: 1,
     },
-    {
-      walletBalanceUnitCode: "ARC",
-      walletBalanceUnitAvatar: `https://${process.env.HOST_NAME}/uploads/sampleIcon.png`,
-      walletBalanceUnitDisplayName: "ARC Coin",
-      convertPrice: 3,
-      originalPrice: 3,
-      userSellPrice: 2,
-      agencySellPrice: 3,
-    },
-  ]
+  ];
   await DB(tableName).insert(listUnit);
 }
 
@@ -112,9 +104,9 @@ async function updateBalanceTransaction(walletBalanceUnitsDataList) {
           .update({ balance: walletBalanceUnitData.balance });
       }
     });
-    return "ok";
+    return 'ok';
   } catch (error) {
-    console.error(error);
+    console.error(`error WalletBalanceUnit updateBalanceTransaction: ${ERROR}`);
     return undefined;
   }
 }
@@ -133,7 +125,7 @@ async function decrementBalance(id, amount) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
@@ -144,30 +136,20 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
 
   if (searchText) {
-    queryBuilder.where('walletBalanceUnitCode', 'like', `%${searchText}%`)
-    queryBuilder.where('walletBalanceUnitDisplayName', 'like', `%${searchText}%`)
-  } else {
-    if (filterData.walletBalanceUnitDisplayName) {
-      queryBuilder.where('walletBalanceUnitDisplayName', 'like', `%${filterData.walletBalanceUnitDisplayName}%`)
-      delete filterData.walletBalanceUnitDisplayName;
-    }
-
-    if (filterData.walletBalanceUnitCode) {
-      queryBuilder.where('walletBalanceUnitCode', 'like', `%${filterData.walletBalanceUnitCode}%`)
-      delete filterData.walletBalanceUnitCode;
-    }
+    queryBuilder.where('walletBalanceUnitCode', 'like', `%${searchText}%`);
+    queryBuilder.where('walletBalanceUnitDisplayName', 'like', `%${searchText}%`);
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
-  queryBuilder.where({isDeleted: 0});
+  queryBuilder.where({ isDeleted: 0 });
   queryBuilder.where(filterData);
-  
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -179,7 +161,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -190,8 +172,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -207,5 +189,5 @@ module.exports = {
   decrementBalance,
   deleteById,
   customSearch,
-  customCount
+  customCount,
 };

@@ -1,8 +1,10 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const UploadFunctions = require("../UploadFunctions");
+'use strict';
+const UploadFunctions = require('../UploadFunctions');
 const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const Logger = require('../../../utils/logging');
 
@@ -12,8 +14,9 @@ async function uploadMediaFile(req) {
       // booksChapterUrl: Joi.string(),
       const imageData = req.payload.imageData;
       const imageFormat = req.payload.imageFormat;
-      
+
       if (!imageData) {
+        console.error(`error uploadMediaFile: do not have book data`);
         reject('do not have book data');
         return;
       }
@@ -23,15 +26,15 @@ async function uploadMediaFile(req) {
       if (newMediaUrl) {
         resolve(newMediaUrl);
       } else {
-        reject('failed to upload')
+        console.error(`error uploadMediaFile: failed to upload`);
+        reject('failed to upload');
       }
-      
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function uploadUserAvatar(req) {
   return new Promise(async (resolve, reject) => {
@@ -42,11 +45,13 @@ async function uploadUserAvatar(req) {
       const appUserId = req.currentUser.appUserId;
 
       if (!imageData) {
+        console.error(`error uploadMediaFile: do not have book data`);
         reject('do not have book data');
         return;
       }
 
       if (!appUserId) {
+        console.error(`error uploadMediaFile: do not have user id`);
         reject('do not have user id');
         return;
       }
@@ -55,26 +60,26 @@ async function uploadUserAvatar(req) {
       let newAvatar = await UploadFunctions.uploadMediaFile(originaldata, imageFormat);
       if (newAvatar) {
         let updateResult = await AppUsersResourceAccess.updateById(appUserId, {
-          userAvatar: newAvatar
+          userAvatar: newAvatar,
         });
         if (updateResult) {
           resolve(newAvatar);
         } else {
-          reject('failed to save new avatar')
+          console.error(`error uploadMediaFile: failed to save new avatar`);
+          reject('failed to save new avatar');
         }
-        
       } else {
-        reject('failed to upload')
+        console.error(`error uploadMediaFile: failed to upload`);
+        reject('failed to upload');
       }
-      
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   uploadMediaFile,
-  uploadUserAvatar
+  uploadUserAvatar,
 };

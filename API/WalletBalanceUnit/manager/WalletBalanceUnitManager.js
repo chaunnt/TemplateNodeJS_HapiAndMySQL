@@ -1,10 +1,13 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const WalletBalanceUnitResourceAccess = require("../resourceAccess/WalletBalanceUnitResourceAccess");
+'use strict';
+const WalletBalanceUnitResourceAccess = require('../resourceAccess/WalletBalanceUnitResourceAccess');
 const WalletBalanceUnitFunction = require('../WalletBalanceUnitFunctions');
 const Logger = require('../../../utils/logging');
+const { ERROR } = require('../../Common/CommonConstant');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -15,43 +18,57 @@ async function insert(req) {
       if (insertData.userSellPrice) {
         insertData.agencySellPrice = insertData.userSellPrice;
       }
-      
+
       let createResult = await WalletBalanceUnitFunction.insertNewBalanceUnit(insertData);
       if (createResult) {
         resolve(createResult);
       } else {
         Logger.error(`insert new balance unit failed`);
-        reject(`failed`)
+        reject(`failed`);
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Balance`, e);
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let searchText = req.payload.searchText;
-      let result = await WalletBalanceUnitResourceAccess.customSearch(req.payload.filter, req.payload.skip, req.payload.limit, undefined, undefined, searchText);
-      
+      let result = await WalletBalanceUnitResourceAccess.customSearch(
+        req.payload.filter,
+        req.payload.skip,
+        req.payload.limit,
+        undefined,
+        undefined,
+        searchText,
+      );
+
       if (result && result.length > 0) {
-        let resultCount = await WalletBalanceUnitResourceAccess.customCount(req.payload.filter, undefined, undefined, searchText);
+        let resultCount = await WalletBalanceUnitResourceAccess.customCount(
+          req.payload.filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          searchText,
+        );
         resolve({
           data: result,
-          total: resultCount[0].count
+          total: resultCount[0].count,
         });
       } else {
         Logger.error(`WalletBalanceUnitResourceAccess can not get list`);
         reject(`failed`);
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Balance find`, e);
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -69,36 +86,37 @@ async function updateById(req) {
         resolve(result);
       } else {
         Logger.error(`WalletBalanceUnitResourceAccess.updateById ${updateId} failed`);
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     let id = req.payload.id;
-    let result = await WalletBalanceUnitResourceAccess.deleteById(id)
+    let result = await WalletBalanceUnitResourceAccess.deleteById(id);
     if (result) {
-      resolve(result)
+      resolve(result);
     } else {
-      reject("failed");
+      console.error(`error Wallet Balance deleteById`, e);
+      reject('failed');
     }
-  })
+  });
 }
 
 async function getList(req) {
@@ -108,31 +126,45 @@ async function getList(req) {
       let filter = req.payload.filter;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
-      let result = await WalletBalanceUnitResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText);
-      
+      let result = await WalletBalanceUnitResourceAccess.customSearch(
+        filter,
+        skip,
+        limit,
+        undefined,
+        undefined,
+        searchText,
+      );
+
       if (result && result.length > 0) {
-        let resultCount = await WalletBalanceUnitResourceAccess.customCount(filter, undefined, undefined, searchText);
+        let resultCount = await WalletBalanceUnitResourceAccess.customCount(
+          filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          searchText,
+        );
         resolve({
           data: result,
-          total: resultCount[0].count
+          total: resultCount[0].count,
         });
       } else {
         resolve({
           data: [],
-          total: 0
+          total: 0,
         });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Balance getList`, e);
+      reject('failed');
     }
   });
-};
+}
 module.exports = {
   insert,
   find,
   updateById,
   findById,
   deleteById,
-  getList
+  getList,
 };
