@@ -1,13 +1,15 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const PaymentServicePackageResourceAccess = require("../resourceAccess/PaymentServicePackageResourceAccess");
-const ServicePackageUserResourceAccess = require("../resourceAccess/PaymentServicePackageUserResourceAccess");
+'use strict';
+const PaymentServicePackageResourceAccess = require('../resourceAccess/PaymentServicePackageResourceAccess');
+const ServicePackageUserResourceAccess = require('../resourceAccess/PaymentServicePackageUserResourceAccess');
 const PackageUnitView = require('../resourceAccess/PackageUnitView');
 
 const { PACKAGE_CATEGORY, PACKAGE_STATUS } = require('../PaymentServicePackageConstant');
-
+const { ERROR } = require('../../Common/CommonConstant');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
@@ -18,13 +20,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error service package insert: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -36,7 +39,7 @@ async function find(req) {
       let searchText = req.payload.searchText;
 
       if (!filter) {
-        filter = {}
+        filter = {};
       }
 
       if (!filter.packageStatus) {
@@ -44,23 +47,39 @@ async function find(req) {
       }
 
       if (!filter.packageCategory) {
-        filter.packageCategory = PACKAGE_CATEGORY.NORMAL
+        filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
       }
 
-      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
-      
+      let paymentServices = await PackageUnitView.customSearch(
+        filter,
+        skip,
+        limit,
+        undefined,
+        undefined,
+        searchText,
+        order,
+      );
+
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, searchText, order);
+        let paymentServiceCount = await PackageUnitView.customCount(
+          filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          searchText,
+          order,
+        );
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -69,7 +88,7 @@ async function updateById(req) {
       let data = req.payload.data;
 
       if (data.packageDiscountPrice !== undefined) {
-        if (data.packageDiscountPrice.trim() === "") {
+        if (data.packageDiscountPrice.trim() === '') {
           data.packageDiscountPrice = null;
         } else {
           data.packageDiscountPrice = data.packageDiscountPrice * 1;
@@ -77,8 +96,8 @@ async function updateById(req) {
       }
 
       if (data.packageDiscountPrice !== null && data.packageDiscountPrice < 1) {
-        Logger.error(`invalid packageDiscountPrice`)
-        reject("INVALID_DISCOUNT_PRICE");
+        Logger.error(`invalid packageDiscountPrice`);
+        reject('INVALID_DISCOUNT_PRICE');
         return;
       }
 
@@ -86,13 +105,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error service package updateById: ${id}: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -102,13 +122,14 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error service package deleteById: ${id}: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -118,21 +139,22 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
+        console.error(`error service package deleteById: ${id}: failed to get item`);
         reject('failed to get item');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function activatePackagesByIdList(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let idList = req.payload.idList;
       let dataUpdated = {
-        isHidden: false
+        isHidden: false,
       };
 
       //vi moi lan chi co toi da 10-20 package nen ko can xu ly update theo list
@@ -141,21 +163,20 @@ async function activatePackagesByIdList(req) {
         const _id = idList[i];
         await PaymentServicePackageResourceAccess.updateById(_id, dataUpdated);
       }
-      resolve("success");
-
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deactivatePackagesByIdList(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let idList = req.payload.idList;
       let dataUpdated = {
-        isHidden: true
+        isHidden: true,
       };
 
       //vi moi lan chi co toi da 10-20 package nen ko can xu ly update theo list
@@ -164,17 +185,15 @@ async function deactivatePackagesByIdList(req) {
         const _id = idList[i];
         await PaymentServicePackageResourceAccess.updateById(_id, dataUpdated);
       }
-      resolve("success");
-
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
-
-async function userGetListPaymentPackage(req,res) {
+async function userGetListPaymentPackage(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
       let filter = req.payload.filter;
@@ -187,7 +206,7 @@ async function userGetListPaymentPackage(req,res) {
       }
 
       filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
-      filter.packageStatus =  PACKAGE_STATUS.NEW;
+      filter.packageStatus = PACKAGE_STATUS.NEW;
       filter.isHidden = 0;
 
       let paymentServices = await PaymentServicePackageResourceAccess.find(filter, skip, limit, order);
@@ -199,7 +218,7 @@ async function userGetListPaymentPackage(req,res) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -209,18 +228,25 @@ async function rewardProfitBonusForUser(req) {
     try {
       let servicePackageUserId = req.payload.paymentServicePackageUserId;
       let amount = req.payload.profitBonus;
-      let rewardResult = await ServicePackageUserResourceAccess.incrementBalance(servicePackageUserId, `profitBonus`, amount);
+      let rewardResult = await ServicePackageUserResourceAccess.incrementBalance(
+        servicePackageUserId,
+        `profitBonus`,
+        amount,
+      );
       if (rewardResult) {
-        resolve("success");
+        resolve('success');
       } else {
+        console.error(
+          `error service package rewardProfitBonusForUser with servicePackageUserId: ${servicePackageUserId}: ${ERROR}`,
+        );
         reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

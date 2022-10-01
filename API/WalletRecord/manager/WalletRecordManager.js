@@ -1,11 +1,13 @@
-"use strict";
-const UserResource = require("../../AppUsers/resourceAccess/AppUsersResourceAccess");
-const ReceiveFunction = require('../WalletRecordFunction');
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+const UserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
+const WalletRecordFunctions = require('../WalletRecordFunction');
 const WalletRecordView = require('../resourceAccess/WalletRecordView');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const { WALLET_RECORD_TYPE } = require('../WalletRecordConstant');
 const moment = require('moment');
-
+const { ERROR } = require('../../Common/CommonConstant');
 async function find(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -17,11 +19,27 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
 
-      let transactionList = await WalletRecordView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let transactionCount = await WalletRecordView.customCount(filter, startDate, endDate, searchText, order);
+      let transactionList = await WalletRecordView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
+      let transactionCount = await WalletRecordView.customCount(
+        filter,
+        undefined,
+        undefined,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -35,19 +53,19 @@ async function find(req) {
         });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Record find`, e);
+      reject('failed');
     }
   });
-};
+}
 async function userHistoryBTC(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let filter = req.payload.filter;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
-      filter.walletType = WALLET_TYPE.BTC
+      filter.walletType = WALLET_TYPE.BTC;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
@@ -56,13 +74,22 @@ async function userHistoryBTC(req) {
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        reject("failed");
+        console.error(`error Wallet Record userHistoryBTC: user invalid`);
+        reject('failed');
         return;
       }
-      let transactionList = await WalletRecordView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
-      
+      let transactionList = await WalletRecordView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
+
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await WalletRecordView.customCount(filter, startDate, endDate);
+        let transactionCount = await WalletRecordView.customCount(filter, undefined, undefined, startDate, endDate);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -74,19 +101,19 @@ async function userHistoryBTC(req) {
         });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Record userHistoryBTC`, e);
+      reject('failed');
     }
   });
-};
+}
 async function userHistoryFAC(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let filter = req.payload.filter;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
-      filter.walletType = WALLET_TYPE.FAC
+      filter.walletType = WALLET_TYPE.FAC;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
@@ -95,11 +122,28 @@ async function userHistoryFAC(req) {
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        reject("failed");
+        console.error(`error Wallet Record userHistoryFAC: user invalid`);
+        reject('failed');
         return;
       }
-      let transactionList = await WalletRecordView.customSearch(filter, skip, limit, startDate, endDate, order);
-      let transactionCount = await WalletRecordView.customCount(filter, startDate, endDate, order);
+      let transactionList = await WalletRecordView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
+      let transactionCount = await WalletRecordView.customCount(
+        filter,
+        undefined,
+        undefined,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -113,19 +157,18 @@ async function userHistoryFAC(req) {
         });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Record userHistoryFAC`, e);
+      reject('failed');
     }
   });
-};
-async function userHistoryPOINT(req) {
+}
+async function userHistory(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let filter = req.payload.filter;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
-      filter.walletType = WALLET_TYPE.POINT
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
@@ -134,15 +177,21 @@ async function userHistoryPOINT(req) {
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        reject("failed");
+        console.error(`error Wallet Record userHistory: user invalid`);
+        reject('failed');
         return;
       }
-
-      let transactionList = await WalletRecordView.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
-
+      let transactionList = await WalletRecordView.customSearch(
+        filter,
+        skip,
+        limit,
+        undefined,
+        undefined,
+        undefined,
+        order,
+      );
       if (transactionList && transactionList.length > 0) {
         let transactionCount = await WalletRecordView.customCount(filter, startDate, endDate, undefined, order);
-
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -154,15 +203,15 @@ async function userHistoryPOINT(req) {
         });
       }
     } catch (e) {
-      console.error(e);
-      reject("failed");
+      console.error(`error Wallet Record userHistory`, e);
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   find,
   userHistoryBTC,
   userHistoryFAC,
-  userHistoryPOINT,
+  userHistory,
 };

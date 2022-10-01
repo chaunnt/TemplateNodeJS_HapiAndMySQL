@@ -1,11 +1,12 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const StakingResourceAccess = require("../resourceAccess/StakingPackageResourceAccess");
+'use strict';
+const StakingResourceAccess = require('../resourceAccess/StakingPackageResourceAccess');
 const Logger = require('../../../utils/logging');
-
-
+const { ERROR } = require('../../Common/CommonConstant');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -14,14 +15,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error Staking package can not inser: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -34,11 +35,26 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
 
-      let listStaking = await StakingResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      
-      if (listStaking && listStaking.length > 0) {
+      let listStaking = await StakingResourceAccess.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
-        let listStakingCount = await StakingResourceAccess.customCount(filter, startDate, endDate, searchText, order);
+      if (listStaking && listStaking.length > 0) {
+        let listStakingCount = await StakingResourceAccess.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+          order,
+        );
 
         resolve({ data: listStaking, total: listStakingCount[0].count });
       } else {
@@ -46,10 +62,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -58,15 +74,15 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error Staking package findById with id ${req.payload.id}: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -75,8 +91,8 @@ async function updateById(req) {
       let data = req.payload.data;
 
       if (data.packageDiscountPrice !== null && data.packageDiscountPrice < 1) {
-        Logger.error(`invalid packageDiscountPrice`)
-        reject("INVALID_DISCOUNT_PRICE");
+        Logger.error(`invalid packageDiscountPrice`);
+        reject('INVALID_DISCOUNT_PRICE');
         return;
       }
 
@@ -84,13 +100,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error Staking package updateById with id ${id}: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -99,19 +116,20 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error Staking package deleteById with id ${req.payload.id}: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   find,
   findById,
   updateById,
   deleteById,
-  insert
-}
+  insert,
+};

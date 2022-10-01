@@ -1,21 +1,23 @@
-const faker = require("faker");
-const chai = require("chai");
-const chaiHttp = require("chai-http");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const faker = require('faker');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 // const fs = require('fs');
 
-const { checkResponseStatus } = require("../../Common/test/Common");
-const TestFunctions = require("../../Common/test/CommonTestFunctions");
+const { checkResponseStatus } = require('../../Common/test/Common');
+const TestFunctions = require('../../Common/test/CommonTestFunctions');
 
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-const app = require("../../../server");
+const app = require('../../../server');
 
 describe(`Tests BetRecords`, () => {
-  let userToken = "";
+  let userToken = '';
   let gameId;
-  before((done) => {
+  before(done => {
     new Promise(async (resolve, reject) => {
       let userData = await TestFunctions.loginUser();
       userToken = userData.token;
@@ -23,14 +25,14 @@ describe(`Tests BetRecords`, () => {
     }).then(() => done());
   });
 
-  it("POST /GameRecord/user/getList", (done) => {
+  it('POST /GameRecord/user/getList', done => {
     const body = {
-      filter: {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GameRecord/user/getList`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -44,7 +46,7 @@ describe(`Tests BetRecords`, () => {
       });
   });
 
-  it("/BetRecords/user/placeRecord", (done) => {
+  it('/BetRecords/user/placeRecord', done => {
     const body = {
       betRecordAmountIn: 100000,
       sectionName: '1-1',
@@ -53,7 +55,7 @@ describe(`Tests BetRecords`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/BetRecords/user/placeRecord`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -64,7 +66,7 @@ describe(`Tests BetRecords`, () => {
       });
   });
 
-  it("/BetRecords/user/placeFakeRecord", (done) => {
+  it('/BetRecords/user/placeFakeRecord', done => {
     const body = {
       betRecordAmountIn: 100000,
       sectionName: '1-1',
@@ -73,7 +75,7 @@ describe(`Tests BetRecords`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/BetRecords/user/placeFakeRecord`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -84,14 +86,14 @@ describe(`Tests BetRecords`, () => {
       });
   });
 
-  it("/BetRecords/user/getList", (done) => {
+  it('/BetRecords/user/getList', done => {
     const body = {
-      filter: {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/BetRecords/user/getList`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

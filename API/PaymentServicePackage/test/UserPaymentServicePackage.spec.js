@@ -1,24 +1,26 @@
-const faker = require("faker");
-const chai = require("chai");
-const chaiHttp = require("chai-http");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const faker = require('faker');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 // const fs = require('fs');
 
-const { checkResponseStatus } = require("../../Common/test/Common");
-const TestFunctions = require("../../Common/test/CommonTestFunctions");
-const Constant = require("../PaymentServicePackageConstant");
+const { checkResponseStatus } = require('../../Common/test/Common');
+const TestFunctions = require('../../Common/test/CommonTestFunctions');
+const Constant = require('../PaymentServicePackageConstant');
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-const app = require("../../../server");
+const app = require('../../../server');
 
 async function getListPackage() {
-  return new Promise((resolve, reject)=> {
+  return new Promise((resolve, reject) => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/getList`)
-      .set("Authorization", ``)
+      .set('Authorization', ``)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -27,15 +29,15 @@ async function getListPackage() {
         checkResponseStatus(res, 200);
         resolve(res.body.data.data);
       });
-  })
+  });
 }
 
 describe(`Tests UserPaymentServicePackage`, () => {
-  let staffToken = "";
-  let userToken = "";
+  let staffToken = '';
+  let userToken = '';
   let id;
   let packageList = [];
-  before((done) => {
+  before(done => {
     new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
       staffToken = staffData.token;
@@ -50,47 +52,47 @@ describe(`Tests UserPaymentServicePackage`, () => {
     const body = {
       paymentServicePackageId: packageId,
     };
-    return new Promise(async (resolve, reject)=> {
+    return new Promise(async (resolve, reject) => {
       chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/PaymentServicePackage/user/buyServicePackage`)
-      .set("Authorization", `Bearer ${userToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        id = res.body.data[0];
-        resolve(id);
-      });
-    })
+        .request(`0.0.0.0:${process.env.PORT}`)
+        .post(`/PaymentServicePackage/user/buyServicePackage`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(body)
+        .end((err, res) => {
+          if (err) {
+            console.error(err);
+          }
+          checkResponseStatus(res, 200);
+          id = res.body.data[0];
+          resolve(id);
+        });
+    });
   }
-  
+
   async function buyPackages(targetPackageList) {
-    return new Promise(async (resolve, reject)=> {
+    return new Promise(async (resolve, reject) => {
       let result = undefined;
       for (let i = 0; i < targetPackageList.length; i++) {
         const package = targetPackageList[i];
         result = await buyPackage(package.paymentServicePackageId);
       }
       resolve(result);
-    })
+    });
   }
 
-  it("POST /PaymentServicePackage/user/buyServicePackage", (done) => {
-    buyPackages(packageList).then((resultId) => {
+  it('POST /PaymentServicePackage/user/buyServicePackage', done => {
+    buyPackages(packageList).then(resultId => {
       id = resultId;
       done();
-    })
+    });
   });
 
-  it("POST /PaymentServicePackage/user/historyServicePackage", (done) => {
+  it('POST /PaymentServicePackage/user/historyServicePackage', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/historyServicePackage`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -101,12 +103,12 @@ describe(`Tests UserPaymentServicePackage`, () => {
       });
   });
 
-  it("POST /PaymentServicePackage/user/getUserServicePackage", (done) => {
+  it('POST /PaymentServicePackage/user/getUserServicePackage', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/getUserServicePackage`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -116,12 +118,12 @@ describe(`Tests UserPaymentServicePackage`, () => {
         done();
       });
   });
-  it("POST /PaymentServicePackage/user/historyBonusServicePackage", (done) => {
+  it('POST /PaymentServicePackage/user/historyBonusServicePackage', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentServicePackage/user/historyBonusServicePackage`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

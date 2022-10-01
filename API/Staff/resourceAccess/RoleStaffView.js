@@ -1,10 +1,12 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "RoleStaffView";
+const tableName = 'RoleStaffView';
 const rootTableName = 'Staff';
-const primaryKeyField = "staffId";
+const primaryKeyField = 'staffId';
 
 async function createRoleStaffView() {
   const RoleTableName = 'Role';
@@ -30,17 +32,18 @@ async function createRoleStaffView() {
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.staffAvatar`,
-    
 
     `${RoleTableName}.permissions`,
     `${RoleTableName}.roleName`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(RoleTableName, function () {
-    this.on(`${rootTableName}.roleId`, '=', `${RoleTableName}.roleId`);
-  });
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(RoleTableName, function () {
+      this.on(`${rootTableName}.roleId`, '=', `${RoleTableName}.roleId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -55,6 +58,7 @@ async function updateById(id, data) {
   return await Common.updateById(tableName, { staffId: id }, data);
 }
 
+/**WARNING !!! Only use this function with super admin. user customSearch() instead  */
 async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
@@ -67,36 +71,42 @@ async function updateAll(data, filter) {
   return await Common.updateAll(tableName, data, filter);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  if(filterData.username){
-    queryBuilder.where('username', 'like', `%${filterData.username}%`)
+  if (filterData.username) {
+    queryBuilder.where('username', 'like', `%${filterData.username}%`);
     delete filterData.username;
   }
 
-  if(filterData.lastName){
-    queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
+  if (filterData.lastName) {
+    queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`);
     delete filterData.lastName;
   }
-  
-  if(filterData.firstName){
-    queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
+
+  if (filterData.firstName) {
+    queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`);
     delete filterData.firstName;
   }
 
-  if(filterData.email){
-    queryBuilder.where('email', 'like', `%${filterData.email}%`)
+  if (filterData.email) {
+    queryBuilder.where('email', 'like', `%${filterData.email}%`);
     delete filterData.email;
   }
 
-  if(filterData.phoneNumber){
-    queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
+  if (filterData.phoneNumber) {
+    queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`);
     delete filterData.phoneNumber;
   }
-  queryBuilder.where(filterData);
+
   queryBuilder.where({ isDeleted: 0 });
+
+  queryBuilder.where(filterData);
+
+  queryBuilder.whereNotIn('roleId', [1]);
+  queryBuilder.whereNotIn('staffId', [1]);
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -108,21 +118,21 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
 
   return await query.select();
 }
 
-async function customCount(filter, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
-  
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -134,5 +144,5 @@ module.exports = {
   initViews,
   updateAll,
   customSearch,
-  customCount
+  customCount,
 };

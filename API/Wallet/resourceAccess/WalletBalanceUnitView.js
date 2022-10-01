@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "WalletBalanceUnitView";
+const tableName = 'WalletBalanceUnitView';
 const rootTableName = 'Wallet';
-const primaryKeyField = "walletId";
+const primaryKeyField = 'walletId';
 async function createView() {
   const BalanceUnitTable = 'WalletBalanceUnit';
 
@@ -29,12 +31,13 @@ async function createView() {
     `${BalanceUnitTable}.agencySellPrice`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName)
-  .leftJoin(BalanceUnitTable, function () {
-    this.on(`${rootTableName}.walletBalanceUnitId`, '=', `${BalanceUnitTable}.walletBalanceUnitId`)
-  });
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(BalanceUnitTable, function () {
+      this.on(`${rootTableName}.walletBalanceUnitId`, '=', `${BalanceUnitTable}.walletBalanceUnitId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -73,17 +76,16 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`)
-    })
+        .orWhere('email', 'like', `%${searchText}%`);
+    });
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -99,7 +101,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -110,8 +112,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -123,5 +125,5 @@ module.exports = {
   initViews,
   sum,
   customSearch,
-  customCount
+  customCount,
 };

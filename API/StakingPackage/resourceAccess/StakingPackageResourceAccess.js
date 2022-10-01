@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "StakingPackage";
-const primaryKeyField = "stakingPackageId";
+const tableName = 'StakingPackage';
+const primaryKeyField = 'stakingPackageId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -16,9 +18,9 @@ async function createTable() {
           table.increments(primaryKeyField).primary();
           table.string('stakingPackageName'); // tên gói
           table.string('stakingPackageDescription', 500); // mô tả gói
-          table.float('stakingPackagePrice', 48, 24);// số tiền gửi
+          table.float('stakingPackagePrice', 48, 24); // số tiền gửi
           table.integer('stakingPeriod'); // kỳ hạn - ngay
-          table.float("stakingInterestRate") // lãi xuất %
+          table.float('stakingInterestRate'); // lãi xuất %
           table.integer('stakingPaymentType'); // kỳ trả lãi (cuối kỳ hoặc theo  giai đoạn)
           table.integer('stakingPaymentPeriod'); // thời gian mỗi kỳ (ngày)
           timestamps(table);
@@ -67,10 +69,12 @@ async function seeding() {
     },
   ];
   return new Promise(async (resolve, reject) => {
-    DB(`${tableName}`).insert(paymentPackages).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    DB(`${tableName}`)
+      .insert(paymentPackages)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -108,7 +112,7 @@ async function deleteById(id) {
   return await Common.deleteById(tableName, dataId);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -122,62 +126,58 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, orde
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
-async function customSum(filter, startDate, endDate) {
-  const _field = 'paymentAmount';
-
+async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   if (startDate) {
-    DB.where('createdAt', '>=', startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    DB.where('createdAt', '<=', endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (filter.referAgentId) {
-    DB.where('referId', referAgentId);
+    queryBuilder.where('referId', referAgentId);
   }
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${_field} as sumResult`)
-        .then(records => {
-          if (records && records[0].sumResult === null) {
-            resolve(undefined)
-          } else {
-            resolve(records);
-          }
-        });
-    }
-    catch (e) {
-      Logger.error("ResourceAccess", `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -194,5 +194,5 @@ module.exports = {
   customSearch,
   modelName: tableName,
   customSum,
-  deleteById
+  deleteById,
 };

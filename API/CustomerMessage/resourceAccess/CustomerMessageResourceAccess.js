@@ -1,12 +1,20 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { MESSAGE_STATUS, MESSAGE_CATEGORY, MESSAGE_TOPIC, MESSAGE_TYPE, MESSAGE_RECEIVER } = require('../CustomerMessageConstant');
-const tableName = "CustomerMessage";
-const primaryKeyField = "customerMessageId";
+const {
+  MESSAGE_STATUS,
+  MESSAGE_CATEGORY,
+  MESSAGE_TOPIC,
+  MESSAGE_TYPE,
+  MESSAGE_RECEIVER,
+} = require('../CustomerMessageConstant');
+const tableName = 'CustomerMessage';
+const primaryKeyField = 'customerMessageId';
 
 //user receive message schema
 async function createTable() {
@@ -28,7 +36,7 @@ async function createTable() {
           table.string('customerMessageContent', 2000);
           table.string('customerMessageTitle');
           table.integer('isRead').defaultTo(0);
-          table.integer('customerStationId'); //tram 
+          table.integer('customerStationId'); //tram
           table.integer('customerScheduleId'); //lich hen
           table.integer('receiverType').defaultTo(MESSAGE_RECEIVER.USER); //loai nguoi nhan
           table.integer('customerId'); //id KH
@@ -53,7 +61,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -90,25 +98,25 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
-    queryBuilder.where(function() {
+    queryBuilder.where(function () {
       this.orWhere('customerMessageCategories', 'like', `%${searchText}%`)
-      .orWhere('customerMessageContent', 'like', `%${searchText}%`)
-      .orWhere('customerRecordPhone', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerMessageContent', 'like', `%${searchText}%`)
+        .orWhere('customerRecordPhone', 'like', `%${searchText}%`);
+    });
   }
 
-  if(startDate){
-    queryBuilder.where('createdAt', '>=', startDate)
+  if (startDate) {
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
-  if(endDate){
-    queryBuilder.where('createdAt', '<=', endDate)
+  if (endDate) {
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
-  
-  queryBuilder.where({isDeleted: 0});
-  
+
+  queryBuilder.where({ isDeleted: 0 });
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -120,7 +128,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -131,17 +139,19 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error(
+        'ResourceAccess',
+        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
+      );
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -161,5 +171,5 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-  updateAll
+  updateAll,
 };

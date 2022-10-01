@@ -1,13 +1,15 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by Huu on 11/18/21.
  */
 
-"use strict";
-const moduleName = "AppUserMembership";
+'use strict';
+const moduleName = 'AppUserMembership';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
-const CommonFunctions = require("../../Common/CommonFunctions");
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
+const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
   appUserMembershipTitle: Joi.string().required(),
@@ -27,7 +29,7 @@ const updateSchema = {
   appUserMembershipImage: Joi.string(),
   appUserMembershipAssetRequired: Joi.number().allow([0]),
   appUserMembershipAssetF1Required: Joi.number().allow([0]),
-  appUserMembershipInvitationRequired: Joi.number()
+  appUserMembershipInvitationRequired: Joi.number(),
 };
 
 const filterSchema = {
@@ -36,12 +38,12 @@ const filterSchema = {
 const filterSchemaUserMembership = {
   appUserMembershipAssetRequired: Joi.number(),
   appUserMembershipAssetF1Required: Joi.number(),
-  appUserMembershipInvitationRequired: Joi.number()
+  appUserMembershipInvitationRequired: Joi.number(),
 };
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -54,11 +56,11 @@ module.exports = {
       payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
+      Response(req, res, 'insert');
     },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Get List ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -73,18 +75,18 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string().default("createdAt").allow(""),
-          value: Joi.string().default("desc").allow(""),
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
+      Response(req, res, 'find');
     },
   },
 
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -96,15 +98,15 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
+      Response(req, res, 'findById');
     },
   },
 
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Update ${moduleName} By Id`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -117,14 +119,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().required().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
+      Response(req, res, 'updateById');
     },
   },
   deleteById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Delete ${moduleName} By Id`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -136,14 +138,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().required().min(0),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "deleteById");
+      Response(req, res, 'deleteById');
     },
   },
   userGetListMemberShip: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Get List ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -158,13 +160,13 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string().default("createdAt").allow(""),
-          value: Joi.string().default("desc").allow(""),
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetListMemberShip");
+      Response(req, res, 'userGetListMemberShip');
     },
   },
 };

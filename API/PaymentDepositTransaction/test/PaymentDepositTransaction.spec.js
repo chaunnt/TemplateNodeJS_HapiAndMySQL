@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const moment = require('moment');
@@ -15,9 +17,9 @@ const Model = require('../resourceAccess/PaymentDepositTransactionResourceAccess
 const PAYMENT_STATUS = require('../PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
 
 describe(`Tests ${Model.modelName}`, () => {
-  let staffToken = "";
-  let userToken = "";
-  let paymentId = "";
+  let staffToken = '';
+  let userToken = '';
+  let paymentId = '';
   let userData = {};
   let userId = 0;
   let staffId = 0;
@@ -43,25 +45,25 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/insert`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        paymentId = res.body.data[0]
+        paymentId = res.body.data[0];
         done();
       });
   });
   it('staff approve deposit payment manually', done => {
     const body = {
-      id: paymentId
+      id: paymentId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/approveDepositTransaction`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -80,26 +82,26 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/insert`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        paymentId = res.body.data[0]
+        paymentId = res.body.data[0];
         done();
       });
   });
 
   it('staff deny deposit payment manually', done => {
     const body = {
-      id: paymentId
+      id: paymentId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/denyDepositTransaction`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -112,12 +114,12 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('staff view detail of deposit payment', done => {
     const body = {
-      id: paymentId
+      id: paymentId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/findById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -133,7 +135,7 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -146,20 +148,20 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('find list of deposit payment (filter staff)', done => {
     const body = {
-      "filter": {
-        paymentPICId: staffId
+      filter: {
+        paymentPICId: staffId,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -171,20 +173,20 @@ describe(`Tests ${Model.modelName}`, () => {
   });
   it('find list of deposit payment (filter username)', done => {
     const body = {
-      "filter": {
-        userName: userData.userName
+      filter: {
+        userName: userData.userName,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -196,20 +198,20 @@ describe(`Tests ${Model.modelName}`, () => {
   });
   it('find list of deposit payment (filter NEW payment)', done => {
     const body = {
-      "filter": {
-        paymentStatus: PAYMENT_STATUS.NEW
+      filter: {
+        paymentStatus: PAYMENT_STATUS.NEW,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -222,20 +224,20 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('find list of deposit payment (filter PENDING payment)', done => {
     const body = {
-      "filter": {
-        paymentStatus: PAYMENT_STATUS.PENDING
+      filter: {
+        paymentStatus: PAYMENT_STATUS.PENDING,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -248,20 +250,20 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('find list of deposit payment (filter CANCELED payment)', done => {
     const body = {
-      "filter": {
-        paymentStatus: PAYMENT_STATUS.CANCELED
+      filter: {
+        paymentStatus: PAYMENT_STATUS.CANCELED,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -274,20 +276,20 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('find list of deposit payment (filter APPROVED payment)', done => {
     const body = {
-      "filter": {
-        paymentStatus: PAYMENT_STATUS.COMPLETED
+      filter: {
+        paymentStatus: PAYMENT_STATUS.COMPLETED,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -300,20 +302,20 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('find list of deposit payment (filter WAITING payment)', done => {
     const body = {
-      "filter": {
-        paymentStatus: PAYMENT_STATUS.WAITING
+      filter: {
+        paymentStatus: PAYMENT_STATUS.WAITING,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -326,12 +328,12 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('staff get list of deposit payment by startDate', done => {
     const body = {
-      startDate: moment().subtract(5, 'day').toDate()
+      startDate: moment().subtract(5, 'day').toDate(),
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -346,12 +348,12 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('staff get list of deposit payment by endDate', done => {
     const body = {
-      endDate: moment().add(5, 'day').toDate()
+      endDate: moment().add(5, 'day').toDate(),
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -363,4 +365,4 @@ describe(`Tests ${Model.modelName}`, () => {
         done();
       });
   });
-})
+});

@@ -1,17 +1,19 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'CustomerMessage';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const { MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
 
 module.exports = {
   userGetListNotificationMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -23,7 +25,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          isRead: Joi.number()
+          //isRead: Joi.number(),
         }),
         startDate: Joi.string(),
         endDate: Joi.string(),
@@ -31,21 +33,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetListNotificationMessage");
-    }
+      Response(req, res, 'userGetListNotificationMessage');
+    },
   },
   userGetUnreadNotificationMessageCount: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -56,17 +54,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        filter: Joi.object({
-
-        }),
-      })
+        filter: Joi.object({}),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetUnreadNotificationMessageCount");
-    }
+      Response(req, res, 'userGetUnreadNotificationMessageCount');
+    },
   },
   userReadNotificationMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `userReadNotificationMessage ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -78,14 +74,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userReadNotificationMessage");
-    }
+      Response(req, res, 'userReadNotificationMessage');
+    },
   },
   userReadAllNotificationMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `userReadAllNotificationMessage ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -95,18 +91,17 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-            payload: Joi.object({
-        filter: Joi.object({
-          
-        }),
-      })
+      payload: Joi.object({
+        filter: Joi.object({}),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userReadAllNotificationMessage");
-    }
+      Response(req, res, 'userReadAllNotificationMessage');
+    },
   },
+
   userDeleteNotificationMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `userDeleteNotificationMessage ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -118,14 +113,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userDeleteNotificationMessage");
-    }
+      Response(req, res, 'userDeleteNotificationMessage');
+    },
   },
   userDeleteAllNotificationMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `userDeleteAllNotificationMessage ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -136,17 +131,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        filter: Joi.object({
-          
-        }),
-      })
+        filter: Joi.object({}),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userDeleteAllNotificationMessage");
-    }
+      Response(req, res, 'userDeleteAllNotificationMessage');
+    },
   },
   userGetDetailMessage: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `userGetDetail ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -157,11 +150,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0).required()
-      })
+        id: Joi.number().min(0).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetDetailMessage");
-    }
+      Response(req, res, 'userGetDetailMessage');
+    },
   },
 };

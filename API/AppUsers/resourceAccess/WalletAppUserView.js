@@ -1,10 +1,12 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "WalletUserView";
+const tableName = 'WalletUserView';
 const rootTableName = 'AppUser';
-const primaryKeyField = "appUserId";
+const primaryKeyField = 'appUserId';
 
 async function createWalletUserView() {
   const WalletTableName = 'Wallet';
@@ -32,10 +34,10 @@ async function createWalletUserView() {
     `${rootTableName}.appleId`,
     `${rootTableName}.createdAt`,
     `${rootTableName}.appUserNote`,
-    
+
     `${rootTableName}.diachiviUSDT`, // su dung tam
     `${rootTableName}.diachiviBTC`, //su dung tam
-    
+
     `${WalletTableName}.walletType`,
     `${WalletTableName}.balance`,
     `${WalletTableName}.balanceUnit`,
@@ -45,11 +47,13 @@ async function createWalletUserView() {
     `${WalletTableName}.walletNote`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(WalletTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${WalletTableName}.appUserId`);
-  });
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(WalletTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${WalletTableName}.appUserId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {

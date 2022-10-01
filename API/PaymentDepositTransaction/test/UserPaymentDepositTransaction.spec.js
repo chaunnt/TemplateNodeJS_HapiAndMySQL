@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const moment = require('moment');
@@ -15,9 +17,9 @@ const Model = require('../resourceAccess/PaymentDepositTransactionResourceAccess
 const PAYMENT_STATUS = require('../PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
 
 describe(`Tests ${Model.modelName}`, () => {
-  let staffToken = "";
-  let userToken = "";
-  let paymentId = "";
+  let staffToken = '';
+  let userToken = '';
+  let paymentId = '';
   let userData = {};
   let userId = 0;
   let staffId = 0;
@@ -41,33 +43,33 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/user/requestDeposit`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        paymentId = res.body.data[0]
+        paymentId = res.body.data[0];
         done();
       });
   });
   it('find list of deposit payment (filter user id)', done => {
     const body = {
-      "filter": {
-        appUserId: userId
+      filter: {
+        appUserId: userId,
       },
-      "skip": 0,
-      "limit": 20,
-      "order": {
-        "key": "createdAt",
-        "value": "desc"
-      }
+      skip: 0,
+      limit: 20,
+      order: {
+        key: 'createdAt',
+        value: 'desc',
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -79,12 +81,12 @@ describe(`Tests ${Model.modelName}`, () => {
   });
   it('user get list of deposit payment by startDate', done => {
     const body = {
-      startDate: moment().subtract(5, 'day').toDate()
+      startDate: moment().subtract(5, 'day').toDate(),
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/user/depositHistory`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -99,12 +101,12 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('user get list of deposit payment by endDate', done => {
     const body = {
-      endDate: moment().add(5, 'day').toDate()
+      endDate: moment().add(5, 'day').toDate(),
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/user/depositHistory`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -122,7 +124,7 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${Model.modelName}/user/depositHistory`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -134,5 +136,4 @@ describe(`Tests ${Model.modelName}`, () => {
         done();
       });
   });
-
-})
+});

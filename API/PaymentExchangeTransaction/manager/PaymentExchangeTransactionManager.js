@@ -1,23 +1,27 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 
-const ExchangeTransactionUserView = require("../resourceAccess/ExchangeTransactionUserView");
+const ExchangeTransactionUserView = require('../resourceAccess/ExchangeTransactionUserView');
 const ExchangeTransactionFunction = require('../PaymentExchangeTransactionFunctions');
 const { EXCHANGE_TRX_STATUS } = require('../PaymentExchangeTransactionConstant');
+const { ERROR } = require('../../Common/CommonConstant');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      reject("can not create exchange transaction");
+      console.error(`error can not create exchange transaction`);
+      reject('can not create exchange transaction');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -29,70 +33,85 @@ async function find(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
-      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, searchText, order);
-      
+      let transactionList = await ExchangeTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
+      let transactionCount = await ExchangeTransactionUserView.customCount(
+        filter,
+        undefined,
+        undefined,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
+
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
-      reject("failed");
+      console.error(`error exchange transaction find: ${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let newStatus = req.payload.data.status;
       let result = undefined;
-      console.log(newStatus);
-      if(newStatus === EXCHANGE_TRX_STATUS.COMPLETED){
+      if (newStatus === EXCHANGE_TRX_STATUS.COMPLETED) {
         result = await ExchangeTransactionFunction.staffAcceptExchangeRequest(req.payload.id);
-      }else{
-        result = await ExchangeTransactionFunction.staffRejectExchangeRequest(req.payload.id)
+      } else {
+        result = await ExchangeTransactionFunction.staffRejectExchangeRequest(req.payload.id);
       }
 
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
-        reject("update transaction failed");
+      } else {
+        console.error(`error exchange transaction update transaction failed`);
+        reject('update transaction failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      
-      let transactionList = await ExchangeTransactionUserView.find({paymentExchangeTransactionId: req.payload.id});
-      if(transactionList && transactionList.length > 0) {
+      let transactionList = await ExchangeTransactionUserView.find({ paymentExchangeTransactionId: req.payload.id });
+      if (transactionList && transactionList.length > 0) {
         resolve(transactionList[0]);
-      }else{
+      } else {
         Logger.error(`ExchangeTransactionUserView can not findById ${req.payload.id}`);
-        reject("failed");
+        reject('failed');
       }
-      
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function exchangeHistory(req) {
   return new Promise(async (resolve, reject) => {
@@ -104,27 +123,42 @@ async function exchangeHistory(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
-      console.log(transactionList);
+      let transactionList = await ExchangeTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
+        let transactionCount = await ExchangeTransactionUserView.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          undefined,
+          order,
+        );
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function receiveHistory(req) {
   return new Promise(async (resolve, reject) => {
@@ -139,27 +173,43 @@ async function receiveHistory(req) {
       filter.receiveWalletId = null;
       filter.paymentStatus = EXCHANGE_TRX_STATUS.COMPLETED;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+      let transactionList = await ExchangeTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
+        let transactionCount = await ExchangeTransactionUserView.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          undefined,
+          order,
+        );
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function viewExchangeRequests(req) {
   return new Promise(async (resolve, reject) => {
@@ -171,61 +221,79 @@ async function viewExchangeRequests(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+      let transactionList = await ExchangeTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(filter, startDate, endDate, undefined, order);
+        let transactionCount = await ExchangeTransactionUserView.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          undefined,
+          order,
+        );
         resolve({
-          data: transactionList, 
+          data: transactionList,
           total: transactionCount[0].count,
         });
-      }else{
+      } else {
         resolve({
-          data: [], 
+          data: [],
           total: 0,
         });
       }
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function approveExchangeTransaction(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let currentStaff = req.currentUser;
       let result = await ExchangeTransactionFunction.staffAcceptExchangeRequest(req.payload.id, currentStaff);
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
-        reject("failed");
+      } else {
+        console.error(`exchange transaction: approveExchangeTransaction failed ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function denyExchangeTransaction(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let currentStaff = req.currentUser;
       let result = await ExchangeTransactionFunction.staffRejectExchangeRequest(req.payload.id, currentStaff);
-      if(result) {
+      if (result) {
         resolve(result);
-      }else{
-        reject("failed");
+      } else {
+        console.error(`exchange transaction: denyExchangeTransaction failed ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

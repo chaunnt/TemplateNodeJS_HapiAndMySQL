@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { PACKAGE_STATUS, PACKAGE_CATEGORY, PACKAGE_TYPE } = require('../PaymentServicePackageConstant');
-const tableName = "PaymentServicePackage";
-const primaryKeyField = "paymentServicePackageId";
+const tableName = 'PaymentServicePackage';
+const primaryKeyField = 'paymentServicePackageId';
 
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -15,9 +17,9 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
-          table.string('packageName'); //<< Tên gói cước 
+          table.string('packageName'); //<< Tên gói cước
           table.string('packageType'); //<< Loai goi cuoc
-          table.string('packageDescription', 500); //<< Mô tả gói cước 
+          table.string('packageDescription', 500); //<< Mô tả gói cước
           table.double('packagePrice'); // << gia goi cuoc
           table.double('packageDiscountPrice').nullable(); // << gia goi cuoc khuyen mai
           table.double('packagePerformance'); // << số coin / ngay
@@ -45,28 +47,30 @@ async function seeding() {
       packageType: PACKAGE_TYPE.A100FAC.type,
       packagePrice: 100,
       packagePerformance: PACKAGE_TYPE.A100FAC.stage1,
-      packageUnitId: 1
+      packageUnitId: 1,
     },
     {
       packageName: 'A500FAC',
       packageType: PACKAGE_TYPE.A500FAC.type,
       packagePrice: 500,
       packagePerformance: PACKAGE_TYPE.A500FAC.stage1,
-      packageUnitId: 1
+      packageUnitId: 1,
     },
     {
       packageName: 'A1000FAC',
       packageType: PACKAGE_TYPE.A1000FAC.type,
       packagePrice: 1000,
       packagePerformance: PACKAGE_TYPE.A1000FAC.stage1,
-      packageUnitId: 1
+      packageUnitId: 1,
     },
   ];
   return new Promise(async (resolve, reject) => {
-    DB(`${tableName}`).insert(paymentPackages).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    DB(`${tableName}`)
+      .insert(paymentPackages)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 async function initDB() {
@@ -98,7 +102,7 @@ async function count(filter, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function countByReferral(filter, userReferralCount = 0, totalReferPayment = 0) {
@@ -108,17 +112,16 @@ async function countByReferral(filter, userReferralCount = 0, totalReferPayment 
   }
 
   queryBuilder.where({ isDeleted: 0 });
-  queryBuilder.orderBy("createdAt", "desc")
+  queryBuilder.orderBy('createdAt', 'desc');
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.select()
-        .then(records => {
-          resolve(records);
-        });
+      queryBuilder.select().then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB countByReferral ERROR: ${tableName} : ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB countByReferral ERROR: ${tableName} : ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -132,5 +135,5 @@ module.exports = {
   findById,
   deleteById,
   initDB,
-  countByReferral
+  countByReferral,
 };

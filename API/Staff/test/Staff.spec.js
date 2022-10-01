@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,7 +17,7 @@ const Model = require('../resourceAccess/StaffResourceAccess');
 const app = require('../../../server');
 
 describe(`Tests ${Model.modelName}`, function () {
-  let staffToken = "";
+  let staffToken = '';
   let staffId;
   before(done => {
     new Promise(async function (resolve, reject) {
@@ -23,7 +25,7 @@ describe(`Tests ${Model.modelName}`, function () {
     }).then(() => done());
   });
 
-  it("Login Staff", done => {
+  it('Login Staff', done => {
     loginStaff().then(result => {
       if (result && Object.keys(result).length > 0) {
         staffToken = `Bearer ${result.token}`;
@@ -32,14 +34,18 @@ describe(`Tests ${Model.modelName}`, function () {
     });
   });
 
+  let _random = parseInt((new Date() - 1) / 1000);
+
   it('Register Staff Success', done => {
+    _random += 1;
+    let fakerUsername = faker.name.firstName() + faker.name.lastName() + _random;
     const body = {
-      "lastName": faker.name.lastName(),
-      "firstName": faker.name.firstName(),
-      "username": faker.name.firstName() + faker.name.lastName(),
-      "email": faker.internet.email() + Math.random(),
-      "password": "string",
-      "phoneNumber": "string",
+      lastName: faker.name.lastName(),
+      firstName: faker.name.firstName(),
+      username: fakerUsername,
+      email: faker.internet.email() + _random,
+      password: 'string',
+      phoneNumber: 'string' + _random,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -53,14 +59,16 @@ describe(`Tests ${Model.modelName}`, function () {
   });
 
   it('Register Staff Error', done => {
+    _random += 1;
+    let fakerUsername = faker.name.firstName() + faker.name.lastName() + _random;
     const body = {
-      "lastName": faker.name.lastName(),
-      "firstName": faker.name.firstName(),
-      "username": faker.name.firstName() + faker.name.lastName(),
-      "email": faker.internet.email(),
-      "password": "string",
-      "phoneNumber": "string",
-      "roleId": 3
+      lastName: faker.name.lastName(),
+      firstName: faker.name.firstName(),
+      username: fakerUsername,
+      email: faker.internet.email() + _random,
+      password: 'string',
+      phoneNumber: 'string' + _random,
+      roleId: 3,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -77,14 +85,16 @@ describe(`Tests ${Model.modelName}`, function () {
   });
 
   it('Insert Staff Error', done => {
+    _random += 1;
+    let fakerUsername = faker.name.firstName() + faker.name.lastName() + _random;
     const body = {
-      "lastName": faker.name.lastName(),
-      "firstName": faker.name.firstName(),
-      "username": faker.name.firstName() + faker.name.lastName(),
-      "email": faker.internet.email(),
-      "password": "string",
-      "phoneNumber": "string",
-      "roleId": 1
+      lastName: faker.name.lastName(),
+      firstName: faker.name.firstName(),
+      username: fakerUsername,
+      email: faker.internet.email() + _random,
+      password: 'string',
+      phoneNumber: 'string' + _random,
+      roleId: 1,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -100,13 +110,15 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
   it('Insert Staff Success', done => {
+    _random += 1;
+    let fakerUsername = faker.name.firstName() + faker.name.lastName() + _random;
     const body = {
-      "lastName": faker.name.lastName(),
-      "firstName": faker.name.firstName(),
-      "username": faker.name.firstName() + faker.name.lastName(),
-      "email": faker.internet.email() + Math.random(),
-      "password": "string",
-      "phoneNumber": "string",
+      lastName: faker.name.lastName(),
+      firstName: faker.name.firstName(),
+      username: fakerUsername,
+      email: faker.internet.email() + _random,
+      password: 'string',
+      phoneNumber: 'string' + _random,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -123,11 +135,11 @@ describe(`Tests ${Model.modelName}`, function () {
   });
   it('Update Staff Success', done => {
     const body = {
-      "id": staffId,
-      "data": {
-        "lastName": faker.name.firstName(),
-        "firstName": faker.name.lastName(),
-      }
+      id: staffId,
+      data: {
+        lastName: faker.name.firstName(),
+        firstName: faker.name.lastName(),
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -145,7 +157,7 @@ describe(`Tests ${Model.modelName}`, function () {
 
   it('Delete Staff Success', done => {
     const body = {
-      "id": staffId
+      id: staffId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)

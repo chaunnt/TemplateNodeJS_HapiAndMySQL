@@ -1,8 +1,10 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const ServicePackageWalletViews = require("../resourceAccess/ServicePackageWalletViews");
+'use strict';
+const ServicePackageWalletViews = require('../resourceAccess/ServicePackageWalletViews');
 const ServicePackageUserViews = require('../resourceAccess/ServicePackageUserViews');
 const SummaryPaymentServicePackageUserView = require('../resourceAccess/SummaryPaymentServicePackageUserView');
 const UserServicePackageFunctions = require('../UserServicePackageFunctions');
@@ -14,7 +16,7 @@ const ServicePackageUser = require('../resourceAccess/PaymentServicePackageUserR
 const { ACTIVITY_STATUS, PACKAGE_CATEGORY, PACKAGE_TYPE } = require('../PaymentServicePackageConstant');
 const BetRecordsFunctions = require('../../BetRecords/BetRecordsFunctions');
 const PaymentServicePackageFunctions = require('../PaymentServicePackageFunctions');
-
+const { ERROR } = require('../../Common/CommonConstant');
 async function getListUserBuyPackage(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -29,9 +31,25 @@ async function getListUserBuyPackage(req) {
         filter = {};
       }
       filter.appUserId = req.currentUser.appUserId;
-      let packages = await ServicePackageUserViews.customGetListUserBuyPackage(filter, skip, limit, startDate, endDate, searchText, order);
+      let packages = await ServicePackageUserViews.customGetListUserBuyPackage(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
       if (packages && packages.length > 0) {
-        let packagesCount = await ServicePackageUserViews.customCount(filter, startDate, endDate, searchText, skip, order);
+        let packagesCount = await ServicePackageUserViews.customCount(
+          filter,
+          skip,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+          order,
+        );
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -46,10 +64,10 @@ async function getListUserBuyPackage(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findUserBuyPackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -66,10 +84,25 @@ async function findUserBuyPackage(req) {
         filter = {};
       }
 
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, searchText, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (packages && packages.length > 0) {
-        let packagesCount = await ServicePackageUserViews.customCount(filter, searchText, startDate, endDate);
+        let packagesCount = await ServicePackageUserViews.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+        );
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -78,17 +111,16 @@ async function findUserBuyPackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-
         resolve({ data: packages, total: packagesCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function historyServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -108,15 +140,23 @@ async function historyServicePackage(req) {
       filter.appUserId = req.currentUser.appUserId;
       filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
 
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, searchText, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (packages && packages.length > 0) {
         for (let i = 0; i < packages.length; i++) {
           const _package = packages[i];
 
           //get time diff in milisecond
-          let _timeDiff = (new Date() - 1) - (new Date(_package.packageLastActiveDate) - 1);
-          packages[i].processing = parseInt(_timeDiff / (MINING_DURATION * 60 * 60 * 1000) * 100);
+          let _timeDiff = new Date() - 1 - (new Date(_package.packageLastActiveDate) - 1);
+          packages[i].processing = parseInt((_timeDiff / (MINING_DURATION * 60 * 60 * 1000)) * 100);
 
           //maximum 100% processing
           packages[i].processing = Math.min(packages[i].processing, 100);
@@ -129,17 +169,24 @@ async function historyServicePackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-        let packagesCount = await ServicePackageUserViews.customCount(filter, searchText, startDate, endDate);
+        let packagesCount = await ServicePackageUserViews.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+        );
         resolve({ data: packages, total: packagesCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getUserServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -175,10 +222,10 @@ async function getUserServicePackage(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function buyServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -188,7 +235,10 @@ async function buyServicePackage(req) {
 
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
+          req.currentUser.username,
+          req.payload.secondaryPassword,
+        );
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
@@ -206,18 +256,23 @@ async function buyServicePackage(req) {
 
         resolve(result);
       } else {
-        reject("failed");
+        console.error(
+          `error User payment service package buyServicePackage with paymentServicePackageId ${paymentServicePackageId}: ${ERROR}`,
+        );
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      if (e === "NOT_ENOUGH_BALANCE") {
-        reject("NOT_ENOUGH_BALANCE")
+      if (e === 'NOT_ENOUGH_BALANCE') {
+        console.error(`error User payment service package buyServicePackage NOT_ENOUGH_BALANCE`);
+        reject('NOT_ENOUGH_BALANCE');
       } else {
-        reject("failed");
+        console.error(`error User payment service package buyServicePackage: ${ERROR}`);
+        reject('failed');
       }
     }
   });
-};
+}
 
 async function userGetBalanceByUnitId(req) {
   return new Promise(async (resolve, reject) => {
@@ -237,11 +292,10 @@ async function userGetBalanceByUnitId(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function userActivateServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -249,19 +303,24 @@ async function userActivateServicePackage(req) {
       let paymentServicePackageUserId = req.payload.paymentServicePackageUserId;
       let currentUser = req.currentUser;
 
-      let result = await UserServicePackageFunctions.userActivateServicePackage(currentUser, paymentServicePackageUserId);
+      let result = await UserServicePackageFunctions.userActivateServicePackage(
+        currentUser,
+        paymentServicePackageUserId,
+      );
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(
+          `error User payment service package userActivateServicePackage with paymentServicePackageUserId ${paymentServicePackageUserId}: ${ERROR}`,
+        );
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function userCollectServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -269,9 +328,11 @@ async function userCollectServicePackage(req) {
       let paymentServicePackageUserId = req.payload.paymentServicePackageUserId;
       let currentUser = req.currentUser;
 
-      let collectedAmount = await UserServicePackageFunctions.userCollectServicePackage(currentUser, paymentServicePackageUserId);
+      let collectedAmount = await UserServicePackageFunctions.userCollectServicePackage(
+        currentUser,
+        paymentServicePackageUserId,
+      );
       if (collectedAmount !== undefined) {
-
         if (collectedAmount.profitBonus && collectedAmount.profitBonus > 0.0000000001) {
           //tang BTC va luu lai lich su
           const WalletRecordFunction = require('../../WalletRecord/WalletRecordFunction');
@@ -279,20 +340,29 @@ async function userCollectServicePackage(req) {
 
           let _currentPackage = await ServicePackageUserViews.findById(paymentServicePackageUserId);
           if (_currentPackage) {
-            await WalletRecordFunction.adminRewardForUser(_currentPackage.appUserId, collectedAmount.profitBonus, WALLET_TYPE.BTC, undefined, _currentPackage.packageName);
+            await WalletRecordFunction.adminRewardForUser(
+              _currentPackage.appUserId,
+              collectedAmount.profitBonus,
+              WALLET_TYPE.BTC,
+              undefined,
+              _currentPackage.packageName,
+            );
           }
         }
 
         resolve(collectedAmount);
       } else {
-        reject("failed");
+        console.error(
+          `error User payment service package userCollectServicePackage with paymentServicePackageUserId ${paymentServicePackageUserId}: ${ERROR}`,
+        );
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userRequestCompletedServicePackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -301,25 +371,34 @@ async function userRequestCompletedServicePackage(req) {
       let currentUser = req.currentUser;
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(currentUser.username, req.payload.secondaryPassword);
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
+          currentUser.username,
+          req.payload.secondaryPassword,
+        );
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
           return;
         }
       }
-      let result = await UserServicePackageFunctions.userCompleteUserServicePackage(paymentServicePackageUserId, currentUser);
+      let result = await UserServicePackageFunctions.userCompleteUserServicePackage(
+        paymentServicePackageUserId,
+        currentUser,
+      );
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(
+          `error User payment service package userRequestCompletedServicePackage with paymentServicePackageUserId ${paymentServicePackageUserId}: ${ERROR}`,
+        );
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function adminCompletePackagesById(req) {
   return new Promise(async (resolve, reject) => {
@@ -327,15 +406,21 @@ async function adminCompletePackagesById(req) {
       let paymentServicePackageUserId = req.payload.id;
       let currentUser = req.currentUser;
 
-      let result = await UserServicePackageFunctions.adminCompleteUserServicePackage(paymentServicePackageUserId, currentUser);
+      let result = await UserServicePackageFunctions.adminCompleteUserServicePackage(
+        paymentServicePackageUserId,
+        currentUser,
+      );
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(
+          `error User payment service package adminCompletePackagesById with paymentServicePackageUserId ${paymentServicePackageUserId}: ${ERROR}`,
+        );
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -357,10 +442,18 @@ async function historyCompleteServicePackage(req) {
       filter.packageActivityStatus = ACTIVITY_STATUS.COMPLETED;
       filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
 
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, undefined, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
 
       if (packages && packages.length > 0) {
-        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, startDate, endDate);
+        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate);
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -379,10 +472,9 @@ async function historyCompleteServicePackage(req) {
           total: 0,
         });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -403,7 +495,15 @@ async function adminHistoryCompleteServicePackage(req) {
 
       filter.packageActivityStatus = ACTIVITY_STATUS.COMPLETED;
 
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, searchText, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (packages && packages.length > 0) {
         //cap nhat loai package phai dung voi ten package
@@ -413,8 +513,14 @@ async function adminHistoryCompleteServicePackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-
-        let resultCount = await ServicePackageUserViews.customCount(filter, searchText, startDate, endDate);
+        let resultCount = await ServicePackageUserViews.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+        );
 
         resolve({
           data: packages,
@@ -426,10 +532,9 @@ async function adminHistoryCompleteServicePackage(req) {
           total: 0,
         });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -449,10 +554,17 @@ async function historyCancelServicePackage(req) {
 
       filter.appUserId = req.currentUser.appUserId;
       filter.packageActivityStatus = ACTIVITY_STATUS.CANCELED;
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, undefined, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
 
       if (packages && packages.length > 0) {
-
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
           let _packageTypeTemp = packages[i].packageType.split('');
@@ -460,7 +572,7 @@ async function historyCancelServicePackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, startDate, endDate);
+        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate);
         resolve({
           data: packages,
           total: resultCount[0].count,
@@ -471,10 +583,9 @@ async function historyCancelServicePackage(req) {
           total: 0,
         });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -493,10 +604,25 @@ async function adminHistoryCancelServicePackage(req) {
         filter = {};
       }
       filter.packageActivityStatus = ACTIVITY_STATUS.CANCELED;
-      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, searchText, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (packages && packages.length > 0) {
-        let resultCount = await ServicePackageUserViews.customCount(filter, searchText, startDate, endDate);
+        let resultCount = await ServicePackageUserViews.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          searchText,
+        );
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -515,10 +641,9 @@ async function adminHistoryCancelServicePackage(req) {
           total: 0,
         });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -536,15 +661,24 @@ async function historyBonusServicePackage(req) {
       }
       filter.appUserId = req.currentUser.appUserId;
 
-      filter.packageCategory = [
-        PACKAGE_CATEGORY.BONUS_NORMAL,
-        PACKAGE_CATEGORY.BONUS_KYC,
-        PACKAGE_CATEGORY.BONUS_RANK,
-      ];
+      filter.packageCategory = [PACKAGE_CATEGORY.BONUS_NORMAL, PACKAGE_CATEGORY.BONUS_KYC, PACKAGE_CATEGORY.BONUS_RANK];
 
-      let packages = await ServicePackageUserViews.customSearchAllByPackageCategory(filter, skip, limit, undefined, startDate, endDate, order);
+      let packages = await ServicePackageUserViews.customSearchAllByPackageCategory(
+        filter,
+        skip,
+        limit,
+        undefined,
+        startDate,
+        endDate,
+        order,
+      );
       if (packages && packages.length > 0) {
-        let resultCount = await ServicePackageUserViews.customCountAllByPackageCategory(filter, undefined, startDate, endDate);
+        let resultCount = await ServicePackageUserViews.customCountAllByPackageCategory(
+          filter,
+          undefined,
+          startDate,
+          endDate,
+        );
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -558,8 +692,7 @@ async function historyBonusServicePackage(req) {
             data: packages,
             total: resultCount[0].count,
           });
-        }
-        else {
+        } else {
           resolve({
             data: result,
             total: 0,
@@ -571,10 +704,9 @@ async function historyBonusServicePackage(req) {
           total: 0,
         });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -588,16 +720,22 @@ async function countAllUserPackage(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let resultCount = await ServicePackageUserViews.countDistinct('appUserId', filter, undefined, undefined, limit, skip);
+      let resultCount = await ServicePackageUserViews.countDistinct(
+        'appUserId',
+        filter,
+        undefined,
+        undefined,
+        limit,
+        skip,
+      );
       if (resultCount && resultCount.length > 0) {
         resolve(resultCount);
       } else {
         resolve([]);
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -612,12 +750,12 @@ async function updateById(req) {
       if (result && result.length > 0) {
         resolve(result);
       } else {
+        console.error(`error User payment service package updateById with id ${id}: ${ERROR}`);
         resolve('failed');
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -641,72 +779,94 @@ async function _summaryReferralByUserId(appUserId, filter, searchText, skip, lim
     packageActivityStatus: ACTIVITY_STATUS.WORKING,
   });
 
-  resultOutput.totalServicePackagePaymentAmount = _totalServicePackagePaymentAmount_STANDBY[0].sumResult + _totalServicePackagePaymentAmount_WORKING[0].sumResult;
+  resultOutput.totalServicePackagePaymentAmount =
+    _totalServicePackagePaymentAmount_STANDBY[0].sumResult + _totalServicePackagePaymentAmount_WORKING[0].sumResult;
 
-  let referredUserList = await SummaryPaymentServicePackageUserView.findReferedUserByUserId({
-    appUserId: appUserId
-  }, skip, limit, searchText);
+  let referredUserList = await SummaryPaymentServicePackageUserView.findReferedUserByUserId(
+    {
+      appUserId: appUserId,
+    },
+    skip,
+    limit,
+    searchText,
+  );
 
   if (referredUserList && referredUserList.length > 0) {
     const BetRecordResource = require('../../BetRecords/resourceAccess/BetRecordsResourceAccess');
     const moment = require('moment');
     let thisWeekStart = moment().startOf('week').endOf('day').format();
-    console.log(thisWeekStart)
+    console.info(thisWeekStart);
     let thisWeekEnd = moment().endOf('week').add(1, 'day').format();
-    console.log(thisWeekEnd)
+    console.info(thisWeekEnd);
 
     for (let i = 0; i < referredUserList.length; i++) {
       const _referredUser = referredUserList[i];
       let _totalBetRecordWin = await BetRecordResource.sumaryWinLoseAmount(thisWeekStart, thisWeekEnd, {
-        appUserId: _referredUser.appUserId
+        appUserId: _referredUser.appUserId,
       });
       if (_totalBetRecordWin && _totalBetRecordWin.length > 0) {
-        referredUserList[i].totalBetRecordWin = _totalBetRecordWin[0].sumResult
+        referredUserList[i].totalBetRecordWin = _totalBetRecordWin[0].sumResult;
       } else {
-        referredUserList[i].totalBetRecordWin = 0
+        referredUserList[i].totalBetRecordWin = 0;
       }
 
       //tinh tong tai san ca nhan, khong tinh cac phan da thanh ly
-      let ___totalServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum('packagePaymentAmount', {
-        appUserId: referredUserList[i].appUserId,
-        packageActivityStatus: ACTIVITY_STATUS.STANDBY,
-      });
-      let ___totalServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum('packagePaymentAmount', {
-        appUserId: referredUserList[i].appUserId,
-        packageActivityStatus: ACTIVITY_STATUS.WORKING,
-      });
+      let ___totalServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum(
+        'packagePaymentAmount',
+        {
+          appUserId: referredUserList[i].appUserId,
+          packageActivityStatus: ACTIVITY_STATUS.STANDBY,
+        },
+      );
+      let ___totalServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum(
+        'packagePaymentAmount',
+        {
+          appUserId: referredUserList[i].appUserId,
+          packageActivityStatus: ACTIVITY_STATUS.WORKING,
+        },
+      );
 
-      referredUserList[i].totalpackagePaymentAmount = ___totalServicePackagePaymentAmount_STANDBY[0].sumResult + ___totalServicePackagePaymentAmount_WORKING[0].sumResult;
+      referredUserList[i].totalpackagePaymentAmount =
+        ___totalServicePackagePaymentAmount_STANDBY[0].sumResult +
+        ___totalServicePackagePaymentAmount_WORKING[0].sumResult;
     }
     resultOutput.data = referredUserList;
 
     //count all refer user
     let totalCount = await SummaryPaymentServicePackageUserView.countReferedUserByUserId({
-      appUserId: appUserId
+      appUserId: appUserId,
     });
     resultOutput.total = totalCount[0].count;
 
     //count all refer F1 user
     let totalCountF1 = await SummaryPaymentServicePackageUserView.countReferedUserByUserId({
-      memberReferIdF1: appUserId
+      memberReferIdF1: appUserId,
     });
     resultOutput.totalCountF1 = totalCountF1[0].count;
 
     //tinh tong tai san ca nhan, khong tinh cac phan da thanh ly
-    let _totalReferredServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum('packagePaymentAmount', {
-      memberReferIdF1: appUserId,
-      packageActivityStatus: ACTIVITY_STATUS.STANDBY,
-    });
-    let _totalReferredServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum('packagePaymentAmount', {
-      memberReferIdF1: appUserId,
-      packageActivityStatus: ACTIVITY_STATUS.WORKING,
-    });
+    let _totalReferredServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum(
+      'packagePaymentAmount',
+      {
+        memberReferIdF1: appUserId,
+        packageActivityStatus: ACTIVITY_STATUS.STANDBY,
+      },
+    );
+    let _totalReferredServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum(
+      'packagePaymentAmount',
+      {
+        memberReferIdF1: appUserId,
+        packageActivityStatus: ACTIVITY_STATUS.WORKING,
+      },
+    );
 
-    resultOutput.totalReferredServicePackagePaymentAmount = _totalReferredServicePackagePaymentAmount_WORKING[0].sumResult + _totalReferredServicePackagePaymentAmount_STANDBY[0].sumResult;
+    resultOutput.totalReferredServicePackagePaymentAmount =
+      _totalReferredServicePackagePaymentAmount_WORKING[0].sumResult +
+      _totalReferredServicePackagePaymentAmount_STANDBY[0].sumResult;
 
     let _totalCountVerifiedReferredUser = await SummaryPaymentServicePackageUserView.countReferedUserByUserId({
       memberReferIdF1: appUserId,
-      isVerified: 1
+      isVerified: 1,
     });
     resultOutput.totalCountVerifiedReferredUser = _totalCountVerifiedReferredUser[0].count;
   }
@@ -719,7 +879,7 @@ async function getListReferralByUserId(req) {
   let skip = req.payload.skip;
   let limit = req.payload.limit;
   if (filter === undefined) {
-    filter = {}
+    filter = {};
   }
 
   let appUserId = filter.appUserId * 1;
@@ -730,10 +890,9 @@ async function getListReferralByUserId(req) {
     try {
       let result = await _summaryReferralByUserId(appUserId, filter, searchText, skip, limit);
       resolve(result);
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -745,16 +904,15 @@ async function summaryReferedUser(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
 
       filter.memberReferIdF1 = req.currentUser.appUserId;
       let resultOutput = await _summaryReferralByUserId(req.currentUser.appUserId, filter, searchText, skip, limit);
       resolve(resultOutput);
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -778,5 +936,5 @@ module.exports = {
   updateById,
   summaryReferedUser,
   getListReferralByUserId,
-  findUserBuyPackage
+  findUserBuyPackage,
 };

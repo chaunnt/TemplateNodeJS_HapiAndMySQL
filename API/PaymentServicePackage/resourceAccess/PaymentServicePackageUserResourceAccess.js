@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "PaymentServicePackageUser";
-const primaryKeyField = "paymentServicePackageUserId";
+const tableName = 'PaymentServicePackageUser';
+const primaryKeyField = 'paymentServicePackageUserId';
 const { ACTIVITY_STATUS } = require('../PaymentServicePackageConstant');
 
 async function createTable() {
@@ -16,7 +18,7 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
           table.integer('appUserId'); //<< User nguoi mua
-          table.integer('paymentServicePackageId'); //<< goi cuoc 
+          table.integer('paymentServicePackageId'); //<< goi cuoc
           table.timestamp('packageExpireDate', { useTz: true }).defaultTo(DB.fn.now()); // << ngay het han
           table.timestamp('packageLastActiveDate', { useTz: true }).defaultTo(DB.fn.now());
           table.integer('packageActivityStatus').defaultTo(ACTIVITY_STATUS.WORKING); // << tinh trang hoat dong cua package
@@ -29,8 +31,8 @@ async function createTable() {
           table.double('profitBonus').defaultTo(0); // << so tien duoc thuong (admin tang hoac he thong tu thuong)
           table.double('profitBonusClaimed').defaultTo(0); //<<so tien thuong da nhan
           table.double('packageCurrentPerformance').defaultTo(0); // << so FAC  khai thac theo giai doan
-          table.float('percentCompleted').defaultTo(0)// phần trăm thanh lý
-          table.string('packageNote').nullable() // ly do thanh ly
+          table.float('percentCompleted').defaultTo(0); // phần trăm thanh lý
+          table.string('packageNote').nullable(); // ly do thanh ly
           timestamps(table);
           table.index(`${primaryKeyField}`);
           table.index(`appUserId`);
@@ -81,7 +83,7 @@ async function count(filter, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function sumAmountDistinctByDate(filter, startDate, endDate) {
@@ -106,53 +108,43 @@ async function findGrantedPackage(id) {
 }
 
 async function customCountDistinct(filter, distinctFields, startDate, endDate) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, startDate, endDate);
-  
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, undefined);
+
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.countDistinct(` ${distinctFields} as CountResult`)
-        .then(records => {
-          if (records && records[0].sumResult === null) {
-            resolve(undefined)
-          } else {
-            resolve(records);
-          }
-        });
-    }
-    catch (e) {
-      Logger.error("ResourceAccess", `DB SUM ERROR: ${tableName} ${_field}: ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      queryBuilder.countDistinct(` ${distinctFields} as CountResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${_field}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
 }
 
-function _makeQueryBuilderForReferedUser(
-  filter,
-  skip,
-  limit,
-  startDate,
-  endDate,
-  searchText,
-  order
-) {
+function _makeQueryBuilderForReferedUser(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
 
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere("username", "like", `%${searchText}%`)
-        .orWhere("firstName", "like", `%${searchText}%`)
-        .orWhere("lastName", "like", `%${searchText}%`)
-        .orWhere("phoneNumber", "like", `%${searchText}%`)
-        .orWhere("email", "like", `%${searchText}%`);
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`);
     });
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (limit) {
@@ -166,35 +158,34 @@ function _makeQueryBuilderForReferedUser(
   if (filter && filter.appUserId) {
     const _appUserId = filter.appUserId;
     queryBuilder.where(function () {
-      this.orWhere("memberReferIdF1", _appUserId)
-        .orWhere("memberReferIdF2", _appUserId)
-        .orWhere("memberReferIdF3", _appUserId)
-        // .orWhere("memberReferIdF4", _appUserId)
-        // .orWhere("memberReferIdF5", _appUserId);
+      this.orWhere('memberReferIdF1', _appUserId)
+        .orWhere('memberReferIdF2', _appUserId)
+        .orWhere('memberReferIdF3', _appUserId);
+      // .orWhere("memberReferIdF4", _appUserId)
+      // .orWhere("memberReferIdF5", _appUserId);
     });
-    delete filter.appUserId
+    delete filter.appUserId;
   }
 
   queryBuilder.where(filter);
 
-  if (
-    order &&
-    order.key !== "" &&
-    order.value !== "" &&
-    (order.value === "desc" || order.value === "asc")
-  ) {
+  if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc");
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 
 async function findReferedUserByUserId(appUserId, skip, limit) {
-  let queryBuilder = _makeQueryBuilderForReferedUser({
-    appUserId: appUserId
-  }, skip, limit);
+  let queryBuilder = _makeQueryBuilderForReferedUser(
+    {
+      appUserId: appUserId,
+    },
+    skip,
+    limit,
+  );
   return await queryBuilder.select();
 }
 
@@ -204,12 +195,18 @@ async function countReferedUserByUserId(filter) {
 }
 
 async function sumReferedUserByUserId(appUserId, sumField, startDate, endDate) {
-  let queryBuilder = _makeQueryBuilderForReferedUser({
-    appUserId: appUserId
-  }, undefined, undefined, startDate, endDate);
+  let queryBuilder = _makeQueryBuilderForReferedUser(
+    {
+      appUserId: appUserId,
+    },
+    undefined,
+    undefined,
+    startDate,
+    endDate,
+  );
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${sumField} as sumResult`).then((records) => {
+      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
         if (records && records[0].sumResult === null) {
           resolve(0);
         } else {
@@ -217,18 +214,14 @@ async function sumReferedUserByUserId(appUserId, sumField, startDate, endDate) {
         }
       });
     } catch (e) {
-      Logger.error(
-        "ResourceAccess",
-        `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`
-      );
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
-
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
 
@@ -239,23 +232,22 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
         .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
-        .orWhere('companyName', 'like', `%${searchText}%`)
-    })
+        .orWhere('companyName', 'like', `%${searchText}%`);
+    });
   }
 
   queryBuilder.where(filterData);
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
 
   queryBuilder.where({ isDeleted: 0 });
-
 
   if (limit) {
     queryBuilder.limit(limit);
@@ -268,24 +260,24 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, searchText, startDate, endDate, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, searchText, startDate, endDate) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
-async function customSum(sumField, filter, searchText, startDate, endDate) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate);
+async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return queryBuilder.sum(`${sumField} as sumResult`);
 }
 

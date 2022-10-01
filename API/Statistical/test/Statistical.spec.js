@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -7,13 +9,12 @@ const { checkResponseStatus } = require('../../Common/test/Common');
 const TestFunctions = require('../../Common/test/CommonTestFunctions');
 const app = require('../../../server');
 
-
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
 describe(`Tests Statistical`, function () {
-  let token = "";
+  let token = '';
   before(done => {
     new Promise(async function (resolve, reject) {
       let staffData = await TestFunctions.loginStaff();
@@ -22,7 +23,6 @@ describe(`Tests Statistical`, function () {
     }).then(() => done());
   });
 
-  
   it('get generalReport', done => {
     const body = {};
     chai
@@ -35,4 +35,4 @@ describe(`Tests Statistical`, function () {
         done();
       });
   });
-})
+});

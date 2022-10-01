@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -16,16 +18,16 @@ function nonAccentVietnamese(str) {
   //     str = str.replace(/\u00F9|\u00FA|\u1EE5|\u1EE7|\u0169|\u01B0|\u1EEB|\u1EE9|\u1EF1|\u1EED|\u1EEF/g, "u");
   //     str = str.replace(/\u1EF3|\u00FD|\u1EF5|\u1EF7|\u1EF9/g, "y");
   //     str = str.replace(/\u0111/g, "d");
-  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-  str = str.replace(/đ/g, "d");
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+  str = str.replace(/đ/g, 'd');
   // Some system encode vietnamese combining accent as individual utf-8 characters
-  str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // Huyền sắc hỏi ngã nặng 
-  str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // Â, Ê, Ă, Ơ, Ư
+  str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ''); // Huyền sắc hỏi ngã nặng
+  str = str.replace(/\u02C6|\u0306|\u031B/g, ''); // Â, Ê, Ă, Ơ, Ư
   return str;
 }
 
@@ -40,7 +42,7 @@ function removeSpecialChars(str) {
 
 function convertToURLFormat(str) {
   let outString = removeSpecialChars(str);
-  return "/" + encodeURI(replaceAll(outString, ' ', '-'));
+  return '/' + encodeURI(replaceAll(outString, ' ', '-'));
 }
 
 async function chunkArray(arrData, chunkSize) {
@@ -51,29 +53,34 @@ async function chunkArray(arrData, chunkSize) {
   return arrayResult;
 }
 function FormatDate(date, resultFormat) {
-  var newDate = moment(date, "YYYY-MM-DD");
+  var newDate = moment(date, 'YYYY-MM-DD');
   var newDateFormat = newDate.format(`${resultFormat}`);
-  return newDateFormat
+  return newDateFormat;
 }
 
-function padLeadingZeros(num, size, char = "0") {
-  var s = num + "";
+function padLeadingZeros(num, size, char = '0') {
+  var s = num + '';
   while (s.length < size) s = char + s;
   return s;
 }
 
 function randomInt(max) {
-  return Math.floor(Math.random() * max);
+  let value = max;
+  for (let i = 0; i < 100; i++) {
+    value = Math.floor(Math.random() * max);
+  }
+  return value;
 }
 
-function randomIntByMinMax(min, max) { // min and max included 
-return Math.floor(Math.random() * (max - min + 1) + min)
+function randomIntByMinMax(min, max) {
+  // min and max included
+  let value = max;
+  for (let i = 0; i < 100; i++) {
+    value = Math.floor(Math.random() * (max - min + 1) + min);
+  }
+  return value;
 }
 
-function convertStringToHex(inputText) {
-  const bufferText = Buffer.from(inputText, 'utf8'); // or Buffer.from('hello world')
-  return bufferText.toString('hex');
-}
 module.exports = {
   nonAccentVietnamese,
   replaceAll,
@@ -83,5 +90,4 @@ module.exports = {
   chunkArray,
   FormatDate,
   padLeadingZeros,
-  convertStringToHex
 };

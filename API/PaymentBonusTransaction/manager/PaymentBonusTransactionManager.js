@@ -1,45 +1,67 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moment = require('moment');
 
-const BonusTransactionResource = require("../resourceAccess/PaymentBonusTransactionResourceAccess");
-const BonusTransactionUserView = require("../resourceAccess/PaymentBonusTransactionUserView");
-const UserResource = require("../../AppUsers/resourceAccess/AppUsersResourceAccess");
+const BonusTransactionResource = require('../resourceAccess/PaymentBonusTransactionResourceAccess');
+const BonusTransactionUserView = require('../resourceAccess/PaymentBonusTransactionUserView');
+const UserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const PaymentBonusFunction = require('../PaymentBonusTransactionFunctions');
-const BetRecordsFunctions = require('../../BetRecords/BetRecordsFunctions');
+const PaymentDepositTransactionFunctions = require('../../PaymentDepositTransaction/PaymentDepositTransactionFunctions');
+const UserWallet = require('../../Wallet/resourceAccess/WalletResourceAccess');
+const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
+const PaymentExchangeFunctions = require('../../PaymentExchangeTransaction/PaymentExchangeTransactionFunctions');
 const Logger = require('../../../utils/logging');
+const { INVALID_REFER_USER } = require('../PaymentBonusTransactionConstant');
+const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
+const INVALID_BANKINFOMATION = undefined;
+const INVALID_STAFF = undefined;
+const { PAYMENT_TYPE } = require('../../PaymentMethod/PaymentMethodConstant');
+const { ERROR } = require('../../Common/CommonConstant');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let appUserId = req.payload.appUserId;
       let paymentAmount = req.payload.paymentAmount;
+      let staff = req.currentUser;
+
       if (!appUserId) {
-        reject("user is invalid");
+        console.error(`bonus transaction insert: user is invalid`);
+        reject('user is invalid');
         return;
       }
 
       let user = await UserResource.find({ appUserId: appUserId });
       if (!user || user.length < 1) {
-        reject("can not find user");
+        console.error(`bonus transaction insert: can not find user`);
+        reject('can not find user');
         return;
       }
       user = user[0];
 
-      let result = await PaymentBonusFunction.createBonusTransactionByUserId(appUserId, paymentAmount);
+      let result = await PaymentBonusFunction.createBonusTransactionByUserId(
+        appUserId,
+        paymentAmount,
+        INVALID_REFER_USER,
+        INVALID_BANKINFOMATION,
+        staff,
+      );
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error createBonusTransactionByUserId:${appUserId} ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -50,19 +72,35 @@ async function find(req) {
       let order = req.payload.order;
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
-
+      let searchText = req.payload.searchText;
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
 
-      let transactionList = await BonusTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, order);
+      let transactionList = await BonusTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
-      if (transactionList && transactionCount && transactionList.length > 0) {
-        let transactionCount = await BonusTransactionUserView.customCount(filter, startDate, endDate, order);
+      if (transactionList && transactionList.length > 0) {
+        let transactionCount = await BonusTransactionUserView.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          undefined,
+          order,
+        );
 
         //hien thi companyName la ten cua nguoi tham chieu, khong phai ten nguoi nhan
         for (let i = 0; i < transactionList.length; i++) {
-          transactionList[i].companyName = "";
+          transactionList[i].companyName = '';
           let _referUser = await UserResource.findById(transactionList[i].referUserId);
           if (_referUser) {
             transactionList[i].companyName = _referUser.companyName;
@@ -71,7 +109,7 @@ async function find(req) {
             transactionList[i].memberReferIdF3 = _referUser.memberReferIdF3;
           }
         }
-
+        transactionList = await PaymentBonusFunction.addStaffNameInTransactionList(transactionList);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -84,10 +122,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -100,27 +138,29 @@ async function updateById(req) {
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let transactionList = await BonusTransactionUserView.find({ paymentBonusTransactionId: req.payload.id });
+
       if (transactionList) {
+        transactionList = await PaymentBonusFunction.addStaffNameInTransactionList(transactionList);
         resolve(transactionList[0]);
       } else {
         resolve({});
       }
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -130,14 +170,15 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error bonusTransaction deleteById:${id} ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetBonusHistory(req) {
   return new Promise(async (resolve, reject) => {
@@ -150,24 +191,41 @@ async function userGetBonusHistory(req) {
       let endDate = req.payload.endDate;
 
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
 
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        reject("failed");
+        console.error(`error paymentBonus userGetBonusHistory: ${ERROR}`);
+        reject('failed');
         return;
       }
 
-      let transactionList = await BonusTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, order);
-      
+      let transactionList = await BonusTransactionUserView.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        undefined,
+        order,
+      );
+
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await BonusTransactionUserView.customCount(filter, startDate, endDate, order);
+        let transactionCount = await BonusTransactionUserView.customCount(
+          filter,
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+          undefined,
+          order,
+        );
 
         //hien thi companyName la ten cua nguoi tham chieu, khong phai ten nguoi nhan
         for (let i = 0; i < transactionList.length; i++) {
-          transactionList[i].companyName = "";
+          transactionList[i].companyName = '';
           let _referUser = await UserResource.findById(transactionList[i].referUserId);
           if (_referUser) {
             transactionList[i].companyName = _referUser.companyName;
@@ -188,10 +246,10 @@ async function userGetBonusHistory(req) {
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userSummaryBonusByStatus(req) {
   return new Promise(async (resolve, reject) => {
@@ -204,17 +262,25 @@ async function userSummaryBonusByStatus(req) {
       let endDate = req.payload.endDate;
 
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
 
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        reject("failed");
+        console.error(`error paymentBonus userSummaryBonusByStatus: ${ERROR}`);
+        reject('failed');
         return;
       }
 
-      let transactionList = await BonusTransactionUserView.sumAmountDistinctByStatus(filter, skip, limit, startDate, endDate, order);
+      let transactionList = await BonusTransactionUserView.sumAmountDistinctByStatus(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        order,
+      );
 
       if (transactionList && transactionList.length > 0) {
         resolve({
@@ -229,24 +295,28 @@ async function userSummaryBonusByStatus(req) {
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function denyBonusTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
-      let denyResult = await PaymentBonusFunction.denyBonusTransaction(req.payload.id, req.currentUser, req.payload.paymentNote);
+      let denyResult = await PaymentBonusFunction.denyBonusTransaction(
+        req.payload.id,
+        req.currentUser,
+        req.payload.paymentNote,
+      );
       if (denyResult) {
-        resolve("success");
+        resolve('success');
       } else {
-        Logger.error("deposit transaction was not denied");
-        reject("failed");
+        Logger.error('deposit transaction was not denied');
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -254,27 +324,35 @@ async function denyBonusTransaction(req, res) {
 async function approveBonusTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
-      let approveResult = await PaymentBonusFunction.approveBonusTransaction(req.payload.id, req.currentUser, req.payload.paymentNote);
+      let approveResult = await PaymentBonusFunction.approveBonusTransaction(
+        req.payload.id,
+        req.currentUser,
+        req.payload.paymentNote,
+        req.payload.paymentRef,
+      );
       if (approveResult) {
         //cap nhat trang thai sau khi da tra hoa hong
-        let transaction = await BonusTransactionResource.find({
-          paymentBonusTransactionId: req.payload.id
-        }, 0, 1);
+        let transaction = await BonusTransactionResource.find(
+          {
+            paymentBonusTransactionId: req.payload.id,
+          },
+          0,
+          1,
+        );
 
         if (!transaction || transaction.length < 1) {
-          Logger.error("transaction is invalid");
+          Logger.error('transaction is invalid');
           return undefined;
         }
         transaction = transaction[0];
-
-        resolve(approveResult);
+        resolve(transaction);
       } else {
-        Logger.error("deposit transaction was not approved");
-        reject("failed");
+        Logger.error('deposit transaction was not approved');
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -291,14 +369,15 @@ async function summaryUser(req) {
       if (result) {
         resolve(result[0]);
       } else {
-        reject("failed");
+        console.error(`error paymentBonus summaryUser: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function summaryAll(req) {
   return new Promise(async (resolve, reject) => {
@@ -311,20 +390,21 @@ async function summaryAll(req) {
       if (result) {
         resolve(result[0]);
       } else {
-        reject("failed");
+        console.error(`error paymentBonus summaryAll: ${ERROR}`);
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function exportHistoryOfUser(req) {
   return new Promise(async (resolve, reject) => {
-    try{
+    try {
       let appUserId = req.payload.id;
-      let history = await BonusTransactionResource.find({appUserId: appUserId});
+      let history = await BonusTransactionResource.find({ appUserId: appUserId });
       if (history && history.length > 0) {
         const fileName = 'userRewardHistory' + (new Date() - 1).toString();
         let filePath = await ExcelFunction.renderExcelFile(fileName, history, 'User Reward History');
@@ -335,17 +415,17 @@ async function exportHistoryOfUser(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
+  });
 }
 
 async function exportSalesToExcel(req) {
   return new Promise(async (resolve, reject) => {
-    try{
+    try {
       let startDate = moment(req.payload.startDate).startOf('month').format('YYYY-MM-DD');
       let endDate = moment(req.payload.endDate).endOf('month').format('YYYY-MM-DD');
-      let data = await BonusTransactionResource.customSearch(startDate, endDate)
+      let data = await BonusTransactionResource.customSearch(startDate, endDate);
       if (data && data.length > 0) {
         const fileName = 'SalesHistory' + (new Date() - 1).toString();
         let filePath = await ExcelFunction.renderExcelFile(fileName, data, 'Sales History');
@@ -356,9 +436,87 @@ async function exportSalesToExcel(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
+  });
+}
+
+async function userRequestWithdrawBonus(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let appUserId = req.currentUser.appUserId;
+      let paymentAmount = req.payload.paymentAmount;
+      let bankInfomation = {
+        paymentOwner: req.payload.paymentOwner,
+        paymentOriginSource: req.payload.paymentOriginSource,
+        paymentOriginName: req.payload.paymentOriginName,
+      };
+      if (!appUserId) {
+        console.error(`payment Bonus userRequestWithdrawBonus: user is invalid`);
+        reject('user is invalid');
+        return;
+      }
+
+      let user = await UserResource.find({ appUserId: appUserId });
+      if (!user || user.length < 1) {
+        console.error(`payment Bonus userRequestWithdrawBonus: can not find user ${appUserId}`);
+        reject('can not find user');
+        return;
+      }
+      user = user[0];
+
+      let result = await PaymentBonusFunction.createBonusTransactionByUserId(
+        appUserId,
+        paymentAmount,
+        INVALID_REFER_USER,
+        bankInfomation,
+      );
+
+      if (result) {
+        resolve(result);
+      } else {
+        console.error(`error payment Bonus userRequestWithdrawBonus AppuserId:${appUserId} ${ERROR}`);
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(e);
+      reject('failed');
+    }
+  });
+}
+
+async function userRequestExchangePoint(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let appUserId = req.currentUser.appUserId;
+      let paymentAmount = req.payload.paymentAmount;
+      let walletId = req.payload.walletId;
+      if (!appUserId) {
+        console.error(`payment Bonus userRequestExchangePoint: user is invalid`);
+        reject('user is invalid');
+        return;
+      }
+
+      let user = await UserResource.find({ appUserId: appUserId });
+      if (!user || user.length < 1) {
+        console.error(`payment Bonus userRequestExchangePoint: can not find user ${appUserId}`);
+        reject('can not find user');
+        return;
+      }
+      user = user[0];
+
+      let result = await PaymentExchangeFunctions.requestExchangeBonusToPOINT(user, paymentAmount, walletId);
+      if (result) {
+        resolve(result);
+      } else {
+        console.error(`error payment Bonus userRequestExchangePoint AppUserId:${appUserId} ${ERROR}`);
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(e);
+      reject('failed');
+    }
+  });
 }
 
 module.exports = {
@@ -375,4 +533,6 @@ module.exports = {
   exportSalesToExcel,
   userGetBonusHistory,
   userSummaryBonusByStatus,
+  userRequestWithdrawBonus,
+  userRequestExchangePoint,
 };

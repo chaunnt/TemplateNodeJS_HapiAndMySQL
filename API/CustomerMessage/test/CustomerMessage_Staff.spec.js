@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -10,30 +12,30 @@ chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-const modelName = "CustomerMessage";
+const modelName = 'CustomerMessage';
 
 const app = require('../../../server');
 
 describe(`Tests ${modelName}`, function () {
   let messageId = 0;
-  let agencyToken = "";
+  let agencyToken = '';
   before(done => {
     new Promise(async function (resolve, reject) {
       let agencyData = await TestFunctions.loginAgency();
       agencyToken = agencyData.token;
-      done()
+      done();
       resolve();
     });
   });
 
   it('/CustomerMessage/staff/getListNotification', done => {
     const body = {
-      "filter": {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerMessage/staff/getListNotification`)
-      .set("Authorization", `Bearer ${agencyToken}`)
+      .set('Authorization', `Bearer ${agencyToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -43,18 +45,18 @@ describe(`Tests ${modelName}`, function () {
         if (res.body.data && res.body.data.data.length > 0) {
           messageId = res.body.data.data[0].customerMessageId;
         }
-        
+
         done();
       });
   });
   it('/CustomerMessage/staff/getDetailMessage', done => {
     const body = {
-      "id": messageId
+      id: messageId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerMessage/staff/getDetailMessage`)
-      .set("Authorization", `Bearer ${agencyToken}`)
+      .set('Authorization', `Bearer ${agencyToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -66,12 +68,12 @@ describe(`Tests ${modelName}`, function () {
   });
   it('/CustomerMessage/staff/getUnreadNotificationCount', done => {
     const body = {
-      "filter": {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerMessage/staff/getUnreadNotificationCount`)
-      .set("Authorization", `Bearer ${agencyToken}`)
+      .set('Authorization', `Bearer ${agencyToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -86,7 +88,7 @@ describe(`Tests ${modelName}`, function () {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerMessage/staff/readAllNotification`)
-      .set("Authorization", `Bearer ${agencyToken}`)
+      .set('Authorization', `Bearer ${agencyToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -98,12 +100,12 @@ describe(`Tests ${modelName}`, function () {
   });
   it('/CustomerMessage/staff/readNotification', done => {
     const body = {
-      "id": messageId
+      id: messageId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerMessage/staff/readNotification`)
-      .set("Authorization", `Bearer ${agencyToken}`)
+      .set('Authorization', `Bearer ${agencyToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -145,5 +147,4 @@ describe(`Tests ${modelName}`, function () {
   //       done();
   //     });
   // });
-
 });

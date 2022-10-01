@@ -1,18 +1,20 @@
-const chai = require("chai");
-const chaiHttp = require("chai-http");
-const { checkResponseStatus } = require("../../Common/test/Common");
-const TestFunctions = require("../../Common/test/CommonTestFunctions");
-const Constant = require("../StakingPackageConstant");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const { checkResponseStatus } = require('../../Common/test/Common');
+const TestFunctions = require('../../Common/test/CommonTestFunctions');
+const Constant = require('../StakingPackageConstant');
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
-const app = require("../../../server");
+const app = require('../../../server');
 
 describe(`Tests staking`, () => {
-  let staffToken = "";
-  let userToken = "";
+  let staffToken = '';
+  let userToken = '';
   let id;
-  before((done) => {
+  before(done => {
     new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
       staffToken = staffData.token;
@@ -22,12 +24,12 @@ describe(`Tests staking`, () => {
     }).then(() => done());
   });
 
-  it("POST /StakingPackage/user/getList", (done) => {
+  it('POST /StakingPackage/user/getList', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StakingPackage/user/getList`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -39,14 +41,14 @@ describe(`Tests staking`, () => {
       });
   });
 
-  it("POST /StakingPackage/user/requestStaking", (done) => {
+  it('POST /StakingPackage/user/requestStaking', done => {
     const body = {
-      "stakingId": id
+      stakingId: id,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StakingPackage/user/requestStaking`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -57,12 +59,12 @@ describe(`Tests staking`, () => {
       });
   });
 
-  it("POST /StakingPackage/user/historyStaking", (done) => {
+  it('POST /StakingPackage/user/historyStaking', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StakingPackage/user/historyStaking`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {

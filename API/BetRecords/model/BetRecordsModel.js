@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 
 const moment = require('moment');
@@ -12,5 +14,5 @@ function fromData(data) {
 }
 
 module.exports = {
-  fromData
+  fromData,
 };

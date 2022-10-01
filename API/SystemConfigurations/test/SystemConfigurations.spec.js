@@ -1,19 +1,21 @@
-const faker = require("faker");
-const chai = require("chai");
-const chaiHttp = require("chai-http");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const faker = require('faker');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
 // const fs = require('fs');
 
-const { checkResponseStatus } = require("../../Common/test/Common");
-const TestFunctions = require("../../Common/test/CommonTestFunctions");
+const { checkResponseStatus } = require('../../Common/test/Common');
+const TestFunctions = require('../../Common/test/CommonTestFunctions');
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-const app = require("../../../server");
+const app = require('../../../server');
 
 describe(`Tests SystemConfigurations`, () => {
-  let token = "";
-  before((done) => {
+  let token = '';
+  before(done => {
     new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
       token = staffData.token;
@@ -21,12 +23,12 @@ describe(`Tests SystemConfigurations`, () => {
     }).then(() => done());
   });
 
-  it("find system configuration", (done) => {
+  it('find system configuration', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/SystemConfigurations/find`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -37,12 +39,12 @@ describe(`Tests SystemConfigurations`, () => {
       });
   });
 
-  it("user/getDetail system configuration", (done) => {
+  it('user/getDetail system configuration', done => {
     const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/SystemConfigurations/user/getDetail`)
-      .set("Authorization", ``)
+      .set('Authorization', ``)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -53,17 +55,17 @@ describe(`Tests SystemConfigurations`, () => {
       });
   });
 
-  it("Update system version", (done) => {
+  it('Update system version', done => {
     const body = {
       data: {
-        systemVersion: "1.0.0"
+        systemVersion: '1.0.0',
       },
     };
 
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/SystemConfigurations/updateConfigs`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -74,18 +76,18 @@ describe(`Tests SystemConfigurations`, () => {
       });
   });
 
-  it("Update infomation", (done) => {
+  it('Update infomation', done => {
     const body = {
       data: {
-        "address": "567 TPHCM VietNam",
-        "hotlineNumber": "123456789",
+        address: '567 TPHCM VietNam',
+        hotlineNumber: '123456789',
       },
     };
 
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/SystemConfigurations/updateConfigs`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -96,19 +98,19 @@ describe(`Tests SystemConfigurations`, () => {
       });
   });
 
-  it("Update image banner", (done) => {
+  it('Update image banner', done => {
     const body = {
       data: {
-        "bannerImage1": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
-        "bannerImage2": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
-        "bannerImage3": `https://${process.env.HOST_NAME}/uploads/sample_banner.png`
+        bannerImage1: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+        bannerImage2: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
+        bannerImage3: `https://${process.env.HOST_NAME}/uploads/sample_banner.png`,
       },
     };
 
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/SystemConfigurations/updateConfigs`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {

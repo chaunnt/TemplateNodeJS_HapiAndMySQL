@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const AppUsersMembership = require('./AppUserMembershipRoute');
 
 module.exports = [
@@ -7,5 +9,9 @@ module.exports = [
   { method: 'POST', path: '/AppUsersMembership/findById', config: AppUsersMembership.findById },
   { method: 'POST', path: '/AppUsersMembership/updateById', config: AppUsersMembership.updateById },
   { method: 'POST', path: '/AppUsersMembership/deleteById', config: AppUsersMembership.deleteById },
-  { method: 'POST', path: '/AppUsersMembership/userGetListMemberShip', config: AppUsersMembership.userGetListMemberShip },
+  {
+    method: 'POST',
+    path: '/AppUsersMembership/userGetListMemberShip',
+    config: AppUsersMembership.userGetListMemberShip,
+  },
 ];

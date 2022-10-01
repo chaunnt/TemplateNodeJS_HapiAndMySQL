@@ -1,5 +1,6 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
-"use strict";
+'use strict';
 
 const PaymentServicePackageResourceAccess = require('./resourceAccess/PaymentServicePackageResourceAccess');
 const ServicePackageUser = require('./resourceAccess/PaymentServicePackageUserResourceAccess');
@@ -22,11 +23,16 @@ function _getPackageTypeDetail(packageType) {
 }
 
 const DEFAULT_PACKAGE_DURATION = 360; //mac dinh la 360 ngay
-async function createPackagesByPackageType(packageType, packageCategory = PACKAGE_CATEGORY.NORMAL, packageDuration = DEFAULT_PACKAGE_DURATION, isHidden = 0) {
+async function createPackagesByPackageType(
+  packageType,
+  packageCategory = PACKAGE_CATEGORY.NORMAL,
+  packageDuration = DEFAULT_PACKAGE_DURATION,
+  isHidden = 0,
+) {
   let _packageTypeDetail = _getPackageTypeDetail(packageType);
   if (!_packageTypeDetail) {
-    Logger.error(`can not find package type ${packageType} to createPackagesByPackageType`)
-    return undefined
+    Logger.error(`can not find package type ${packageType} to createPackagesByPackageType`);
+    return undefined;
   }
 
   let _currentStage = await SystemConfigurationsResourceAccess.getCurrentStage();
@@ -41,8 +47,8 @@ async function createPackagesByPackageType(packageType, packageCategory = PACKAG
     packageStatus: PACKAGE_STATUS.NEW,
     packageCategory: packageCategory,
     packageDuration: packageDuration,
-    isHidden: isHidden
-  }
+    isHidden: isHidden,
+  };
   //mac dinh package 1000$ se ko duoc mo ban
   if (packageType === PACKAGE_TYPE.A1000FAC.type) {
     newPackage.isHidden = 1;
@@ -56,36 +62,36 @@ async function createPackagesByPackageType(packageType, packageCategory = PACKAG
 
     //make new package name
     let _newPackageName = UtilsFuntions.padLeadingZeros(hexId, MAX_PACKAGE_NAME_LENGTH, '0');
-    
+
     //generate name by type
     _newPackageName = _packageTypeDetail.type + _newPackageName;
 
     //apply prefix by stage
-    let _currentPrefix = "A"; //prefix of stage 1
+    let _currentPrefix = 'A'; //prefix of stage 1
     if (_currentStage === 5) {
-      _currentPrefix = "V"
+      _currentPrefix = 'V';
     } else if (_currentStage === 4) {
-      _currentPrefix = "S"
+      _currentPrefix = 'S';
     } else if (_currentStage === 3) {
-      _currentPrefix = "D"
+      _currentPrefix = 'D';
     } else if (_currentStage === 2) {
-      _currentPrefix = "C"
+      _currentPrefix = 'C';
     }
 
-    _newPackageName = _newPackageName.slice(1, _newPackageName.length); 
+    _newPackageName = _newPackageName.slice(1, _newPackageName.length);
     _newPackageName = _currentPrefix + _newPackageName;
-    
+
     //make all character to uppercase to be "CODE LIKE"
     _newPackageName = _newPackageName.toUpperCase();
-    
+
     let _newPackageId = createResult[0];
     await PaymentServicePackageResourceAccess.updateById(_newPackageId, {
-      packageName: _newPackageName
+      packageName: _newPackageName,
     });
 
     return _newPackageId;
   } else {
-    Logger.error(`failed to createPackagesByPackageType with ${packageType}`)
+    Logger.error(`failed to createPackagesByPackageType with ${packageType}`);
   }
 
   return undefined;
@@ -94,7 +100,7 @@ async function createPackagesByPackageType(packageType, packageCategory = PACKAG
 //we will generate presale packages follow maxNumberOfPackages
 //total count of packages with "packageType" will be equal to maxNumberOfPackages
 async function generatePresalePackages(packageType, maxNumberOfPackages, isHidden) {
-  Logger.info(`generatePresalePackages ${packageType}`)
+  Logger.info(`generatePresalePackages ${packageType}`);
   //dem so luong presale package hien tai
   let presaleListCount = await PaymentServicePackageResourceAccess.count({
     packageType: packageType,
@@ -147,7 +153,9 @@ async function addBonusPackageForUser(appUserId, packageType) {
   }
 
   //update package thanh SOLD de cac user khac khong thay
-  let _updatedResult = await PaymentServicePackageResourceAccess.updateById(_newPackageId, { packageStatus: PACKAGE_STATUS.SOLD });
+  let _updatedResult = await PaymentServicePackageResourceAccess.updateById(_newPackageId, {
+    packageStatus: PACKAGE_STATUS.SOLD,
+  });
   if (_updatedResult) {
     Logger.error(`addBonusPackageForUser error when update package _newPackageId ${_newPackageId} to SOLD`);
     return;
@@ -164,7 +172,7 @@ async function addBonusPackageForUser(appUserId, packageType) {
     packagePaymentAmount: 0, // goi thuong khong can thanh toan
     packageLastActiveDate: new Date(),
     packageCurrentPerformance: _newPackage.packagePerformance,
-    packageActivityStatus: ACTIVITY_STATUS.WORKING
+    packageActivityStatus: ACTIVITY_STATUS.WORKING,
   };
   let newPackageResult = await ServicePackageUser.insert(userPackageData);
   if (!newPackageResult) {
@@ -173,7 +181,6 @@ async function addBonusPackageForUser(appUserId, packageType) {
 }
 
 async function regenerateAllPresalePackage() {
-  console.log("regenerateAllPresalePackage")
   let presaleListCount = await PaymentServicePackageResourceAccess.find({
     isDeleted: 0,
     packageStatus: PACKAGE_STATUS.NEW,

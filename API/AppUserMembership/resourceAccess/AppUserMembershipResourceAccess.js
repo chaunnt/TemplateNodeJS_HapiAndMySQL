@@ -1,37 +1,39 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by Huu on 12/31/21.
  */
 
-"use strict";
-require("dotenv").config();
+'use strict';
+require('dotenv').config();
 
-const Logger = require("../../../utils/logging");
-const { DB, timestamps } = require("../../../config/database");
-const Common = require("../../Common/resourceAccess/CommonResourceAccess");
-const tableName = "AppUserMembership";
-const primaryKeyField = "appUsermembershipId";
+const Logger = require('../../../utils/logging');
+const { DB, timestamps } = require('../../../config/database');
+const Common = require('../../Common/resourceAccess/CommonResourceAccess');
+const tableName = 'AppUserMembership';
+const primaryKeyField = 'appUsermembershipId';
 async function createTable() {
-  Logger.info("ResourceAccess", `createTable ${tableName}`);
+  Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
-          table.string("appUserMembershipTitle");
-          table.string("appUserMembershipDescription", 500);
-          table.string("appUserMembershipImage");
-          table.integer("appUserMembershipInvitationRequired");
-          table.integer("appUserMembershipAssetRequired");
-          table.integer("appUserMembershipAssetF1Required");
-          table.integer("appUserMembershipBonusRate");
-          table.string("appUserMembershipBonusPrizeName");
-          table.integer("appUserMembershipBonusPrizeType");
-          table.integer("appUserMembershipBonusPrize");
+          table.string('appUserMembershipTitle');
+          table.string('appUserMembershipDescription', 500);
+          table.string('appUserMembershipImage');
+          table.integer('appUserMembershipInvitationRequired');
+          table.integer('appUserMembershipAssetRequired');
+          table.integer('appUserMembershipAssetF1Required');
+          table.integer('appUserMembershipBonusRate');
+          table.string('appUserMembershipBonusPrizeName');
+          table.integer('appUserMembershipBonusPrizeType');
+          table.integer('appUserMembershipBonusPrize');
           timestamps(table);
           table.index(`${primaryKeyField}`);
-          table.index("appUserMembershipInvitationRequired");
-          table.index("appUserMembershipAssetRequired");
-          table.index("appUserMembershipAssetF1Required");
+          table.index('appUserMembershipInvitationRequired');
+          table.index('appUserMembershipAssetRequired');
+          table.index('appUserMembershipAssetF1Required');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -48,29 +50,28 @@ async function seeding() {
     {
       appUserMembershipTitle: 'Thành Viên',
       appUserMembershipInvitationRequired: 0,
-      appUserMembershipDescription: "day la thanh vien",
+      appUserMembershipDescription: 'day la thanh vien',
       appUserMembershipAssetRequired: 100,
       appUserMembershipAssetF1Required: 0,
-      
     },
     {
       appUserMembershipTitle: 'Hộ Kinh Doanh',
       appUserMembershipInvitationRequired: 100,
-      appUserMembershipDescription: "day la thanh vien",
+      appUserMembershipDescription: 'day la thanh vien',
       appUserMembershipAssetRequired: 1000,
       appUserMembershipAssetF1Required: 5000,
     },
     {
       appUserMembershipTitle: 'Công Ty',
       appUserMembershipInvitationRequired: 500,
-      appUserMembershipDescription: "day la thanh vien",
+      appUserMembershipDescription: 'day la thanh vien',
       appUserMembershipAssetRequired: 3000,
       appUserMembershipAssetF1Required: 10000,
     },
     {
       appUserMembershipTitle: 'Doanh Nghiệp',
       appUserMembershipInvitationRequired: 1000,
-      appUserMembershipDescription: "day la thanh vien",
+      appUserMembershipDescription: 'day la thanh vien',
       appUserMembershipAssetRequired: 10000,
       appUserMembershipAssetF1Required: 30000,
     },
@@ -78,15 +79,17 @@ async function seeding() {
       appUserMembershipTitle: 'Tập Đoàn',
       appUserMembershipInvitationRequired: 1000,
       appUserMembershipAssetRequired: 30000,
-      appUserMembershipDescription: "day la thanh vien",
+      appUserMembershipDescription: 'day la thanh vien',
       appUserMembershipAssetF1Required: 100000,
-    }
+    },
   ];
   return new Promise(async (resolve, reject) => {
-    DB(`${tableName}`).insert(projectStatus).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    DB(`${tableName}`)
+      .insert(projectStatus)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -122,18 +125,17 @@ async function findById(id) {
   return await Common.findById(tableName, dataId, id);
 }
 
-
-function _makeQueryBuilderByFilter(filter, skip, limit, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
-  
-  if(filterData.appUserMembershipTitle){
-    queryBuilder.where('appUserMembershipTitle', 'like', `%${filterData.appUserMembershipTitle}%`)
+
+  if (filterData.appUserMembershipTitle) {
+    queryBuilder.where('appUserMembershipTitle', 'like', `%${filterData.appUserMembershipTitle}%`);
     delete filterData.appUserMembershipTitle;
   }
 
-  if(filterData.appUserMembershipDescription){
-    queryBuilder.where('appUserMembershipDescription', 'like', `%${filterData.appUserMembershipDescription}%`)
+  if (filterData.appUserMembershipDescription) {
+    queryBuilder.where('appUserMembershipDescription', 'like', `%${filterData.appUserMembershipDescription}%`);
     delete filterData.appUserMembershipDescription;
   }
 
@@ -147,22 +149,29 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
     queryBuilder.offset(skip);
   }
 
+  if (startDate) {
+    queryBuilder.where('createdAt', '>=', startDate);
+  }
+  if (endDate) {
+    queryBuilder.where('createdAt', '<=', endDate);
+  }
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, order);  
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, undefined, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 module.exports = {
@@ -174,5 +183,5 @@ module.exports = {
   findById,
   initDB,
   customSearch,
-  customCount
+  customCount,
 };

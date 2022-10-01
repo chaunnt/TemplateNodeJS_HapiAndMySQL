@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = "DepositTransactionUserView";
+const tableName = 'DepositTransactionUserView';
 const rootTableName = 'PaymentDepositTransaction';
-const primaryKeyField = "paymentDepositTransactionId";
+const primaryKeyField = 'paymentDepositTransactionId';
 async function createView() {
   const UserTableName = 'AppUserViews';
   let fields = [
@@ -23,10 +25,7 @@ async function createView() {
     `${UserTableName}.username`,
     `${UserTableName}.companyName`,
     `${UserTableName}.appUserMembershipTitle`,
-    `${UserTableName}.sotaikhoan`,
-    `${UserTableName}.tentaikhoan`,
-    `${UserTableName}.tennganhang`,
-    
+    `${rootTableName}.isUserDeposit`,
     `${rootTableName}.paymentDepositTransactionId`,
     `${rootTableName}.paymentMethodId`,
     `${rootTableName}.paymentAmount`,
@@ -34,29 +33,37 @@ async function createView() {
     `${rootTableName}.paymentUnit`,
     `${rootTableName}.paymentStatus`,
     `${rootTableName}.paymentRef`,
-    `${rootTableName}.paymentNote`,
-    `${rootTableName}.paymentApproveDate`,
-    `${rootTableName}.paymentPICId`,
-    `${rootTableName}.createdAt`,
-    `${rootTableName}.paymentCategory`,
-    `${rootTableName}.paymentRefAmount`,
     `${rootTableName}.paymentType`,
+    `${rootTableName}.paymentNote`,
     `${rootTableName}.paymentOwner`,
     `${rootTableName}.paymentOriginSource`,
     `${rootTableName}.paymentOriginName`,
-
-
+    `${rootTableName}.paymentApproveDate`,
+    `${rootTableName}.paymentPICId`,
+    `${rootTableName}.createdAt`,
     DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
     `${rootTableName}.updatedAt`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.isDeleted`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(UserTableName, function () {
-    this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`)
-  });
+  // let fieldsPaymentMethod = [
+  //    ...fields,
+  //   `${paymentMethodName}.paymentMethodId`,
+  //   `${paymentMethodName}.paymentMethodName`,
+  //   `${paymentMethodName}.paymentMethodType`,
+  //   `${paymentMethodName}.paymentMethodIdentityNumber`,
+  //   `${paymentMethodName}.paymentMethodReferName`,
+  //   `${paymentMethodName}.paymentMethodReceiverName`,
+  //   `${paymentMethodName}.paymentMethodImageUrl`,
+  // ]
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(UserTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`);
+    });
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -96,25 +103,27 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
         .orWhere('companyName', 'like', `%${searchText}%`)
-    })
+        .orWhere('paymentOwner', 'like', `%${searchText}%`)
+        .orWhere('paymentOriginSource', 'like', `%${searchText}%`)
+        .orWhere('paymentOriginName', 'like', `%${searchText}%`);
+    });
   }
 
   queryBuilder.where({ isDeleted: 0 });
 
   queryBuilder.where(filterData);
-  
+
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
-  
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -122,15 +131,10 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (skip) {
     queryBuilder.offset(skip);
   }
-  if (
-    order &&
-    order.key !== "" &&
-    order.value !== "" &&
-    (order.value === "desc" || order.value === "asc")
-  ) {
+  if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc");
+    queryBuilder.orderBy('createdAt', 'desc');
   }
   return queryBuilder;
 }
@@ -139,8 +143,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -154,5 +158,5 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-  sumAmountDistinctByDate
+  sumAmountDistinctByDate,
 };

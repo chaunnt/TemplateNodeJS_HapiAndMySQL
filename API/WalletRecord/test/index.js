@@ -1,1 +1,3 @@
-require('./WalletRecord.spec')
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+require('./WalletRecord.spec');

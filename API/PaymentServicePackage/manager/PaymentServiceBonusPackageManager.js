@@ -1,18 +1,20 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moment = require('moment');
 
-const PaymentServicePackageResourceAccess = require("../resourceAccess/PaymentServicePackageResourceAccess");
-const UserBonusPackageResource = require("../resourceAccess/UserBonusPackageResourceAccess");
-const UserPackageResource = require("../resourceAccess/PaymentServicePackageUserResourceAccess");
+const PaymentServicePackageResourceAccess = require('../resourceAccess/PaymentServicePackageResourceAccess');
+const UserBonusPackageResource = require('../resourceAccess/UserBonusPackageResourceAccess');
+const UserPackageResource = require('../resourceAccess/PaymentServicePackageUserResourceAccess');
 const PackageUnitView = require('../resourceAccess/PackageUnitView');
 const UserBonusPackageView = require('../resourceAccess/UserBonusPackageView');
 const { CLAIMABLE_STATUS, PACKAGE_CATEGORY, PACKAGE_STATUS } = require('../PaymentServicePackageConstant');
 const Logger = require('../../../utils/logging');
 const WalletResource = require('../../Wallet/resourceAccess/WalletResourceAccess');
-
+const { ERROR } = require('../../Common/CommonConstant');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -21,13 +23,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error payment service bonus package insert:${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -38,20 +41,36 @@ async function find(req) {
       let order = req.payload.order;
       let searchText = req.payload.searchText;
 
-      let paymentServices = await UserBonusPackageView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
-      
+      let paymentServices = await UserBonusPackageView.customSearch(
+        filter,
+        skip,
+        limit,
+        undefined,
+        undefined,
+        searchText,
+        order,
+      );
+
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await UserBonusPackageView.customCount(filter, undefined, undefined, searchText, order);
+        let paymentServiceCount = await UserBonusPackageView.customCount(
+          filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          searchText,
+          order,
+        );
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function _checkBonusClaimableForPackages(packageList, bonusPackageList) {
   if (!packageList || packageList.length <= 0) {
@@ -82,17 +101,33 @@ async function userGetListPaymentBonusPackage(req) {
       let limit = req.payload.limit;
       let order = req.payload.order;
       let searchText = req.payload.searchText;
-      
+
       if (!filter) {
         filter = {};
         filter.packageCategory = PACKAGE_CATEGORY.BONUS_NORMAL;
       }
 
-      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
-      
+      let paymentServices = await PackageUnitView.customSearch(
+        filter,
+        skip,
+        limit,
+        undefined,
+        undefined,
+        searchText,
+        order,
+      );
+
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, searchText, order);
-        
+        let paymentServiceCount = await PackageUnitView.customCount(
+          filter,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          searchText,
+          order,
+        );
+
         //set all bonus package to DISABLE first
         for (let i = 0; i < paymentServices.length; i++) {
           //_checkBonusAvailbilityForUser
@@ -123,11 +158,10 @@ async function userGetListPaymentBonusPackage(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -139,13 +173,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error payment service bonus package updateById ${id}:${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -155,13 +190,14 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      console.error(`error payment service bonus package deleteById ${id}:${ERROR}`);
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -171,14 +207,15 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
+        console.error(`error payment service bonus package findById ${id}: failed to get item`);
         reject('failed to get item');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userClaimBonusPackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -201,7 +238,7 @@ async function userClaimBonusPackage(req) {
 
       let claimResult = await UserBonusPackageResource.updateById(userBonusPackageId, {
         bonusPackageClaimable: CLAIMABLE_STATUS.CLAIMED,
-        bonusPackageClaimedDate: new Date()
+        bonusPackageClaimedDate: new Date(),
       });
 
       if (claimResult) {
@@ -217,22 +254,24 @@ async function userClaimBonusPackage(req) {
         let newUnitWallet = await WalletResource.find({
           appUserId: req.currentUser.appUserId,
           walletType: WALLET_TYPE.CRYPTO,
-          walletBalanceUnitId: _rewardedPackage.packageUnitId
+          walletBalanceUnitId: _rewardedPackage.packageUnitId,
         });
         if (newUnitWallet && newUnitWallet.length > 0) {
           //if wallet existed, then do nothing
-        } else {  
+        } else {
           let createNewUnitWallet = await WalletResource.insert({
             appUserId: req.currentUser.appUserId,
             walletType: WALLET_TYPE.CRYPTO,
-            walletBalanceUnitId: _rewardedPackage.packageUnitId
+            walletBalanceUnitId: _rewardedPackage.packageUnitId,
           });
           if (createNewUnitWallet === undefined) {
-            Logger.error(`userBuyServicePackage can not create new wallet crypto user ${req.currentUser.appUserId} - unitId ${_rewardedPackage.packageUnitId}`)
+            Logger.error(
+              `userBuyServicePackage can not create new wallet crypto user ${req.currentUser.appUserId} - unitId ${_rewardedPackage.packageUnitId}`,
+            );
           }
         }
 
-        //store working package 
+        //store working package
         let _newUserPackageData = {
           appUserId: req.currentUser.appUserId,
           paymentServicePackageId: _rewardedPackage.paymentServicePackageId,
@@ -252,15 +291,15 @@ async function userClaimBonusPackage(req) {
           return;
         }
       } else {
-        reject("failed");
+        console.error(`error payment service bonus package userClaimBonusPackage: ${ERROR}`);
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffSendBonusPackage(req) {
   return new Promise(async (resolve, reject) => {
@@ -296,22 +335,24 @@ async function staffSendBonusPackage(req) {
         bonusPackageExpireDate: moment().add(10, 'days').toDate(), // 10 ngay de nhan khong thi tu mat
         bonusPackageClaimable: CLAIMABLE_STATUS.ENABLE,
         bonusPackageDescription: bonusPackageDescription,
-        appUserId: appUserId
-      })
+        appUserId: appUserId,
+      });
       if (result) {
         // update package da gui
-        await PaymentServicePackageResourceAccess.updateById(paymentServicePackageId, { packageStatus: PACKAGE_STATUS.SOLD })
+        await PaymentServicePackageResourceAccess.updateById(paymentServicePackageId, {
+          packageStatus: PACKAGE_STATUS.SOLD,
+        });
         resolve(result);
       } else {
-        reject("failed");
+        console.error(`error payment service bonus package staffSendBonusPackage: ${ERROR}`);
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,
@@ -321,5 +362,5 @@ module.exports = {
   findById,
   userGetListPaymentBonusPackage,
   userClaimBonusPackage,
-  staffSendBonusPackage
+  staffSendBonusPackage,
 };
