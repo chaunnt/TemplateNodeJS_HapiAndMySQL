@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const TextToSpeechClient = require('./TextToSpeechClient');
 
 ///+ Biển số nền màu xanh, chữ và số màu trắng, sêri biển số sử dụng lần lượt một trong 11 chữ cái sau đây: A, B, C, D,
@@ -18,8 +20,8 @@ const TextToSpeechClient = require('./TextToSpeechClient');
 ///
 ///+ Biển số nền màu vàng, chữ và số màu đen sêri biển số sử dụng lần lượt một trong 20 chữ cái sau đây: A, B, C, D, E,
 /// F, G, H, K, L, M, N, P, S, T, U, V, X, Y, Z cấp cho xe hoạt động kinh doanh vận tải (quy định mới).
-const c_valid_char = "A,B,C,D,E,F,G,H,K,L,M,N,P,R,S,T,U,V,X,Y,Z".split(",");
-const c_valid_specialChar = "KT,LD,DA,MK,MD,MĐ,TD,TĐ,HC,NG,QT,NN,CV,CD,LB".split(",");
+const c_valid_char = 'A,B,C,D,E,F,G,H,K,L,M,N,P,R,S,T,U,V,X,Y,Z'.split(',');
+const c_valid_specialChar = 'KT,LD,DA,MK,MD,MĐ,TD,TĐ,HC,NG,QT,NN,CV,CD,LB'.split(',');
 
 function getSpeechesUrls(plateNumber) {
   const speeches = [];
@@ -29,7 +31,7 @@ function getSpeechesUrls(plateNumber) {
   speeches.push(`https://${process.env.HOST_NAME}/uploads/voices/welcome.mp3`);
 
   //Check if plate start with 2 digits
-  let doubleChar = "0";
+  let doubleChar = '0';
   if (characters.length > 2) {
     doubleChar = `${characters[0]}${characters[1]}`;
   }
@@ -39,7 +41,7 @@ function getSpeechesUrls(plateNumber) {
     charCounter = 2;
   }
 
-  //Remaining characters will be add sequentially 
+  //Remaining characters will be add sequentially
   for (let i = charCounter; i < characters.length; i++) {
     const charString = characters[i].toUpperCase();
     let speechFile = `https://${process.env.HOST_NAME}/uploads/voices/alphabets/${charString}.mp3`;
@@ -56,11 +58,11 @@ async function createProcessSpeechFile(processString, fileName) {
 
 async function resetDefaultSpeechFile() {
   await TextToSpeechClient.remakeAllAlphabets();
-  return "ok";
+  return 'ok';
 }
 
 module.exports = {
   getSpeechesUrls,
   createProcessSpeechFile,
-  resetDefaultSpeechFile
+  resetDefaultSpeechFile,
 };

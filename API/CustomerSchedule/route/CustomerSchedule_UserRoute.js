@@ -1,11 +1,13 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'CustomerSchedule';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
@@ -15,7 +17,7 @@ const insertSchema = {
   customerEmail: Joi.string().email(),
   customerScheduleDate: Joi.string().required().default('2022/01/01'),
   customerScheduleTime: Joi.string().required().default('07:30'),
-  customerScheduleNote:  Joi.string().allow(''),
+  customerScheduleNote: Joi.string().allow(''),
   stationsId: Joi.number().min(0),
   agencyId: Joi.number().min(0),
   stationServicesId: Joi.number(),
@@ -36,7 +38,7 @@ const filterSchema = {
 
 module.exports = {
   userInsertSchedule: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `user insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -47,15 +49,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        ...insertSchema
-      })
+        ...insertSchema,
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userInsertSchedule");
-    }
+      Response(req, res, 'userInsertSchedule');
+    },
   },
   userCancelSchedule: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `user cancel ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -67,15 +69,15 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         customerScheduleId: Joi.number().min(0).required(),
-        customerScheduleNote: Joi.string().allow('')
-      })
+        customerScheduleNote: Joi.string().allow(''),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userCancelSchedule");
-    }
+      Response(req, res, 'userCancelSchedule');
+    },
   },
   userGetListSchedule: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `user get list ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -92,21 +94,17 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetListSchedule");
-    }
+      Response(req, res, 'userGetListSchedule');
+    },
   },
   userGetDetailSchedule: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `user get detail ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -117,11 +115,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        customerScheduleId: Joi.number().min(0)
-      })
+        customerScheduleId: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetDetailSchedule");
-    }
+      Response(req, res, 'userGetDetailSchedule');
+    },
   },
 };

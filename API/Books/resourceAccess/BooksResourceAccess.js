@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "Books";
-const primaryKeyField = "booksId";
+const tableName = 'Books';
+const primaryKeyField = 'booksId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -44,7 +46,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -79,17 +81,17 @@ async function count(filter, order) {
 function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
-  
-  if(filterData.booksCategories){
-    queryBuilder.where('booksCategories', 'like', `%${filterData.booksCategories}%`)
+
+  if (filterData.booksCategories) {
+    queryBuilder.where('booksCategories', 'like', `%${filterData.booksCategories}%`);
     delete filterData.booksCategories;
   }
 
-  if(filterData.booksName){
-    queryBuilder.where('booksName', 'like', `%${filterData.booksName}%`)
+  if (filterData.booksName) {
+    queryBuilder.where('booksName', 'like', `%${filterData.booksName}%`);
     delete filterData.booksName;
   }
-  
+
   queryBuilder.where(filterData);
 
   if (limit) {
@@ -103,7 +105,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("booksUpdatedAt", "desc")
+    queryBuilder.orderBy('booksUpdatedAt', 'desc');
   }
 
   return queryBuilder;
@@ -135,24 +137,24 @@ async function addViewCount(booksId) {
   let filter = {};
   filter[primaryKeyField] = booksId;
 
-  await DB(tableName).where(filter).increment('booksTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('booksTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
 }
 
 async function resetDayViewedCount() {
-  return await DB(tableName).update({dayViewed: 0});
+  return await DB(tableName).update({ dayViewed: 0 });
 }
 
 async function resetMonthViewedCount() {
-  return await DB(tableName).update({monthViewed: 0});
+  return await DB(tableName).update({ monthViewed: 0 });
 }
 
 async function resetWeekViewedCount() {
-  return await DB(tableName).update({weekViewed: 0});
+  return await DB(tableName).update({ weekViewed: 0 });
 }
 
 module.exports = {
@@ -170,5 +172,5 @@ module.exports = {
   resetDayViewedCount,
   updateFollowCount,
   updateSearchCount,
-  addViewCount
+  addViewCount,
 };

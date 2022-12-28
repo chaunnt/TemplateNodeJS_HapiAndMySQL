@@ -77,6 +77,34 @@ async function seeding() {
       balanceUnit: `BTC`,
       walletBalanceUnitId: 2,
     },
+    {
+      appUserId: 2,
+      walletType: WALLET_TYPE.USDT,
+      balance: 1000000,
+      balanceUnit: `USDT`,
+      walletBalanceUnitId: 3,
+    },
+    {
+      appUserId: 2,
+      walletType: WALLET_TYPE.FAC,
+      balance: 1000000,
+      balanceUnit: `FAC`,
+      walletBalanceUnitId: 1,
+    },
+    {
+      appUserId: 2,
+      walletType: WALLET_TYPE.POINT,
+      balance: 1000000,
+      balanceUnit: `FAC`,
+      walletBalanceUnitId: 1,
+    },
+    {
+      appUserId: 2,
+      walletType: WALLET_TYPE.BTC,
+      balance: 1000000,
+      balanceUnit: `BTC`,
+      walletBalanceUnitId: 2,
+    },
   ];
   return new Promise(async (resolve, reject) => {
     DB(`${tableName}`)

@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -8,23 +10,23 @@ const NewsCategoryFunctions = require('../StationNewsCategoryFunctions');
 
 async function initCategoryForAllStations(station) {
   let _stationCount = await StationResource.count({});
-  console.log(_stationCount)
+  console.log(_stationCount);
   if (_stationCount) {
     for (let i = 0; i < _stationCount; i++) {
       let _stationInfo = await StationResource.find({}, i, 1);
       if (_stationInfo && _stationInfo.length > 0) {
         _stationInfo = _stationInfo[0];
         await NewsCategoryFunctions.initNewCategoriesForStation(_stationInfo);
-        console.info(`Done initNewCategoriesForStation ${_stationInfo.stationsId}`)
+        console.info(`Done initNewCategoriesForStation ${_stationInfo.stationsId}`);
       }
     }
   } else {
-    console.error('No station to initCategoryForAllStations')
+    console.error('No station to initCategoryForAllStations');
   }
 }
 
 initCategoryForAllStations();
 
 module.exports = {
-  initCategoryForAllStations
-}
+  initCategoryForAllStations,
+};

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -22,7 +22,14 @@ const EmailClient = require('../../ThirdParty/Email/EmailClient');
 const WALLET_TYPE = require('../Wallet/WalletConstant').WALLET_TYPE;
 /** Gọi ra để sử dụng đối tượng "authenticator" của thằng otplib */
 const { authenticator } = otplib;
-const { USER_TYPE, USER_ERROR } = require('./AppUserConstant');
+const {
+  USER_VERIFY_INFO_STATUS,
+  USER_VERIFY_EMAIL_STATUS,
+  USER_VERIFY_PHONE_NUMBER_STATUS,
+  USER_TYPE,
+  USER_ERROR,
+  USER_MEMBER_LEVEL,
+} = require('./AppUserConstant');
 /** Tạo secret key ứng với từng user để phục vụ việc tạo otp token.
   * Lưu ý: Secret phải được gen bằng lib otplib thì những app như
     Google Authenticator hoặc tương tự mới xử lý chính xác được.
@@ -40,7 +47,10 @@ const generateOTPToken = (username, serviceName, secret) => {
 async function getUnreadNotificationCount(foundUser) {
   const CustomerMessageResourceAccess = require('../CustomerMessage/resourceAccess/CustomerMessageResourceAccess');
   //lay so luong thong bao chua doc cua user
-  let unreadNotifications = await CustomerMessageResourceAccess.count({ customerId: foundUser.appUserId, isRead: 0 });
+  let unreadNotifications = await CustomerMessageResourceAccess.count({
+    customerId: foundUser.appUserId,
+    isRead: 0,
+  });
   foundUser.unreadNotifications = unreadNotifications[0].count;
 }
 
@@ -134,10 +144,8 @@ async function retrieveUserDetail(appUserId) {
 
     //lay so luong thong bao chua doc cua user
     await getUnreadNotificationCount(foundUser);
-
     return foundUser;
   }
-
   return undefined;
 }
 
@@ -326,6 +334,7 @@ async function createNewUser(userData) {
         return; //make sure everything stop
       }
     }
+
     //create new user
     let addResult = await AppUsersResourceAccess.insert(userData);
     if (addResult === undefined) {
@@ -336,14 +345,43 @@ async function createNewUser(userData) {
       await generate2FACode(newUserId);
 
       let referCode = encodeReferCode(newUserId);
-      // let appUserId = decodeReferCode(referCode);
-      await AppUsersResourceAccess.updateById(newUserId, { referCode: referCode });
-      let userDetail = retrieveUserDetail(newUserId);
+      await AppUsersResourceAccess.updateById(newUserId, {
+        referCode: referCode,
+        isVerifiedEmail: USER_VERIFY_EMAIL_STATUS.IS_VERIFIED,
+      });
+
+      const FAC_UNIT_ID = 1;
+      const FAC_UNIT = 'FAC';
+      //Create wallet for user
+      let newWalletData = [
+        {
+          appUserId: newUserId,
+          walletType: WALLET_TYPE.USDT, //vi usdt
+        },
+        {
+          appUserId: newUserId,
+          walletType: WALLET_TYPE.FAC, //vi fac
+          walletBalanceUnitId: FAC_UNIT_ID,
+          balanceUnit: FAC_UNIT,
+        },
+        {
+          appUserId: newUserId,
+          walletType: WALLET_TYPE.BTC, //vi btc
+        },
+        {
+          appUserId: newUserId,
+          walletType: WALLET_TYPE.POINT, //vi hoa hong
+        },
+      ];
+      await WalletResource.insert(newWalletData);
+
+      let userDetail = await retrieveUserDetail(newUserId);
       resolve(userDetail);
     }
     return;
   });
 }
+
 async function sendEmailToResetPassword(user, userToken, email) {
   let link = `${process.env.LINK_WEB_SITE}/resetPassword?token=${userToken}`;
   let userType = '';
@@ -575,10 +613,10 @@ function encodeReferCode(appUserId) {
   let x2 = Math.floor(appUserId / (36 * 36));
   let x3 = Math.floor(appUserId / 36);
   let x4 = Math.floor(appUserId % 36);
-  x1 = encodingTable.at(x1);
-  x2 = encodingTable.at(x2);
-  x3 = encodingTable.at(x3);
-  x4 = encodingTable.at(x4);
+  x1 = encodingTable[x1];
+  x2 = encodingTable[x2];
+  x3 = encodingTable[x3];
+  x4 = encodingTable[x4];
   let hashReferCode = `${x1}${x2}${x3}${x4}`;
   return utilitiesFunction.padLeadingZeros(hashReferCode, 4);
 }

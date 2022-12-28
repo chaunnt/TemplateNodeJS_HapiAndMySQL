@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const textToSpeech = require('@google-cloud/text-to-speech');
 const fs = require('fs');
 const util = require('util');
@@ -16,13 +18,13 @@ async function makeSpeechFile(speechString, fileName) {
   if (outputFile.indexOf('.mp3') < 0) {
     outputFile = outputFile + '.mp3';
   }
-  
+
   const request = {
     input: { text: `${speechString}` },
     voice: { languageCode: 'vi-VN', ssmlGender: 'FEMALE' },
-    audioConfig: { 
+    audioConfig: {
       audioEncoding: 'MP3',
-      "speakingRate": 1.19,
+      speakingRate: 1.19,
     },
   };
   const [response] = await client.synthesizeSpeech(request);
@@ -34,16 +36,16 @@ async function makeSpeechFile(speechString, fileName) {
 
 async function remakeAllAlphabets() {
   for (let i = 0; i < 100; i++) {
-    await makeSpeechFile(i.toString(),`uploads/voices/alphabets/${i}.mp3`);
+    await makeSpeechFile(i.toString(), `uploads/voices/alphabets/${i}.mp3`);
   }
-  let alphabets = "ABCDEFGHIJKLMNOPQRSTUVZXWY";
-  alphabets = alphabets.split("");
+  let alphabets = 'ABCDEFGHIJKLMNOPQRSTUVZXWY';
+  alphabets = alphabets.split('');
   for (let i = 0; i < alphabets.length; i++) {
-    await makeSpeechFile(alphabets[i],`uploads/voices/alphabets/${alphabets[i]}.mp3`);
+    await makeSpeechFile(alphabets[i], `uploads/voices/alphabets/${alphabets[i]}.mp3`);
   }
 }
 
 module.exports = {
   makeSpeechFile,
-  remakeAllAlphabets
+  remakeAllAlphabets,
 };

@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const INIT_DATA = require('../script/data.json');
-const tableName = "CommonPlace";
-const primaryKeyField = "commonPlaceId";
+const tableName = 'CommonPlace';
+const primaryKeyField = 'commonPlaceId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -17,20 +19,22 @@ async function createTable() {
           table.string('commonPlaceName');
           table.decimal('lat', 30, 20);
           table.decimal('lng', 30, 20);
-          table.integer("areaCountryId").defaultTo(1);
-          table.integer("areaProvinceId");
-          table.integer("areaDistrictId");
-          table.integer("areaWardId");
-          table.string("commonPlaceType");
+          table.integer('areaCountryId').defaultTo(1);
+          table.integer('areaProvinceId');
+          table.integer('areaDistrictId');
+          table.integer('areaWardId');
+          table.string('commonPlaceType');
           timestamps(table);
           table.index(`${primaryKeyField}`);
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          DB(`${tableName}`).insert(INIT_DATA.data).then((result) => {
-            Logger.info(`${tableName}`, `init ${tableName}` + result);
-            resolve();
-          });
+          DB(`${tableName}`)
+            .insert(INIT_DATA.data)
+            .then(result => {
+              Logger.info(`${tableName}`, `init ${tableName}` + result);
+              resolve();
+            });
           resolve();
         });
     });
@@ -63,9 +67,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  if(filterData.CommonPlaceName) {
+  if (filterData.CommonPlaceName) {
     queryBuilder.where('CommonPlaceName', 'like', `%${filter.CommonPlaceName}%`);
-    delete filterData.CommonPlaceName
+    delete filterData.CommonPlaceName;
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });
@@ -78,7 +82,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -94,17 +98,19 @@ async function customCount(filter, order) {
   return await query.count(`${primaryKeyField} as count`);
 }
 
-
 async function findNearPlace(AreaCityId, AreaDistrictId, lat, lng, NEAREST_LAT_LNG) {
-  let data = await DB(tableName).whereNot({
-    'areaProvinceId': AreaCityId,
-    'areaDistrictId': AreaDistrictId
-  }).where(function () {
-    this.orWhere('lng', '>=', lng - NEAREST_LAT_LNG)
-      .orWhere('lng', '<=', lng + NEAREST_LAT_LNG)
-      .orWhere('lat', '<=', lat + NEAREST_LAT_LNG)
-      .orWhere('lat', '>=', lat - NEAREST_LAT_LNG)
-  }).select();
+  let data = await DB(tableName)
+    .whereNot({
+      areaProvinceId: AreaCityId,
+      areaDistrictId: AreaDistrictId,
+    })
+    .where(function () {
+      this.orWhere('lng', '>=', lng - NEAREST_LAT_LNG)
+        .orWhere('lng', '<=', lng + NEAREST_LAT_LNG)
+        .orWhere('lat', '<=', lat + NEAREST_LAT_LNG)
+        .orWhere('lat', '>=', lat - NEAREST_LAT_LNG);
+    })
+    .select();
   return data;
 }
 
@@ -116,5 +122,5 @@ module.exports = {
   initDB,
   customSearch,
   customCount,
-  findNearPlace
+  findNearPlace,
 };

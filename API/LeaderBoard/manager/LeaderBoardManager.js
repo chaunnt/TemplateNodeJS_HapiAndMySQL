@@ -4,7 +4,6 @@
 const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess');
 const LeaderBoardViews = require('../resourceAccess/LeaderBoardViews');
 const LeaderBoardFunction = require('../LeaderFunction');
-const { ERROR } = require('../../Common/CommonConstant');
 async function userGetTopRank(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -17,11 +16,10 @@ async function userGetTopRank(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error userGetTopRank: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error user get top rank`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -37,11 +35,10 @@ async function updateRanKingById(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error updateRanKingById: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error update RanKing By Id `, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -58,21 +55,13 @@ async function find(req) {
       };
       let result = await LeaderBoardViews.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
       if (result && result.length > 0) {
-        let dataCount = await LeaderBoardViews.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-        );
+        let dataCount = await LeaderBoardViews.customCount(filter, undefined, undefined);
         resolve({ data: result, total: dataCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
-      console.error(`error:`, e);
+      console.error(e);
       reject('failed');
     }
   });

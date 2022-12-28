@@ -1,11 +1,13 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const StationProductsResourceAccess = require("../resourceAccess/StationProductsResourceAccess");
-const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess')
+'use strict';
+const StationProductsResourceAccess = require('../resourceAccess/StationProductsResourceAccess');
+const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 const Logger = require('../../../utils/logging');
-const formatDate = require("../../ApiUtils/utilFunctions")
+const formatDate = require('../../ApiUtils/utilFunctions');
 const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
 
 async function insert(req) {
@@ -16,7 +18,6 @@ async function insert(req) {
       if (req.currentUser.stationsId) {
         stationProductsData.stationsId = req.currentUser.stationsId;
       }
-      
 
       //xu ly cap nhat thumbnail neu co update avatar
       if (stationProductsData.stationProductsAvatar) {
@@ -25,18 +26,18 @@ async function insert(req) {
           stationProductsData.stationProductsAvatarThumbnails = _thumbnailsUrl;
         }
       }
-      
+
       let result = await StationProductsResourceAccess.insert(stationProductsData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -49,16 +50,16 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let startDate = req.payload.startDate;
       if (endDate) {
-        endDate = formatDate.FormatDate(endDate)
+        endDate = formatDate.FormatDate(endDate);
       }
       if (startDate) {
-        startDate = formatDate.FormatDate(startDate)
+        startDate = formatDate.FormatDate(startDate);
       }
 
       if (!filter) {
-        filter = {}
+        filter = {};
       }
-      
+
       let stationProducts = await StationProductsResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
       let stationProductsCount = await StationProductsResourceAccess.customCount(filter, startDate, endDate, searchText, order);
       if (stationProducts && stationProductsCount) {
@@ -68,10 +69,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -91,13 +92,13 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -107,13 +108,13 @@ async function findById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -123,16 +124,14 @@ async function deleteById(req) {
       let result = await StationProductsResourceAccess.deleteById(stationProductsId);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      else {
-        reject("failed");
-      }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
+  });
 }
 
 async function userGetDetailProduct(req) {
@@ -143,14 +142,14 @@ async function userGetDetailProduct(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetListProduct(req) {
   return new Promise(async (resolve, reject) => {
@@ -166,13 +165,12 @@ async function userGetListProduct(req) {
       } else {
         resolve({ data: [], total: 0 });
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

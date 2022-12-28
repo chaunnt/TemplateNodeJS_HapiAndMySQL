@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -29,6 +29,14 @@ async function verifyToken(request, reply) {
       return;
     }
 
+    //append current user to request
+    request.currentUser = result;
+
+    if (!request.currentUser.active) {
+      reply.response(errorCodes[505]).code(505).takeover();
+      return;
+    }
+
     //system down then normal user can not use anything, except staff
     if (result.appUserId && SystemStatus.all === false) {
       Logger.error(`System was down - current active status = ${SystemStatus.all}`);
@@ -38,7 +46,9 @@ async function verifyToken(request, reply) {
 
     //recheck again with realtime DB
     if (result.appUserId) {
-      let currentUser = await UserResource.find({ appUserId: result.appUserId });
+      let currentUser = await UserResource.find({
+        appUserId: result.appUserId,
+      });
       if (currentUser && currentUser.length > 0 && currentUser[0].active) {
         //append current user to request
         request.currentUser = currentUser[0];
@@ -52,6 +62,12 @@ async function verifyToken(request, reply) {
       if (currentStaff && currentStaff.length > 0 && currentStaff[0].active) {
         //append current user to request
         request.currentUser = currentStaff[0];
+
+        //do not allow multiple staff login
+        //if (currentStaff[0].staffToken !== request.headers.authorization.replace('Bearer ','')) {
+        //  reply.response(errorCodes[505]).code(505).takeover();
+        //  return
+        //}
         resolve('ok');
       } else {
         reply.response(errorCodes[505]).code(505).takeover();
@@ -87,17 +103,19 @@ async function verifyTokenOrAllowEmpty(request, reply) {
 async function verifyStaffToken(request, reply) {
   return new Promise(function (resolve) {
     let currentUser = request.currentUser;
-    if (!currentUser.staffId || currentUser.staffId < 1) {
+
+    if (!currentUser || !currentUser.staffId || currentUser.staffId < 1) {
       Logger.error('do not have staffId or staff id is invalid');
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
-    if (!currentUser.roleId || currentUser.roleId < 1) {
+    if (!currentUser || !currentUser.roleId || currentUser.roleId < 1) {
       Logger.error('do not have roleId or roleId is invalid');
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
+
     resolve('ok');
   }).then(function () {
     reply('pre-handler done');
@@ -184,6 +202,7 @@ async function verifyOwnerToken(request, reply) {
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
+
     resolve('ok');
   }).then(function () {
     reply('pre-handler done');

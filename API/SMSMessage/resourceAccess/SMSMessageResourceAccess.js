@@ -124,10 +124,7 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }

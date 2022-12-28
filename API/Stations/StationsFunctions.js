@@ -1,8 +1,10 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
-const StationsResourceAccess = require("./resourceAccess/StationsResourceAccess");
+const StationsResourceAccess = require('./resourceAccess/StationsResourceAccess');
 const StationsDetailModel = require('./model/StationDetailModel');
 const StationDetailPublicModel = require('./model/StationDetailPublicModel');
 const UtilsFunction = require('../ApiUtils/utilFunctions');
@@ -13,7 +15,6 @@ if (process.env.GOOGLE_TTS_ENABLE) {
   const TextToSpeechFunction = require('../../ThirdParty/TextToSpeech/TextToSpeechFunctions');
 }
 
-
 async function registerNewStation(stationsData) {
   //generate new url based on name
   let stationUrl = UtilsFunction.nonAccentVietnamese(stationsData.stationsName);
@@ -22,7 +23,7 @@ async function registerNewStation(stationsData) {
   //extract url name only
   stationUrl = stationUrl.replace('/', '');
 
-  //make new url as a subdomain of CDN 
+  //make new url as a subdomain of CDN
   stationsData.stationUrl = `${stationUrl}.${process.env.WEB_HOST_NAME}`;
   stationsData.stationWebhookUrl = `${stationUrl}-webhooks.${process.env.HOST}`;
   let result = await StationsResourceAccess.insert(stationsData);
@@ -36,7 +37,7 @@ async function getStationDetailById(stationId) {
     result = StationsDetailModel.fromData(result);
   }
 
-  let staffCount = await StaffResource.count({ stationsId: stationId});
+  let staffCount = await StaffResource.count({ stationsId: stationId });
   if (staffCount && staffCount.length > 0) {
     staffCount = staffCount[0].count;
   } else {
@@ -44,7 +45,7 @@ async function getStationDetailById(stationId) {
   }
 
   result.staffCount = staffCount;
-  
+
   return result;
 }
 
@@ -53,7 +54,7 @@ async function getStationDetailByUrl(url) {
 
   if (result && result.length > 0) {
     //This model is use to display info of Stations in public.
-    //BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL 
+    //BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL
     result = StationDetailPublicModel.fromData(result[0]);
   } else {
     result = undefined;
@@ -66,8 +67,8 @@ async function updateVoiceDataForConfig(stationsConfig) {
     const configurationData = stationsConfig[i];
     let configVoice = configurationData.stepVoice;
     //delete voice url if voice string is empty
-    if (configVoice.trim() === "") {
-      stationsConfig[i].stepVoiceUrl = "";
+    if (configVoice.trim() === '') {
+      stationsConfig[i].stepVoiceUrl = '';
     }
     //or generate new voice url if voice string is not empty
     else {
@@ -78,7 +79,7 @@ async function updateVoiceDataForConfig(stationsConfig) {
 
       //find if voice url is existed in upload storage or not
       let existedVoice = await UploadResource.find({
-        uploadFileName: voiceUrl
+        uploadFileName: voiceUrl,
       });
       //if voice file is existed, use it
       if (process.env.GOOGLE_TTS_ENABLE * 1 === 0 && existedVoice && existedVoice.length > 0) {
@@ -93,15 +94,15 @@ async function updateVoiceDataForConfig(stationsConfig) {
             stationsConfig[i].stepVoiceUrl = `https://${process.env.HOST_NAME}${voiceUrl}`;
             UploadResource.insert({
               uploadFileName: voiceFilePath,
-              uploadFileExtension: "mp3",
+              uploadFileExtension: 'mp3',
               uploadUnicodeName: configVoice,
               uploadFileSize: 100,
-              uploadFileUrl: `https://${process.env.HOST_NAME}${voiceUrl}`
+              uploadFileUrl: `https://${process.env.HOST_NAME}${voiceUrl}`,
             });
           } else {
-            console.error(`can not make stepVoiceUrl ${configVoice}`)
+            console.error(`can not make stepVoiceUrl ${configVoice}`);
             //handle error
-            stationsConfig[i].stepVoiceUrl = "";
+            stationsConfig[i].stepVoiceUrl = '';
           }
         }
       }
@@ -110,12 +111,12 @@ async function updateVoiceDataForConfig(stationsConfig) {
 }
 
 async function resetAllDefaultMp3() {
-  console.info(`resetAllDefaultMp3 ${new Date().toISOString()}`)
+  console.info(`resetAllDefaultMp3 ${new Date().toISOString()}`);
   //Reset all default mp3 to new TTS setting if server required (GOOGLE_TTS_ENABLE = 1)
   if (process.env.GOOGLE_TTS_ENABLE * 1 === 1) {
     await TextToSpeechFunction.resetDefaultSpeechFile();
     let existingMp3Files = await UploadResource.find({
-      uploadFileExtension: "mp3",
+      uploadFileExtension: 'mp3',
     });
     if (existingMp3Files && existingMp3Files.length > 0) {
       for (let i = 0; i < existingMp3Files.length; i++) {
@@ -142,5 +143,5 @@ module.exports = {
   getStationDetailByUrl,
   updateVoiceDataForConfig,
   resetAllDefaultMp3,
-  sortCheckingConfigStep
-}
+  sortCheckingConfigStep,
+};

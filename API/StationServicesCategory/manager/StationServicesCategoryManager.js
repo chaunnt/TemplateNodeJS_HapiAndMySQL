@@ -1,13 +1,14 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const StationServicesCategoryResourceAccess = require("../resourceAccess/StationServicesCategoryResourceAccess");
-const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess')
+'use strict';
+const StationServicesCategoryResourceAccess = require('../resourceAccess/StationServicesCategoryResourceAccess');
+const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 const ProductCategoryFunctions = require('../StationServicesCategoryFunctions');
 
 const Logger = require('../../../utils/logging');
-
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -25,14 +26,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -45,20 +46,31 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let startDate = req.payload.startDate;
 
-      let stationServicesCategory = await StationServicesCategoryResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let stationServicesCategory = await StationServicesCategoryResourceAccess.customSearch(
+        filter,
+        skip,
+        limit,
+        startDate,
+        endDate,
+        searchText,
+        order,
+      );
 
       if (stationServicesCategory && stationServicesCategory.length > 0) {
         let stationServicesCategoryCount = await StationServicesCategoryResourceAccess.customCount(filter, startDate, endDate, searchText, order);
-        resolve({ data: stationServicesCategory, total: stationServicesCategoryCount[0].count });
+        resolve({
+          data: stationServicesCategory,
+          total: stationServicesCategoryCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -69,14 +81,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateDisplayIndexById(req) {
   return new Promise(async (resolve, reject) => {
@@ -87,14 +99,14 @@ async function updateDisplayIndexById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -104,14 +116,14 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -122,14 +134,13 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
+  });
 }
 
 async function userGetListProductCategory(req) {
@@ -141,43 +152,45 @@ async function userGetListProductCategory(req) {
       let station = undefined;
       let filter = {};
 
-      //retry to find config with 
+      //retry to find config with
       if (stationUrl && (!station || station.length <= 0)) {
-        station = await StationsResourceAccess.find({ "stationUrl": stationUrl }, 0, 1);
+        station = await StationsResourceAccess.find({ stationUrl: stationUrl }, 0, 1);
       }
 
-      //retry to find config with 
+      //retry to find config with
       if (stationUrl && (!station || station.length <= 0)) {
-        station = await StationsResourceAccess.find({ "stationLandingPageUrl": stationUrl }, 0, 1);
+        station = await StationsResourceAccess.find({ stationLandingPageUrl: stationUrl }, 0, 1);
       }
 
       if (station && station.length > 0) {
         station = station[0];
         filter = {
-          stationsId: station.stationsId
+          stationsId: station.stationsId,
         };
       }
 
       let _categoryOrder = {
-        key: "displayIndex",
-        value: "asc"
-      }
+        key: 'displayIndex',
+        value: 'asc',
+      };
 
       let stationServicesCategory = await StationServicesCategoryResourceAccess.find(filter, skip, limit, _categoryOrder);
 
       if (stationServicesCategory && stationServicesCategory.length > 0) {
         let stationServicesCategoryCount = await StationServicesCategoryResourceAccess.count(filter);
-        resolve({ data: stationServicesCategory, total: stationServicesCategoryCount[0].count });
+        resolve({
+          data: stationServicesCategory,
+          total: stationServicesCategoryCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
-    }
-    catch {
+    } catch {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

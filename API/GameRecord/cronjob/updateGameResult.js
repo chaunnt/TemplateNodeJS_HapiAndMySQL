@@ -22,10 +22,7 @@ async function updateGameResult(gameRecordSection) {
         let updateRecordData = {
           gameRecordValue: resultLottery.ketqua,
         };
-        let isUpdateSuccess = await GameRecordsResourceAccess.updateById(
-          existedGameRecord.gameRecordId,
-          updateRecordData,
-        );
+        let isUpdateSuccess = await GameRecordsResourceAccess.updateById(existedGameRecord.gameRecordId, updateRecordData);
         let isGameRecordValueChange = existedGameRecord.gameRecordValue !== updateRecordData.gameRecordValue;
         if (isUpdateSuccess && isGameRecordValueChange) {
           let groupNotifyTitle = 'Kết quả quả xổ số';

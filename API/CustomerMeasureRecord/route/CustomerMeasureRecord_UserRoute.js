@@ -1,20 +1,20 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'CustomerMeasureRecord';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
-const filterSchema = {
-  
-};
+const filterSchema = {};
 
 module.exports = {
   userGetListMeasureRecord: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `get list ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -32,21 +32,17 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetListMeasureRecord");
-    }
+      Response(req, res, 'userGetListMeasureRecord');
+    },
   },
   userGetDetailMeasureRecordById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `get detail ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -58,10 +54,10 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.string().required(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userGetDetailMeasureRecordById");
-    }
+      Response(req, res, 'userGetDetailMeasureRecordById');
+    },
   },
 };

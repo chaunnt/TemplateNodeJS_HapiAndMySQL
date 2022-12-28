@@ -3,13 +3,25 @@
 const CustomerMessage_User = require('./CustomerMessage_UserRoute');
 const CustomerMessage_Staff = require('./CustomerMessage_StaffRoute');
 const GroupCustomerMessage = require('../route/GroupCustomerMessageRoute');
-const CustomerMessage = require('./CustomerMessageRoute');
+
 module.exports = [
   //Api CustomerSchedule
-  { method: 'POST', path: '/GroupCustomerMessage/insert', config: GroupCustomerMessage.insert },
+  {
+    method: 'POST',
+    path: '/GroupCustomerMessage/insert',
+    config: GroupCustomerMessage.insert,
+  },
   // { method: 'POST', path: '/GroupCustomerMessage/updateById', config: GroupCustomerMessage.updateById },
-  { method: 'POST', path: '/GroupCustomerMessage/findById', config: GroupCustomerMessage.findById },
-  { method: 'POST', path: '/GroupCustomerMessage/find', config: GroupCustomerMessage.find },
+  {
+    method: 'POST',
+    path: '/GroupCustomerMessage/findById',
+    config: GroupCustomerMessage.findById,
+  },
+  {
+    method: 'POST',
+    path: '/GroupCustomerMessage/find',
+    config: GroupCustomerMessage.find,
+  },
   // { method: 'POST', path: '/GroupCustomerMessage/deleteById', config: GroupCustomerMessage.deleteById },
   {
     method: 'POST',
@@ -87,10 +99,5 @@ module.exports = [
     method: 'POST',
     path: '/CustomerMessage/staff/deleteNotification',
     config: CustomerMessage_Staff.staffDeleteNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/insertNotification',
-    config: CustomerMessage.insert,
   },
 ];

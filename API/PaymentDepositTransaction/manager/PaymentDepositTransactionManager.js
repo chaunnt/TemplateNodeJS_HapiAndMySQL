@@ -7,13 +7,13 @@
 const moment = require('moment');
 
 const DepositTransactionAccess = require('../resourceAccess/PaymentDepositTransactionResourceAccess');
-const DepositTransactionUserView = require('../resourceAccess/PaymentDepositTransactionUserView');
+const PaymentDepositTransactionUserView = require('../resourceAccess/PaymentDepositTransactionUserView');
 const DepositTransactionMethodView = require('../resourceAccess/PaymentDepositMethodView');
 const UserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const DepositFunction = require('../PaymentDepositTransactionFunctions');
 const Logger = require('../../../utils/logging');
-const StaffResourceAccess =require('../../Staff/resourceAccess/StaffResourceAccess');
-
+const StaffResourceAccess = require('../../Staff/resourceAccess/StaffResourceAccess');
+const PaymentMethodResourceAccess = require('../../PaymentMethod/resourceAccess/PaymentMethodResourceAccess');
 const { DEPOSIT_TRX_STATUS, DEPOSIT_TRX_TYPE, DEPOSIT_ERROR } = require('../PaymentDepositTransactionConstant');
 // const ExcelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
 const INVALID_WALLET = undefined;
@@ -22,6 +22,8 @@ const INVALID_BANKINFOMATION = undefined;
 
 const { ERROR } = require('../../Common/CommonConstant');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
+const { publishJson } = require('../../../ThirdParty/MQTTBroker/MQTTBroker');
+
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -78,27 +80,10 @@ async function find(req) {
         filter = {};
       }
 
-      let transactionList = await DepositTransactionMethodView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
-      let transactionCount = await DepositTransactionMethodView.customCount(
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
-    
+      let transactionList = await DepositTransactionMethodView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let transactionCount = await DepositTransactionMethodView.customCount(filter, undefined, undefined, startDate, endDate, searchText, order);
+
       if (transactionList && transactionCount && transactionList.length > 0) {
-     
         transactionList = await getDetailTransactionDeposit(transactionList);
         resolve({
           data: transactionList,
@@ -143,7 +128,6 @@ async function findById(req) {
       } else {
         resolve({});
       }
-      resolve('success');
     } catch (e) {
       console.error(`error payment deposit findById with paymentDepositTransactionId:${req.payload.id}`, e);
       reject('failed');
@@ -173,24 +157,8 @@ async function depositHistory(req) {
         return;
       }
 
-      let transactionList = await DepositTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
-      let transactionCount = await DepositTransactionUserView.customCount(
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await PaymentDepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+      let transactionCount = await PaymentDepositTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -213,11 +181,7 @@ async function depositHistory(req) {
 async function denyDepositTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
-      let denyResult = await DepositFunction.denyDepositTransaction(
-        req.payload.id,
-        req.currentUser,
-        req.payload.paymentNote,
-      );
+      let denyResult = await DepositFunction.denyDepositTransaction(req.payload.id, req.currentUser, req.payload.paymentNote);
       if (denyResult) {
         resolve('success');
       } else {
@@ -300,12 +264,7 @@ async function summaryAll(req) {
 async function addPointForUser(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let rewardResult = await DepositFunction.addPointForUser(
-        req.payload.id,
-        req.payload.amount,
-        req.currentUser,
-        req.payload.paymentNote,
-      );
+      let rewardResult = await DepositFunction.addPointForUser(req.payload.id, req.payload.amount, req.currentUser, req.payload.paymentNote);
       if (rewardResult) {
         resolve('success');
       } else {
@@ -365,9 +324,9 @@ async function userRequestDeposit(req) {
     try {
       let appUserId = req.currentUser.appUserId;
       let paymentAmount = req.payload.paymentAmount;
+      let paymentMethodId = req.payload.paymentMethodId;
       let paymentRef = req.payload.paymentRef;
       let walletId = req.payload.walletId;
-      let paymentMethodId = req.payload.paymentMethodId;
       let bankInfomation = {};
 
       if (!appUserId) {
@@ -383,21 +342,30 @@ async function userRequestDeposit(req) {
       }
       user = user[0];
 
-      let paymentOwner = req.payload.paymentOwner ? req.payload.paymentOwner : user.tentaikhoan;
-      let paymentOriginSource = req.payload.paymentOriginSource ? req.payload.paymentOriginSource : user.tennganhang;
-      let paymentOriginName = req.payload.paymentOriginName ? req.payload.paymentOriginName : user.sotaikhoan;
+      //  let paymentOwner = req.payload.paymentOwner ? req.payload.paymentOwner : user.tentaikhoan;
+      //  let paymentOriginSource = req.payload.paymentOriginSource ? req.payload.paymentOriginSource : user.tennganhang;
+      //  let paymentOriginName = req.payload.paymentOriginName ? req.payload.paymentOriginName : user.sotaikhoan;
 
-      if (paymentOwner && paymentOriginSource && paymentOriginName) {
-        bankInfomation = {
-          paymentOwner: paymentOwner,
-          paymentOriginSource: paymentOriginSource,
-          paymentOriginName: paymentOriginName,
-        };
-      } else {
-        console.error(`error deposit transaction userRequestDeposit: ${DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION}`);
-        reject(DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION);
-        return;
-      }
+      // if (paymentOwner && paymentOriginSource && paymentOriginName) {
+      //   bankInfomation = {
+      //     paymentOwner: paymentOwner,
+      //     paymentOriginSource: paymentOriginSource,
+      //     paymentOriginName: paymentOriginName,
+      //   };
+      // } else {
+      //   let paymentMethods = await PaymentMethodResourceAccess.find({ paymentMethodId: paymentMethodId });
+      //   if (paymentMethods) {
+      //     bankInfomation = {
+      //       paymentOwner: paymentMethods[0].paymentMethodName, //USDT
+      //       paymentOriginSource: paymentMethods[0].paymentMethodType, // CRYPTO
+      //       paymentOriginName: paymentMethods[0].paymentMethodReceiverName, // dia chi vi
+      //     };
+      //   } else {
+      //     console.error(`error deposit transaction userRequestDeposit: ${DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION}`);
+      //     reject(DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION);
+      //     return;
+      //   }
+      // }
 
       let result = await DepositFunction.createDepositTransaction(
         user,
@@ -405,8 +373,12 @@ async function userRequestDeposit(req) {
         paymentRef,
         walletId,
         bankInfomation,
+        undefined,
+        req.payload.paymentSecondaryRef,
       );
       if (result) {
+        let transaction = await DepositTransactionAccess.findById(result[0]);
+        await publishJson('STAFF_GENERAL', transaction);
         resolve(result);
       } else {
         console.error(`error deposit transaction userRequestDeposit: ${ERROR}`);

@@ -7,11 +7,7 @@
 const WithdrawTransactionResource = require('./resourceAccess/PaymentWithdrawTransactionResourceAccess');
 const WalletResourceAccess = require('../Wallet/resourceAccess/WalletResourceAccess');
 const { WALLET_TYPE } = require('../Wallet/WalletConstant');
-const {
-  WITHDRAW_TRX_STATUS,
-  WITHDRAW_TRX_TYPE,
-  WITHDRAW_TRX_CATEGORY,
-} = require('./PaymentWithdrawTransactionConstant');
+const { WITHDRAW_TRX_STATUS, WITHDRAW_TRX_TYPE, WITHDRAW_TRX_CATEGORY } = require('./PaymentWithdrawTransactionConstant');
 const Logger = require('../../utils/logging');
 const WalletRecordFunction = require('../WalletRecord/WalletRecordFunction');
 const StaffResourceAccess = require('../Staff/resourceAccess/StaffResourceAccess');
@@ -46,28 +42,7 @@ async function acceptWithdrawRequest(transactionRequestId, paymentNote, staff, p
 
   let updateResult = await WithdrawTransactionResource.updateById(transactionRequestId, transaction);
   if (updateResult) {
-    const UserWallet = require('../Wallet/resourceAccess/WalletResourceAccess');
-    let wallet = await UserWallet.find(
-      {
-        appUserId: transaction.appUserId,
-        walletId: transaction.walletId,
-      },
-      0,
-      1,
-    );
-    let walletType = wallet[0].walletType;
-    let paymentAmount = transaction.paymentAmount * -1;
-    //luu tru lai lich su bien dong so du cua Vi
-    let updateWalletResult = await WalletRecordFunction.withdrawWalletBalance(
-      transaction.appUserId,
-      paymentAmount,
-      walletType,
-      staff,
-      transactionRequestId,
-    );
-    if (updateWalletResult) {
-      return updateWalletResult;
-    }
+    return updateResult;
   } else {
     return undefined;
   }
@@ -113,17 +88,7 @@ async function rejectWithdrawRequest(transactionRequestId, paymentNote) {
   }
 }
 
-async function createWithdrawRequest(
-  user,
-  amount,
-  staff,
-  paymentNote,
-  walletType,
-  walletId,
-  bankInfomation,
-  paymentFeeAmount,
-) {
-  console.log(walletId);
+async function createWithdrawRequest(user, amount, staff, paymentNote, walletType, walletId, bankInfomation, paymentFeeAmount) {
   const MIN_PERSIST_AMOUNT = process.env.MIN_PERSIST_AMOUNT || 0;
   if (user.appUserId === undefined) {
     Logger.error(`createWithdrawRequest invalid user`);
@@ -200,27 +165,17 @@ async function createWithdrawRequest(
     transactionData.paymentRef = user.diachiviBTC;
   }
 
-  await WalletResourceAccess.incrementBalance(wallet.walletId, amount * -1);
   let result = await WithdrawTransactionResource.insert(transactionData);
 
   if (result) {
     //luu tru lai lich su bien dong so du cua Vi
-    if (staff) {
-      // kiem tra chac chan la staff tao rut tien
-      let paymentAmount = amount * -1;
-      let updateWalletResult = await WalletRecordFunction.withdrawWalletBalance(
-        user.appUserId,
-        paymentAmount,
-        wallet.walletType,
-        staff,
-      );
+    let paymentAmount = amount * -1;
+    let updateWalletResult = await WalletRecordFunction.withdrawWalletBalance(user.appUserId, paymentAmount, wallet.walletType, staff, result[0]);
 
-      if (!updateWalletResult) {
-        Logger.error('Save wallet record  error');
-        return undefined;
-      }
+    if (!updateWalletResult) {
+      Logger.error('Save wallet record  error');
+      return undefined;
     }
-
     return result;
   } else {
     Logger.error('insert withdraw trx error');

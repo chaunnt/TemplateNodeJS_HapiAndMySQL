@@ -42,25 +42,9 @@ async function find(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let products = await ProductResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let products = await ProductResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
       if (products) {
-        let productsCount = await ProductResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+        let productsCount = await ProductResourceAccess.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
         resolve({ data: products, total: productsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -138,26 +122,10 @@ async function getList(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let products = await ProductResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let products = await ProductResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (products && products.length > 0) {
-        let productsCount = await ProductResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+        let productsCount = await ProductResourceAccess.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
 
         resolve({ data: products, total: productsCount[0].count });
       } else {

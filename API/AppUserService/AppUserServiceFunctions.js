@@ -1,16 +1,18 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 
-const AppUserServiceResource = require("../AppUserService/resourceAccess/AppUserServiceResourceAccess");
+const AppUserServiceResource = require('../AppUserService/resourceAccess/AppUserServiceResourceAccess');
 const AppUserServiceViews = require('../AppUserService/resourceAccess/AppUserServiceView');
 
 async function storeUserService(appUserId, serviceId, serviceType) {
   let result = await AppUserServiceResource.insert({
     appUserId: appUserId,
     userServiceId: serviceId,
-    userServiceType: serviceType
+    userServiceType: serviceType,
   });
 
   return result;
@@ -18,10 +20,10 @@ async function storeUserService(appUserId, serviceId, serviceType) {
 
 async function _fetchAllServicesByUser(appUserId, serviceType) {
   let _filter = {
-    appUserId: appUserId
+    appUserId: appUserId,
   };
   if (serviceType) {
-    _filter.userServiceType = serviceType
+    _filter.userServiceType = serviceType;
   }
   let _serviceList = await AppUserServiceResource.find(_filter);
 
@@ -48,4 +50,4 @@ async function fetchAllStationServicesByUser(appUserId, serviceType) {
 module.exports = {
   storeUserService,
   fetchAllStationServicesByUser,
-}
+};

@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const UtilFunction = require('../../ApiUtils/utilFunctions');
-const tableName = "PaymentRecord";
-const primaryKeyField = "paymentRecordId";
+const tableName = 'PaymentRecord';
+const primaryKeyField = 'paymentRecordId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -84,17 +86,17 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, orde
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -128,18 +130,16 @@ async function customSum(filter, startDate, endDate) {
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${_field} as sumResult`)
-        .then(records => {
-          if (records && records[0].sumResult === null) {
-            resolve(undefined)
-          } else {
-            resolve(records);
-          }
-        });
-    }
-    catch (e) {
-      Logger.error("ResourceAccess", `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
-      Logger.error("ResourceAccess", e);
+      queryBuilder.sum(`${_field} as sumResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });

@@ -1,4 +1,6 @@
-"use strict";
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
 require('dotenv').config();
 
 const chai = require('chai');
@@ -14,10 +16,10 @@ async function executeTask(queueName, executeFunction, taskCount = TASK_PER_BATC
   return new Promise((resolve, reject) => {
     try {
       TaskQueue.process(`${queueName}`, taskCount, function (job, done) {
-        executeFunction(job.data, (result) => {
-          if(result){
+        executeFunction(job.data, result => {
+          if (result) {
             return done(null, result);
-          }else{
+          } else {
             console.error(`ERROR: executeFunction ${job.data}`);
           }
           resolve(result);
@@ -27,7 +29,7 @@ async function executeTask(queueName, executeFunction, taskCount = TASK_PER_BATC
     } catch (e) {
       console.error(`ERROR: executeTask ${queueName} count ${taskCount}`);
       console.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -55,31 +57,30 @@ async function createTask(queueName, taskData) {
   return new Promise(async (resolve, reject) => {
     try {
       if (taskData.id === undefined) {
-        reject("task must have id attribute");
+        reject('task must have id attribute');
         return;
       }
 
-      let taskId = `${projectName}_${environment}_${queueName}_${taskData.id}`
+      let taskId = `${projectName}_${environment}_${queueName}_${taskData.id}`;
       var job = TaskQueue.create(queueName, {
         id: taskId,
-        ...taskData
-      }).removeOnComplete(true)
+        ...taskData,
+      })
+        .removeOnComplete(true)
         .save(function (err) {
           if (err) {
             console.log(err);
             console.error(`${job.id} has error on data for ${taskId}`);
-            reject("task must have id attribute");
+            reject('task must have id attribute');
             return;
           }
-          resolve("Done");
+          resolve('Done');
         });
     } catch (e) {
       console.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-
-
 }
 
 async function cleanAllTask(queueName) {

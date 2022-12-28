@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "StationNews";
-const primaryKeyField = "stationNewsId";
+const tableName = 'StationNews';
+const primaryKeyField = 'stationNewsId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -15,7 +17,7 @@ async function createTable() {
           table.increments('stationNewsId').primary();
           table.integer('stationsId');
           table.string('stationNewsTitle', 1000);
-          table.text('stationNewsContent','longtext');
+          table.text('stationNewsContent', 'longtext');
           table.integer('stationNewsRating').defaultTo(5);
           table.string('stationNewsCreators');
           table.integer('stationNewsStatus').defaultTo(0);
@@ -37,7 +39,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -76,31 +78,30 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('stationNewsTitle', 'like', `%${searchText}%`)
         .orWhere('stationNewsContent', 'like', `%${searchText}%`)
-        .orWhere('stationNewsCategories', 'like',`%${searchText}%`)
-    })
-  } 
-  else{
-    if(filterData.stationNewsName){
-      queryBuilder.where('stationNewsName', 'like', `%${filterData.stationNewsName}%`)
+        .orWhere('stationNewsCategories', 'like', `%${searchText}%`);
+    });
+  } else {
+    if (filterData.stationNewsName) {
+      queryBuilder.where('stationNewsName', 'like', `%${filterData.stationNewsName}%`);
       delete filterData.stationNewsName;
     }
-    if(filterData.stationNewsTitle){
-      queryBuilder.where('stationNewsTitle', 'like', `%${filterData.stationNewsTitle}%`)
+    if (filterData.stationNewsTitle) {
+      queryBuilder.where('stationNewsTitle', 'like', `%${filterData.stationNewsTitle}%`);
       delete filterData.stationNewsTitle;
     }
-    if(filterData.stationNewsContent){
-      queryBuilder.where('stationNewsContent', 'like', `%${filterData.stationNewsContent}%`)
+    if (filterData.stationNewsContent) {
+      queryBuilder.where('stationNewsContent', 'like', `%${filterData.stationNewsContent}%`);
       delete filterData.stationNewsContent;
     }
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
-  
+
   queryBuilder.where(filterData);
 
   if (limit) {
@@ -111,12 +112,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.offset(skip);
   }
 
-  queryBuilder.where({isDeleted: 0});
-  
+  queryBuilder.where({ isDeleted: 0 });
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("stationNewsUpdatedAt", "desc")
+    queryBuilder.orderBy('stationNewsUpdatedAt', 'desc');
   }
 
   return queryBuilder;
@@ -131,13 +132,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -159,29 +159,29 @@ async function addViewCount(stationNewsId) {
   let filter = {};
   filter[primaryKeyField] = stationNewsId;
 
-  await DB(tableName).where(filter).increment('stationNewsTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('stationNewsTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
 }
 
 async function resetDayViewedCount() {
-  return await DB(tableName).update({dayViewed: 0});
+  return await DB(tableName).update({ dayViewed: 0 });
 }
 
 async function resetMonthViewedCount() {
-  return await DB(tableName).update({monthViewed: 0});
+  return await DB(tableName).update({ monthViewed: 0 });
 }
 
 async function resetWeekViewedCount() {
-  return await DB(tableName).update({weekViewed: 0});
+  return await DB(tableName).update({ weekViewed: 0 });
 }
 async function deleteById(stationNewsId) {
   let dataId = {};
   dataId[primaryKeyField] = stationNewsId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 module.exports = {
   insert,
@@ -199,5 +199,5 @@ module.exports = {
   updateFollowCount,
   updateSearchCount,
   addViewCount,
-  deleteById
+  deleteById,
 };

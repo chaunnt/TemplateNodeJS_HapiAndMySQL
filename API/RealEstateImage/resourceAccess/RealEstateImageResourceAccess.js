@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const UtilFunction = require('../../ApiUtils/utilFunctions');
-const tableName = "RealEstateImage";
-const primaryKeyField = "realEstateImageId";
+const tableName = 'RealEstateImage';
+const primaryKeyField = 'realEstateImageId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -58,7 +60,7 @@ async function count(filter, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 module.exports = {
   insert,
@@ -69,5 +71,5 @@ module.exports = {
   initDB,
   deleteById,
   findById,
-  modelName: tableName
+  modelName: tableName,
 };

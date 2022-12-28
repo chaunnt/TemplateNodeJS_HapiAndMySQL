@@ -1,14 +1,16 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moment = require('moment');
-const CustomerRecordResourceAccess = require("../resourceAccess/CustomerRecordResourceAccess");
+const CustomerRecordResourceAccess = require('../resourceAccess/CustomerRecordResourceAccess');
 const Logger = require('../../../utils/logging');
-const CustomerFuntion = require("../CustomerRecordFunctions");
+const CustomerFuntion = require('../CustomerRecordFunctions');
 const CustomerRecordModel = require('../model/CustomerRecordModel');
-const excelFunction = require("../../../ThirdParty/Excel/ExcelFunction");
-const UploadFunctions = require("../../Upload/UploadFunctions")
+const excelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
+const UploadFunctions = require('../../Upload/UploadFunctions');
 const StationResource = require('../../Stations/resourceAccess/StationsResourceAccess');
 const { CHECKING_STATUS } = require('../CustomerRecordConstants');
 
@@ -54,16 +56,18 @@ async function _addNewCustomerRecord(customerRecordData) {
   _checkCustomerRecordDate(customerRecordData, NO_AUTO_FILL);
 
   //Fill customer data based on history data
-  let resultPlate = await CustomerRecordResourceAccess.find({ "customerRecordPlatenumber": customerRecordPlatenumber });
+  let resultPlate = await CustomerRecordResourceAccess.find({
+    customerRecordPlatenumber: customerRecordPlatenumber,
+  });
   if (resultPlate !== undefined && resultPlate.length > 0) {
     if (customerRecordData.customerRecordFullName === undefined) {
-      customerRecordData.customerRecordFullName = resultPlate[0].customerRecordFullName
+      customerRecordData.customerRecordFullName = resultPlate[0].customerRecordFullName;
     }
     if (customerRecordData.customerRecordPhone === undefined) {
-      customerRecordData.customerRecordPhone = resultPlate[0].customerRecordPhone
+      customerRecordData.customerRecordPhone = resultPlate[0].customerRecordPhone;
     }
     if (customerRecordData.customerRecordEmail === undefined) {
-      customerRecordData.customerRecordEmail = resultPlate[0].customerRecordEmail
+      customerRecordData.customerRecordEmail = resultPlate[0].customerRecordEmail;
     }
 
     //mark if this customer comeback
@@ -74,14 +78,14 @@ async function _addNewCustomerRecord(customerRecordData) {
   if (result) {
     //get inserted data
     let newRecord = await CustomerRecordResourceAccess.find({
-      customerRecordId: result[0]
+      customerRecordId: result[0],
     });
 
     //notify to realtime data
     if (newRecord && newRecord.length > 0) {
       await CustomerFuntion.notifyCustomerStatusAdded(newRecord[0]);
     }
-    return (result);
+    return result;
   }
 
   return undefined;
@@ -93,16 +97,16 @@ async function insert(req) {
       let customerRecordData = req.payload;
       let addResult = await _addNewCustomerRecord(customerRecordData);
       if (addResult) {
-        resolve(addResult)
+        resolve(addResult);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -130,10 +134,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findToday(req) {
   return new Promise(async (resolve, reject) => {
@@ -162,10 +166,10 @@ async function findToday(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -179,11 +183,13 @@ async function updateById(req) {
       _checkCustomerRecordDate(customerRecordData, NO_AUTO_FILL);
 
       //if user update record info manually, then we note it
-      if (customerRecordData.customerRecordFullName
-        || customerRecordData.customerRecordEmail
-        || customerRecordData.customerRecordPhone
-        || customerRecordData.customerRecordPlatenumber
-        || customerRecordData.customerRecordPlateColor) {
+      if (
+        customerRecordData.customerRecordFullName ||
+        customerRecordData.customerRecordEmail ||
+        customerRecordData.customerRecordPhone ||
+        customerRecordData.customerRecordPlatenumber ||
+        customerRecordData.customerRecordPlateColor
+      ) {
         customerRecordData.customerRecordModifyDate = new Date();
       }
 
@@ -191,14 +197,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -210,13 +216,13 @@ async function findById(req) {
         result = CustomerRecordModel.fromData(result);
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -225,7 +231,7 @@ async function deleteById(req) {
 
       let oldRecord = await CustomerRecordResourceAccess.findById(customerRecordId);
       if (oldRecord === undefined) {
-        reject("invalid record");
+        reject('invalid record');
         return;
       }
 
@@ -233,47 +239,43 @@ async function deleteById(req) {
       if (result) {
         await CustomerFuntion.notifyCustomerStatusDeleted(oldRecord);
         resolve(result);
+      } else {
+        reject('failed');
       }
-      else {
-        reject("failed");
-      }
-
     } catch (e) {
-
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function _exportRecordToExcel(records, filepath) {
   let count = 0;
-  const workSheetColumnNames = [
-      "STT",
-      "Họ & Tên",
-      "BSX",
-      "SDT",
-      "Email",
-      "Ngày kiêm định"
-  ];
+  const workSheetColumnNames = ['STT', 'Họ & Tên', 'BSX', 'SDT', 'Email', 'Ngày kiêm định'];
 
   const workSheetName = 'Danh sách khách hàng';
-  const data = []
+  const data = [];
   records.forEach(record => {
-      var newDate = moment(record.customerRecordCheckDate, "DD-MM-YYYY");
-      var newDateFormat = newDate.format("DD/MM/YYYY");
-      count += 1;
-      data.push([count, record.customerRecordFullName, record.customerRecordPlatenumber, record.customerRecordPhone, record.customerRecordEmail, newDateFormat])
-
+    var newDate = moment(record.customerRecordCheckDate, 'DD-MM-YYYY');
+    var newDateFormat = newDate.format('DD/MM/YYYY');
+    count += 1;
+    data.push([
+      count,
+      record.customerRecordFullName,
+      record.customerRecordPlatenumber,
+      record.customerRecordPhone,
+      record.customerRecordEmail,
+      newDateFormat,
+    ]);
   });
   excelFunction.exportExcel(data, workSheetColumnNames, workSheetName, filepath);
-  return data
+  return data;
 }
 
 async function exportCustomerRecord(req) {
-  let fileName = "DSKH_" + new Date().toJSON().slice(0, 10) + "_" + Math.random().toString(36).substring(2, 15) + ".xlsx";
+  let fileName = 'DSKH_' + new Date().toJSON().slice(0, 10) + '_' + Math.random().toString(36).substring(2, 15) + '.xlsx';
   //Tên File : DSKH_2021-10-12_nv5xj2uqzgf.xlsx
-  const filepath = "uploads/exportExcel/" + fileName;
+  const filepath = 'uploads/exportExcel/' + fileName;
   return new Promise(async (resolve, reject) => {
     try {
       let filter = req.payload.filter;
@@ -288,20 +290,19 @@ async function exportCustomerRecord(req) {
         filter.customerStationId = req.currentUser.stationsId;
       }
       let customerRecord = await CustomerRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let newData = await _exportRecordToExcel(customerRecord, filepath)
+      let newData = await _exportRecordToExcel(customerRecord, filepath);
       if (newData) {
-        let newExcelUrl = "https://" + process.env.HOST_NAME + "/" + filepath;
+        let newExcelUrl = 'https://' + process.env.HOST_NAME + '/' + filepath;
         resolve(newExcelUrl);
-      }
-      else {
-        reject("failse");
+      } else {
+        reject('failse');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function importCustomerRecord(req) {
   return new Promise(async (resolve, reject) => {
@@ -316,11 +317,11 @@ async function importCustomerRecord(req) {
       var originaldata = Buffer.from(fileData, 'base64');
       let newExcel = await UploadFunctions.uploadExcel(originaldata, fileFormat);
       if (newExcel) {
-        let path = "uploads/importExcel/" + newExcel;
+        let path = 'uploads/importExcel/' + newExcel;
         let excelData = await excelFunction.importExcel(path);
 
         if (excelData === undefined) {
-          reject('failed to import')
+          reject('failed to import');
         } else {
           //notify to front-end
           //front-end will use this counter to display user waiting message
@@ -328,9 +329,9 @@ async function importCustomerRecord(req) {
             //!! IMPORTANT: do not return function here
             //if there are more than 1000 record, we will response before function done
             resolve({
-              importSuccess: "importSuccess",
-              importTotalWaiting: excelData.length
-            })
+              importSuccess: 'importSuccess',
+              importTotalWaiting: excelData.length,
+            });
           }
 
           //if it is less than 1000 records, let user wait until it finishes
@@ -344,7 +345,7 @@ async function importCustomerRecord(req) {
           for (var i = 0; i < needToImportRecords.length; i++) {
             let addResult = await _addNewCustomerRecord(needToImportRecords[i]);
             if (addResult) {
-              importSuccessCount++
+              importSuccessCount++;
             }
           }
 
@@ -353,19 +354,19 @@ async function importCustomerRecord(req) {
           if (excelData.length < 1000) {
             resolve({
               importSuccess: importSuccessCount,
-              importTotal: needToImportRecords.length
-            })
+              importTotal: needToImportRecords.length,
+            });
           }
         }
       } else {
-        reject('failed to upload')
+        reject('failed to upload');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 //BEWARE !! This API is use for robot
 async function robotInsert(req) {
@@ -379,7 +380,7 @@ async function robotInsert(req) {
         station = await StationResource.find({ stationWebhookUrl: hostname }, 0, 1);
         if (station === undefined || station.length < 1) {
           console.log(`can not find station by WebhookUrl ${hostname} for robotInsert`);
-          reject("failed");
+          reject('failed');
           return;
         }
       }
@@ -389,14 +390,14 @@ async function robotInsert(req) {
       let today = new Date();
       let dirName = `uploads/media/plate/${today.getFullYear()}${today.getMonth()}${today.getDate()}`;
       if (payload.image === undefined && payload.image.path === undefined) {
-        console.error("payload do not have image")
-        reject("failed");
+        console.error('payload do not have image');
+        reject('failed');
       }
       fs.readFile(payload.image.path, (err, data) => {
         if (err) {
-          console.error("writeFile error");
+          console.error('writeFile error');
           console.error(err);
-          reject("failed");
+          reject('failed');
         }
 
         // check if upload directory exists
@@ -409,30 +410,30 @@ async function robotInsert(req) {
           fs.mkdirSync(dirName);
         }
 
-        var path = require('path')
-        let newFileName = `station_${station.stationsId}_at_${moment().format("YYYYMMDDhhmmss")}${path.extname(payload.image.filename)}`;
+        var path = require('path');
+        let newFileName = `station_${station.stationsId}_at_${moment().format('YYYYMMDDhhmmss')}${path.extname(payload.image.filename)}`;
 
         //write file to storage
-        fs.writeFile(`${dirName}/${newFileName}`, data, async (writeErr) => {
+        fs.writeFile(`${dirName}/${newFileName}`, data, async writeErr => {
           if (writeErr) {
-            console.error("writeFile error");
+            console.error('writeFile error');
             console.error(writeErr);
-            reject("failed");
+            reject('failed');
           }
 
-          let customerRecordPlateColor = "white";
-          if (payload.color === "T") {
-            customerRecordPlateColor = "white";
-          } else if (payload.color === "V") {
-            customerRecordPlateColor = "yellow";
-          } else if (payload.color === "X") {
-            customerRecordPlateColor = "blue";
-          };
+          let customerRecordPlateColor = 'white';
+          if (payload.color === 'T') {
+            customerRecordPlateColor = 'white';
+          } else if (payload.color === 'V') {
+            customerRecordPlateColor = 'yellow';
+          } else if (payload.color === 'X') {
+            customerRecordPlateColor = 'blue';
+          }
 
           let newCustomerRecordData = {
             customerRecordPlatenumber: payload.bsx,
             customerRecordPlateImageUrl: `https://${process.env.HOST_NAME}/${dirName}/${newFileName}`,
-            customerRecordPlateColor: customerRecordPlateColor
+            customerRecordPlateColor: customerRecordPlateColor,
           };
           if (station) {
             newCustomerRecordData.customerStationId = station.stationsId;
@@ -442,21 +443,21 @@ async function robotInsert(req) {
           }
           let addResult = await _addNewCustomerRecord(newCustomerRecordData);
           if (addResult) {
-            resolve(addResult)
+            resolve(addResult);
           } else {
-            reject("failed");
+            reject('failed');
           }
 
-          resolve("ok");
+          resolve('ok');
         });
-      })
+      });
       // resolve("ok");
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,
@@ -467,5 +468,5 @@ module.exports = {
   exportCustomerRecord,
   importCustomerRecord,
   robotInsert,
-  findToday
+  findToday,
 };

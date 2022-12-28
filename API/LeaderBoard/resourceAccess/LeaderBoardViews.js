@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -137,8 +137,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, startRanKin
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, startRanKing, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, startRanKing, order);
+async function customCount(filter, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 

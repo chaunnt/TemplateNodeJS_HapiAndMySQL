@@ -1,15 +1,16 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const moment = require('moment');
+const crypto = require('crypto');
 function nonAccentVietnamese(str) {
   if (!str) {
     return str;
   }
-  str = str.toLowerCase();
+
   //     We can also use this instead of from line 11 to line 17
   //     str = str.replace(/\u00E0|\u00E1|\u1EA1|\u1EA3|\u00E3|\u00E2|\u1EA7|\u1EA5|\u1EAD|\u1EA9|\u1EAB|\u0103|\u1EB1|\u1EAF|\u1EB7|\u1EB3|\u1EB5/g, "a");
   //     str = str.replace(/\u00E8|\u00E9|\u1EB9|\u1EBB|\u1EBD|\u00EA|\u1EC1|\u1EBF|\u1EC7|\u1EC3|\u1EC5/g, "e");
@@ -65,20 +66,51 @@ function padLeadingZeros(num, size, char = '0') {
 }
 
 function randomInt(max) {
-  let value = max;
-  for (let i = 0; i < 100; i++) {
-    value = Math.floor(Math.random() * max);
-  }
-  return value;
+  return Math.floor(Math.random() * max);
 }
 
 function randomIntByMinMax(min, max) {
   // min and max included
-  let value = max;
-  for (let i = 0; i < 100; i++) {
-    value = Math.floor(Math.random() * (max - min + 1) + min);
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function convertStringToHex(inputText) {
+  const bufferText = Buffer.from(inputText, 'utf8'); // or Buffer.from('hello world')
+  return bufferText.toString('hex');
+}
+
+function isNotValidValue(value) {
+  if (!value) {
+    return true;
   }
-  return value;
+  if (value === null) {
+    return true;
+  }
+  return false;
+}
+
+function isValidValue(value) {
+  return !isNotValidValue(value);
+}
+function isNotEmptyStringValue(stringValue) {
+  if (isNotValidValue(stringValue)) {
+    return false;
+  }
+  if ((stringValue + '').trim() === '') {
+    return false;
+  }
+  if (stringValue.length === 0) {
+    return false;
+  }
+  return true;
+}
+
+function makeHashFromData(data) {
+  const hashData = crypto
+    .createHmac('sha256', 'ThisIsSecretKey')
+    .update(data + '')
+    .digest('hex');
+  return hashData;
 }
 
 module.exports = {
@@ -90,4 +122,9 @@ module.exports = {
   chunkArray,
   FormatDate,
   padLeadingZeros,
+  convertStringToHex,
+  isNotEmptyStringValue,
+  isNotValidValue,
+  isValidValue,
+  makeHashFromData,
 };

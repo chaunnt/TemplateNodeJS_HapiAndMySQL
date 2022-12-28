@@ -1,8 +1,10 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const RealEstateSubCategoryResourceAccess = require("../resourceAccess/RealEstateSubCategoryResourceAccess");
+'use strict';
+const RealEstateSubCategoryResourceAccess = require('../resourceAccess/RealEstateSubCategoryResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
@@ -13,13 +15,13 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -38,10 +40,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -52,13 +54,13 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -70,10 +72,10 @@ async function findById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -84,14 +86,14 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 module.exports = {
   insert,
   find,
   updateById,
   findById,
-  deleteById
+  deleteById,
 };

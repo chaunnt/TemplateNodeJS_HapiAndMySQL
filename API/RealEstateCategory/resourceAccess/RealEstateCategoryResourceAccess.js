@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const UtilFunction = require('../../ApiUtils/utilFunctions');
-const tableName = "RealEstateCategory";
-const primaryKeyField = "realEstateCategoryId";
+const tableName = 'RealEstateCategory';
+const primaryKeyField = 'realEstateCategoryId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -35,51 +37,50 @@ async function createTable() {
 function __getDefaultFeild() {
   const defaultFeild = [
     {
-      realEstateCategoryName: "Bán nhà riêng",
-      realEstatePostTypeId: 1
+      realEstateCategoryName: 'Bán nhà riêng',
+      realEstatePostTypeId: 1,
     },
     {
-      realEstateCategoryName: "Bán căn hộ chung cư",
-      realEstatePostTypeId: 1
+      realEstateCategoryName: 'Bán căn hộ chung cư',
+      realEstatePostTypeId: 1,
     },
     {
-      realEstateCategoryName: "Bán đất",
-      realEstatePostTypeId: 1
+      realEstateCategoryName: 'Bán đất',
+      realEstatePostTypeId: 1,
     },
     {
-      realEstateCategoryName: "Bán bất động sản khác",
-      realEstatePostTypeId: 1
+      realEstateCategoryName: 'Bán bất động sản khác',
+      realEstatePostTypeId: 1,
     },
     {
-      realEstateCategoryName: "Cho thuê nhà riêng",
-      realEstatePostTypeId: 2
+      realEstateCategoryName: 'Cho thuê nhà riêng',
+      realEstatePostTypeId: 2,
     },
     {
-      realEstateCategoryName: "Cho thuê căn hộ chung cư",
-      realEstatePostTypeId: 2
+      realEstateCategoryName: 'Cho thuê căn hộ chung cư',
+      realEstatePostTypeId: 2,
     },
     {
-      realEstateCategoryName: "Cho thuê đất",
-      realEstatePostTypeId: 2
+      realEstateCategoryName: 'Cho thuê đất',
+      realEstatePostTypeId: 2,
     },
     {
-      realEstateCategoryName: "Cho văn phòng, mặt bằng kinh doanh",
-      realEstatePostTypeId: 2
+      realEstateCategoryName: 'Cho văn phòng, mặt bằng kinh doanh',
+      realEstatePostTypeId: 2,
     },
     {
-      realEstateCategoryName: "Cho thuê phòng trọ",
-      realEstatePostTypeId: 2
+      realEstateCategoryName: 'Cho thuê phòng trọ',
+      realEstatePostTypeId: 2,
     },
-  ]
-  return defaultFeild
+  ];
+  return defaultFeild;
 }
 async function initDB() {
   await createTable();
   const data = __getDefaultFeild();
   for (var i = 0; i < data.length; i++) {
-    await Common.insert(tableName, data[i])
+    await Common.insert(tableName, data[i]);
   }
-
 }
 async function insert(data) {
   return await Common.insert(tableName, data);
@@ -110,9 +111,8 @@ async function incrementView(id) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
-
 
 module.exports = {
   insert,
@@ -123,5 +123,5 @@ module.exports = {
   deleteById,
   findById,
   incrementView,
-  modelName: tableName
+  modelName: tableName,
 };

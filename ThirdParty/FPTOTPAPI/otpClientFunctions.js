@@ -18,11 +18,7 @@ async function sendVoiceOTP(phoneNumber, otp) {
   };
   console.log(reqBody);
   const api = 'http://otp.ezcall.vn';
-  const { body } = await chai
-    .request(`${api}`)
-    .post(`/api/autodial.php`)
-    .set('Content-type', 'application/json')
-    .send(reqBody);
+  const { body } = await chai.request(`${api}`).post(`/api/autodial.php`).set('Content-type', 'application/json').send(reqBody);
   console.log(body);
   // todo: cập nhật lại khi có api
   return true;

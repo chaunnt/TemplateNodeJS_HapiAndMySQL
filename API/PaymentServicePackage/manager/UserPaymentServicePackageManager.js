@@ -31,25 +31,9 @@ async function getListUserBuyPackage(req) {
         filter = {};
       }
       filter.appUserId = req.currentUser.appUserId;
-      let packages = await ServicePackageUserViews.customGetListUserBuyPackage(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customGetListUserBuyPackage(filter, skip, limit, startDate, endDate, searchText, order);
       if (packages && packages.length > 0) {
-        let packagesCount = await ServicePackageUserViews.customCount(
-          filter,
-          skip,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-          order,
-        );
+        let packagesCount = await ServicePackageUserViews.customCount(filter, skip, undefined, startDate, endDate, searchText, order);
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -84,25 +68,10 @@ async function findUserBuyPackage(req) {
         filter = {};
       }
 
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (packages && packages.length > 0) {
-        let packagesCount = await ServicePackageUserViews.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-        );
+        let packagesCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate, searchText);
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -140,15 +109,7 @@ async function historyServicePackage(req) {
       filter.appUserId = req.currentUser.appUserId;
       filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
 
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (packages && packages.length > 0) {
         for (let i = 0; i < packages.length; i++) {
@@ -169,14 +130,7 @@ async function historyServicePackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-        let packagesCount = await ServicePackageUserViews.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-        );
+        let packagesCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate, searchText);
         resolve({ data: packages, total: packagesCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -235,10 +189,7 @@ async function buyServicePackage(req) {
 
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
@@ -256,9 +207,7 @@ async function buyServicePackage(req) {
 
         resolve(result);
       } else {
-        console.error(
-          `error User payment service package buyServicePackage with paymentServicePackageId ${paymentServicePackageId}: ${ERROR}`,
-        );
+        console.error(`error User payment service package buyServicePackage with paymentServicePackageId ${paymentServicePackageId}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -303,10 +252,7 @@ async function userActivateServicePackage(req) {
       let paymentServicePackageUserId = req.payload.paymentServicePackageUserId;
       let currentUser = req.currentUser;
 
-      let result = await UserServicePackageFunctions.userActivateServicePackage(
-        currentUser,
-        paymentServicePackageUserId,
-      );
+      let result = await UserServicePackageFunctions.userActivateServicePackage(currentUser, paymentServicePackageUserId);
       if (result) {
         resolve(result);
       } else {
@@ -328,10 +274,7 @@ async function userCollectServicePackage(req) {
       let paymentServicePackageUserId = req.payload.paymentServicePackageUserId;
       let currentUser = req.currentUser;
 
-      let collectedAmount = await UserServicePackageFunctions.userCollectServicePackage(
-        currentUser,
-        paymentServicePackageUserId,
-      );
+      let collectedAmount = await UserServicePackageFunctions.userCollectServicePackage(currentUser, paymentServicePackageUserId);
       if (collectedAmount !== undefined) {
         if (collectedAmount.profitBonus && collectedAmount.profitBonus > 0.0000000001) {
           //tang BTC va luu lai lich su
@@ -371,20 +314,14 @@ async function userRequestCompletedServicePackage(req) {
       let currentUser = req.currentUser;
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
           return;
         }
       }
-      let result = await UserServicePackageFunctions.userCompleteUserServicePackage(
-        paymentServicePackageUserId,
-        currentUser,
-      );
+      let result = await UserServicePackageFunctions.userCompleteUserServicePackage(paymentServicePackageUserId, currentUser);
       if (result) {
         resolve(result);
       } else {
@@ -406,10 +343,7 @@ async function adminCompletePackagesById(req) {
       let paymentServicePackageUserId = req.payload.id;
       let currentUser = req.currentUser;
 
-      let result = await UserServicePackageFunctions.adminCompleteUserServicePackage(
-        paymentServicePackageUserId,
-        currentUser,
-      );
+      let result = await UserServicePackageFunctions.adminCompleteUserServicePackage(paymentServicePackageUserId, currentUser);
       if (result) {
         resolve(result);
       } else {
@@ -442,15 +376,7 @@ async function historyCompleteServicePackage(req) {
       filter.packageActivityStatus = ACTIVITY_STATUS.COMPLETED;
       filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
 
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (packages && packages.length > 0) {
         let resultCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate);
@@ -495,15 +421,7 @@ async function adminHistoryCompleteServicePackage(req) {
 
       filter.packageActivityStatus = ACTIVITY_STATUS.COMPLETED;
 
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (packages && packages.length > 0) {
         //cap nhat loai package phai dung voi ten package
@@ -513,14 +431,7 @@ async function adminHistoryCompleteServicePackage(req) {
           packages[i].packageType = _packageTypeTemp.join('');
         }
 
-        let resultCount = await ServicePackageUserViews.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-        );
+        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate, searchText);
 
         resolve({
           data: packages,
@@ -554,15 +465,7 @@ async function historyCancelServicePackage(req) {
 
       filter.appUserId = req.currentUser.appUserId;
       filter.packageActivityStatus = ACTIVITY_STATUS.CANCELED;
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (packages && packages.length > 0) {
         //cap nhat loai package phai dung voi ten package
@@ -604,25 +507,10 @@ async function adminHistoryCancelServicePackage(req) {
         filter = {};
       }
       filter.packageActivityStatus = ACTIVITY_STATUS.CANCELED;
-      let packages = await ServicePackageUserViews.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (packages && packages.length > 0) {
-        let resultCount = await ServicePackageUserViews.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-        );
+        let resultCount = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate, searchText);
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -663,22 +551,9 @@ async function historyBonusServicePackage(req) {
 
       filter.packageCategory = [PACKAGE_CATEGORY.BONUS_NORMAL, PACKAGE_CATEGORY.BONUS_KYC, PACKAGE_CATEGORY.BONUS_RANK];
 
-      let packages = await ServicePackageUserViews.customSearchAllByPackageCategory(
-        filter,
-        skip,
-        limit,
-        undefined,
-        startDate,
-        endDate,
-        order,
-      );
+      let packages = await ServicePackageUserViews.customSearchAllByPackageCategory(filter, skip, limit, undefined, startDate, endDate, order);
       if (packages && packages.length > 0) {
-        let resultCount = await ServicePackageUserViews.customCountAllByPackageCategory(
-          filter,
-          undefined,
-          startDate,
-          endDate,
-        );
+        let resultCount = await ServicePackageUserViews.customCountAllByPackageCategory(filter, undefined, startDate, endDate);
 
         //cap nhat loai package phai dung voi ten package
         for (let i = 0; i < packages.length; i++) {
@@ -720,14 +595,7 @@ async function countAllUserPackage(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let resultCount = await ServicePackageUserViews.countDistinct(
-        'appUserId',
-        filter,
-        undefined,
-        undefined,
-        limit,
-        skip,
-      );
+      let resultCount = await ServicePackageUserViews.countDistinct('appUserId', filter, undefined, undefined, limit, skip);
       if (resultCount && resultCount.length > 0) {
         resolve(resultCount);
       } else {
@@ -811,24 +679,17 @@ async function _summaryReferralByUserId(appUserId, filter, searchText, skip, lim
       }
 
       //tinh tong tai san ca nhan, khong tinh cac phan da thanh ly
-      let ___totalServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum(
-        'packagePaymentAmount',
-        {
-          appUserId: referredUserList[i].appUserId,
-          packageActivityStatus: ACTIVITY_STATUS.STANDBY,
-        },
-      );
-      let ___totalServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum(
-        'packagePaymentAmount',
-        {
-          appUserId: referredUserList[i].appUserId,
-          packageActivityStatus: ACTIVITY_STATUS.WORKING,
-        },
-      );
+      let ___totalServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum('packagePaymentAmount', {
+        appUserId: referredUserList[i].appUserId,
+        packageActivityStatus: ACTIVITY_STATUS.STANDBY,
+      });
+      let ___totalServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum('packagePaymentAmount', {
+        appUserId: referredUserList[i].appUserId,
+        packageActivityStatus: ACTIVITY_STATUS.WORKING,
+      });
 
       referredUserList[i].totalpackagePaymentAmount =
-        ___totalServicePackagePaymentAmount_STANDBY[0].sumResult +
-        ___totalServicePackagePaymentAmount_WORKING[0].sumResult;
+        ___totalServicePackagePaymentAmount_STANDBY[0].sumResult + ___totalServicePackagePaymentAmount_WORKING[0].sumResult;
     }
     resultOutput.data = referredUserList;
 
@@ -845,24 +706,17 @@ async function _summaryReferralByUserId(appUserId, filter, searchText, skip, lim
     resultOutput.totalCountF1 = totalCountF1[0].count;
 
     //tinh tong tai san ca nhan, khong tinh cac phan da thanh ly
-    let _totalReferredServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum(
-      'packagePaymentAmount',
-      {
-        memberReferIdF1: appUserId,
-        packageActivityStatus: ACTIVITY_STATUS.STANDBY,
-      },
-    );
-    let _totalReferredServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum(
-      'packagePaymentAmount',
-      {
-        memberReferIdF1: appUserId,
-        packageActivityStatus: ACTIVITY_STATUS.WORKING,
-      },
-    );
+    let _totalReferredServicePackagePaymentAmount_STANDBY = await ServicePackageUserViews.customSum('packagePaymentAmount', {
+      memberReferIdF1: appUserId,
+      packageActivityStatus: ACTIVITY_STATUS.STANDBY,
+    });
+    let _totalReferredServicePackagePaymentAmount_WORKING = await ServicePackageUserViews.customSum('packagePaymentAmount', {
+      memberReferIdF1: appUserId,
+      packageActivityStatus: ACTIVITY_STATUS.WORKING,
+    });
 
     resultOutput.totalReferredServicePackagePaymentAmount =
-      _totalReferredServicePackagePaymentAmount_WORKING[0].sumResult +
-      _totalReferredServicePackagePaymentAmount_STANDBY[0].sumResult;
+      _totalReferredServicePackagePaymentAmount_WORKING[0].sumResult + _totalReferredServicePackagePaymentAmount_STANDBY[0].sumResult;
 
     let _totalCountVerifiedReferredUser = await SummaryPaymentServicePackageUserView.countReferedUserByUserId({
       memberReferIdF1: appUserId,

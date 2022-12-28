@@ -125,7 +125,7 @@ async function findById(id) {
   return await Common.findById(tableName, dataId, id);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -149,13 +149,6 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.offset(skip);
   }
 
-  if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
-  }
-  if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
-  }
-
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
@@ -165,13 +158,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customSearch(filter, skip, limit, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, order);
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, undefined, order);
+async function customCount(filter, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 module.exports = {

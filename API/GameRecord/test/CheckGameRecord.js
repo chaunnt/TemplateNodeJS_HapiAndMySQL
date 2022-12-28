@@ -6,8 +6,7 @@ function testRecultGame() {
   console.log('ok');
 
   const existedGameRecordSingle = {
-    gameRecordValue:
-      '97;758;7144;2985;2893;4026;91612;47726;52720;30307;33661;70784;94115;86152;22364;64481;41786;511023',
+    gameRecordValue: '97;758;7144;2985;2893;4026;91612;47726;52720;30307;33661;70784;94115;86152;22364;64481;41786;511023',
   };
   const single = [
     { type: 'Single', value: '511023', predict: 2500000000, errorMessage: 'sai Giải DB ' },

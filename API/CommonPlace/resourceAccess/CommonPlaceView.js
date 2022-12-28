@@ -1,9 +1,11 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "CommonPlaceViews";
-const primaryKeyField = "commonPlaceId";
+const tableName = 'CommonPlaceViews';
+const primaryKeyField = 'commonPlaceId';
 const rootTableName = 'CommonPlace';
 
 async function createViews() {
@@ -25,24 +27,24 @@ async function createViews() {
     `country.areaDataName as areaCountryName`,
     `province.areaDataName as areaProvinceName`,
     `district.areaDataName as areaDistrictName`,
-    `ward.areaDataName as areaWardName`
+    `ward.areaDataName as areaWardName`,
   ];
-  
-  var viewDefinition = DB.select(fields).from(rootTableName)
-    .leftJoin({ country: AreaDataTable }, function() {
-      this.on(`${rootTableName}.areaCountryId`, '=', `country.areaDataId`)
-    })  
-    .leftJoin({ province: AreaDataTable }, function() {
-      this.on(`${rootTableName}.areaProvinceId`, '=', `province.areaDataId`)
+
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin({ country: AreaDataTable }, function () {
+      this.on(`${rootTableName}.areaCountryId`, '=', `country.areaDataId`);
+    })
+    .leftJoin({ province: AreaDataTable }, function () {
+      this.on(`${rootTableName}.areaProvinceId`, '=', `province.areaDataId`);
     })
     .leftJoin({ district: AreaDataTable }, function () {
       this.on(`${rootTableName}.areaDistrictId`, '=', `district.areaDataId`);
     })
     .leftJoin({ ward: AreaDataTable }, function () {
-        this.on(`${rootTableName}.areaWardId`, '=', `ward.areaDataId`);
-    })
-    Common.createOrReplaceView(tableName, viewDefinition);
-
+      this.on(`${rootTableName}.areaWardId`, '=', `ward.areaDataId`);
+    });
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initView() {
@@ -71,25 +73,23 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  
-
-  if(filterData.CommonPlaceName) {
+  if (filterData.CommonPlaceName) {
     queryBuilder.where('CommonPlaceName', 'like', `%${filter.CommonPlaceName}%`);
-    delete filterData.CommonPlaceName
+    delete filterData.CommonPlaceName;
   }
-  if(filterData.areaCountryId && filterData.areaCountryId.length > 0) {
+  if (filterData.areaCountryId && filterData.areaCountryId.length > 0) {
     queryBuilder.whereIn('areaCountryId', filterData.areaCountryId);
     delete filterData.areaCountryId;
   }
-  if(filterData.areaProvinceId && filterData.areaProvinceId.length > 0) {
+  if (filterData.areaProvinceId && filterData.areaProvinceId.length > 0) {
     queryBuilder.whereIn('areaProvinceId', filterData.areaProvinceId);
     delete filterData.areaProvinceId;
   }
-  if(filterData.areaDistrictId && filterData.areaDistrictId.length > 0) {
+  if (filterData.areaDistrictId && filterData.areaDistrictId.length > 0) {
     queryBuilder.whereIn('areaDistrictId', filterData.areaDistrictId);
     delete filterData.areaDistrictId;
   }
-  if(filterData.areaWardId && filterData.areaWardId.length > 0) {
+  if (filterData.areaWardId && filterData.areaWardId.length > 0) {
     queryBuilder.whereIn('areaWardId', filterData.areaWardId);
     delete filterData.areaWardId;
   }
@@ -104,7 +104,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -120,17 +120,19 @@ async function customCount(filter, order) {
   return await query.count(`${primaryKeyField} as count`);
 }
 
-
 async function findNearPlace(areaCityId, areaDistrictId, lat, lng, NEAREST_LAT_LNG) {
-  let data = await DB(tableName).whereNot({
-    'areaCityId': areaCityId,
-    'areaDistrictId': areaDistrictId
-  }).where(function () {
-    this.orWhere('lng', '>=', lng - NEAREST_LAT_LNG)
-      .orWhere('lng', '<=', lng + NEAREST_LAT_LNG)
-      .orWhere('lat', '<=', lat + NEAREST_LAT_LNG)
-      .orWhere('lat', '>=', lat - NEAREST_LAT_LNG)
-  }).select();
+  let data = await DB(tableName)
+    .whereNot({
+      areaCityId: areaCityId,
+      areaDistrictId: areaDistrictId,
+    })
+    .where(function () {
+      this.orWhere('lng', '>=', lng - NEAREST_LAT_LNG)
+        .orWhere('lng', '<=', lng + NEAREST_LAT_LNG)
+        .orWhere('lat', '<=', lat + NEAREST_LAT_LNG)
+        .orWhere('lat', '>=', lat - NEAREST_LAT_LNG);
+    })
+    .select();
   return data;
 }
 
@@ -142,5 +144,5 @@ module.exports = {
   initView,
   customSearch,
   customCount,
-  findNearPlace
+  findNearPlace,
 };

@@ -15,6 +15,8 @@ const insertSchema = {
   orderItemQuantity: Joi.number(),
   productId: Joi.number(),
   productOrderId: Joi.number(),
+  maxOrderItemQuantity: Joi.number(),
+  minOrderItemQuantity: Joi.number(),
 };
 
 const updateSchema = {

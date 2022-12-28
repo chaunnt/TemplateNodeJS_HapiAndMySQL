@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -15,5 +17,5 @@ module.exports = {
   BOOK_STATUS: {
     ACTIVE: 0,
     INACTIVE: 1,
-  }
-}
+  },
+};

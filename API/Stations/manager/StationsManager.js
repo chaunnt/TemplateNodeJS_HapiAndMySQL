@@ -1,20 +1,22 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const StationsResourceAccess = require("../resourceAccess/StationsResourceAccess");
+'use strict';
+const StationsResourceAccess = require('../resourceAccess/StationsResourceAccess');
 const StationFunctions = require('../StationsFunctions');
 const Logger = require('../../../utils/logging');
 const UtilsFunction = require('../../ApiUtils/utilFunctions');
 const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
 const StaffFunctions = require('../../Staff/StaffFunctions');
-const { STATION_STATUS } = require("../StationsConstants");
+const { STATION_STATUS } = require('../StationsConstants');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let stationsData = req.payload;
-      
+
       //xu ly tao ra thumbnail tu avatar (neu co update)
       if (stationsData.stationsLogo) {
         let _thumbnailsUrl = await ImageUtils.createThumbnailsImage(stationsData.stationsLogo);
@@ -22,7 +24,7 @@ async function insert(req) {
           stationsData.stationsLogoThumbnails = _thumbnailsUrl;
         }
       }
-      
+
       let registerResult = await StationFunctions.registerNewStation(stationsData);
 
       if (registerResult) {
@@ -37,38 +39,38 @@ async function insert(req) {
         let retry = 0;
         while (registerUserResult === undefined) {
           let adminUserData = {
-            username: nonVietnameseName + (generatorIndex === 0 ? "" : generatorIndex) + "admin",
-            firstName: "admin",
+            username: nonVietnameseName + (generatorIndex === 0 ? '' : generatorIndex) + 'admin',
+            firstName: 'admin',
             lastName: stationsData.stationsName,
-            password: "123456789",
+            password: '123456789',
             stationsId: registerResult[0],
-            roleId: 2 //Station Admin
-          }
+            roleId: 2, //Station Admin
+          };
 
           try {
             registerUserResult = await StaffFunctions.createNewStaff(adminUserData, adminUserData.password);
           } catch (error) {
             Logger.info(`Duplicated staff username ${adminUserData.username}`);
           }
-          
+
           if (!registerUserResult) {
             generatorIndex = generatorIndex + 1;
             retry++;
           }
           if (retryMaxTime === retry) {
-            reject("failed");
+            reject('failed');
           }
         }
         resolve(registerResult);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -80,7 +82,7 @@ async function find(req) {
       let searchText = req.payload.searchText;
 
       let stations = await StationsResourceAccess.customSearch(filter, skip, limit, searchText, order);
-      
+
       if (stations && stations.length > 0) {
         let stationsCount = await StationsResourceAccess.customCount(filter, searchText, order);
         resolve({ data: stations, total: stationsCount[0].count });
@@ -89,10 +91,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -102,9 +104,8 @@ async function updateById(req) {
       if (stationsData.stationBookingConfig) {
         try {
           StationFunctions.sortCheckingConfigStep(stationsData.stationBookingConfig);
-          
+
           stationsData.stationBookingConfig = JSON.stringify(stationsData.stationBookingConfig);
-          
         } catch (error) {
           stationsData.stationBookingConfig = '';
         }
@@ -122,34 +123,34 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let stationsId = req.payload.id;
       let stationsData = {
-        isDeleted: 1
+        isDeleted: 1,
       };
-      
+
       let result = await StationsResourceAccess.updateById(stationsId, stationsData);
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -159,13 +160,13 @@ async function findById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findByUrl(req) {
   return new Promise(async (resolve, reject) => {
@@ -175,13 +176,13 @@ async function findByUrl(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function resetAllDefaultMp3() {
   await StationFunctions.resetAllDefaultMp3();
@@ -194,29 +195,28 @@ async function updateConfigSMTP(req) {
       let smtpHost = req.payload.smtpHost;
       let smtpPort = req.payload.smtpPort;
       let smtpSecure = req.payload.smtpSecure;
-      let smtpAuth = req.payload.smtpAuth
-      let smtpTls = req.payload.smtpTls
+      let smtpAuth = req.payload.smtpAuth;
+      let smtpTls = req.payload.smtpTls;
       let stationData = {
         stationCustomSMTPConfig: {
           smtpHost: smtpHost,
           smtpPort: smtpPort,
           smtpSecure: smtpSecure,
           smtpAuth: smtpAuth,
-          smtpTls: smtpTls
-        }
+          smtpTls: smtpTls,
+        },
       };
       stationData.stationCustomSMTPConfig = JSON.stringify(stationData.stationCustomSMTPConfig);
       let result = await StationsResourceAccess.updateById(stationsId, stationData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function updateConfigSMS(req) {
@@ -226,27 +226,26 @@ async function updateConfigSMS(req) {
       let smsUrl = req.payload.smsUrl;
       let smsUserName = req.payload.smsUserName;
       let smsPassword = req.payload.smsPassword;
-      let smsBrand = req.payload.smsBrand
+      let smsBrand = req.payload.smsBrand;
       let stationData = {
         stationCustomSMSBrandConfig: {
           smsUrl: smsUrl,
           smsUserName: smsUserName,
           smsPassword: smsPassword,
           smsBrand: smsBrand,
-        }
+        },
       };
       stationData.stationCustomSMSBrandConfig = JSON.stringify(stationData.stationCustomSMSBrandConfig);
       let result = await StationsResourceAccess.updateById(stationsId, stationData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function updateCustomSMTP(req) {
@@ -255,19 +254,18 @@ async function updateCustomSMTP(req) {
       let stationsId = req.payload.stationsId;
       let stationUseCustomSMTP = req.payload.CustomSMTP;
       let stationData = {
-        stationUseCustomSMTP: stationUseCustomSMTP
-      }
+        stationUseCustomSMTP: stationUseCustomSMTP,
+      };
       let result = await StationsResourceAccess.updateById(stationsId, stationData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function updateCustomSMSBrand(req) {
@@ -276,19 +274,18 @@ async function updateCustomSMSBrand(req) {
       let stationsId = req.payload.stationsId;
       let stationUseCustomSMSBrand = req.payload.stationUseCustomSMSBrand;
       let stationData = {
-        stationUseCustomSMSBrand: stationUseCustomSMSBrand
-      }
+        stationUseCustomSMSBrand: stationUseCustomSMSBrand,
+      };
       let result = await StationsResourceAccess.updateById(stationsId, stationData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function updateRightAdBanner(req) {
@@ -298,18 +295,17 @@ async function updateRightAdBanner(req) {
       let stationsCustomAdBannerRight = req.payload.stationsCustomAdBannerRight;
 
       let result = await StationsResourceAccess.updateById(stationsId, {
-        stationsCustomAdBannerRight: stationsCustomAdBannerRight
+        stationsCustomAdBannerRight: stationsCustomAdBannerRight,
       });
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function updateLeftAdBanner(req) {
@@ -319,18 +315,17 @@ async function updateLeftAdBanner(req) {
       let stationsCustomAdBannerLeft = req.payload.stationsCustomAdBannerLeft;
 
       let result = await StationsResourceAccess.updateById(stationsId, {
-        stationsCustomAdBannerLeft: stationsCustomAdBannerLeft
+        stationsCustomAdBannerLeft: stationsCustomAdBannerLeft,
       });
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
 
 async function enableAdsForStation(req) {
@@ -340,21 +335,19 @@ async function enableAdsForStation(req) {
       let stationsEnableAd = req.payload.stationsEnableAd;
 
       let result = await StationsResourceAccess.updateById(stationsId, {
-        stationsEnableAd: stationsEnableAd
+        stationsEnableAd: stationsEnableAd,
       });
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-
 }
-
 
 async function userGetListStation(req) {
   return new Promise(async (resolve, reject) => {
@@ -369,7 +362,7 @@ async function userGetListStation(req) {
       }
       filter.stationStatus = STATION_STATUS.ACTIVE;
       let stations = await StationsResourceAccess.customSearch(filter, skip, limit, searchText, order);
-      
+
       if (stations && stations.length > 0) {
         let stationsCount = await StationsResourceAccess.customCount(filter, searchText, order);
         resolve({ data: stations, total: stationsCount[0].count });
@@ -378,10 +371,10 @@ async function userGetListStation(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetDetailStationById(req) {
   return new Promise(async (resolve, reject) => {
@@ -391,14 +384,14 @@ async function userGetDetailStationById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetDetailStationByUrl(req) {
   return new Promise(async (resolve, reject) => {
@@ -408,14 +401,14 @@ async function userGetDetailStationByUrl(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

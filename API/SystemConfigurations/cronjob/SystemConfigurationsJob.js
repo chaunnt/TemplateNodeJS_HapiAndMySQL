@@ -6,7 +6,7 @@ const SystemConfigurationsFunction = require('../SystemConfigurationsFunction');
 const Logger = require('../../../utils/logging');
 
 async function statisticalFAC() {
-  console.info('update systemconfig');
+  console.log('update systemconfig');
   return new Promise(async (resolve, reject) => {
     try {
       let dataUpdate = {};
@@ -24,7 +24,6 @@ async function statisticalFAC() {
         resolve('DONE');
         Logger.info(`DONE`);
       } else {
-        console.error(`error SystemConfigurationJob statisticalFAC`);
         reject('failed');
       }
     } catch (e) {

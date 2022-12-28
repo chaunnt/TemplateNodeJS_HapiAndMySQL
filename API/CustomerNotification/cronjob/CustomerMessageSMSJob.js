@@ -1,8 +1,10 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const Joi = require('joi')
+'use strict';
+const Joi = require('joi');
 const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
 const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
 const { MESSAGE_STATUS, MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
@@ -12,18 +14,21 @@ const MessageFunction = require('../CustomerMessageFunctions');
 async function sendMessageSMSToCustomer(station) {
   console.log(`sendMessageSMSToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
-
     //Skip TEST station
     if (station.stationsId === 0) {
-      resolve("OK");
+      resolve('OK');
       return;
     }
 
-    let messageList = await MessageCustomerView.find({
-      messageSendStatus: MESSAGE_STATUS.NEW,
-      customerMessageCategories: MESSAGE_CATEGORY.SMS,
-      customerStationId: station.stationsId
-    }, 0, 100);
+    let messageList = await MessageCustomerView.find(
+      {
+        messageSendStatus: MESSAGE_STATUS.NEW,
+        customerMessageCategories: MESSAGE_CATEGORY.SMS,
+        customerStationId: station.stationsId,
+      },
+      0,
+      100,
+    );
 
     if (messageList && messageList.length > 0) {
       for (let i = 0; i < messageList.length; i++) {
@@ -32,7 +37,7 @@ async function sendMessageSMSToCustomer(station) {
         let messageContent = _customerMessage.customerMessageContent;
 
         //if using template, then generate content based on template
-        if (_templateId && _templateId !== null && _templateId !== "") {
+        if (_templateId && _templateId !== null && _templateId !== '') {
           let customer = await CustomerRecord.findById(_customerMessage.customerId);
           if (customer) {
             let templateContent = await MessageFunction.getMessageContentByTemplate(_templateId, station, customer);
@@ -43,8 +48,8 @@ async function sendMessageSMSToCustomer(station) {
         }
 
         let updatedMessageData = {
-          messageSendStatus: MESSAGE_STATUS.FAILED
-        }
+          messageSendStatus: MESSAGE_STATUS.FAILED,
+        };
 
         //if valid email then process
         if (Joi.string().validate(_customerMessage.customerMessagePhone).error === null) {
@@ -57,7 +62,7 @@ async function sendMessageSMSToCustomer(station) {
               updatedMessageData.messageSendStatus = MESSAGE_STATUS.COMPLETED;
               updatedMessageData.messageNote = sendResult;
               await CustomerRecord.updateById(_customerMessage.customerId, {
-                customerRecordSMSNotifyDate: new Date()
+                customerRecordSMSNotifyDate: new Date(),
               });
             } else {
               updatedMessageData.messageNote = `Send fail`;
@@ -75,12 +80,12 @@ async function sendMessageSMSToCustomer(station) {
         await MessageCustomer.updateById(_customerMessage.messageCustomerId, updatedMessageData);
       }
 
-      resolve("OK");
+      resolve('OK');
     } else {
-      resolve("DONE");
+      resolve('DONE');
     }
   });
-};
+}
 
 module.exports = {
   sendMessageSMSToCustomer,

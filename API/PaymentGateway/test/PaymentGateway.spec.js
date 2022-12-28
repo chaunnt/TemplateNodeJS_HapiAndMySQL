@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,9 +17,9 @@ const Model = require('../resourceAccess/PaymentMethodResourceAccess');
 const app = require('../../../server');
 
 describe(`Tests ${Model.modelName}`, () => {
-  let token = "";
-  let paymentMethodId = "";
-  let userToken = "";
+  let token = '';
+  let paymentMethodId = '';
+  let userToken = '';
   before(done => {
     new Promise(async (resolve, reject) => {
       let staffData = await TestFunctions.loginStaff();
@@ -30,19 +32,19 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('insert payment method', done => {
     const body = {
-      paymentMethodName: 'MOMO'
+      paymentMethodName: 'MOMO',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/insert`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
-        paymentMethodId = res.body.data[0]
+        paymentMethodId = res.body.data[0];
         done();
       });
   });
@@ -52,7 +54,7 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/find`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -66,7 +68,7 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/getList`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .end((err, res) => {
         if (err) {
           console.error(err);
@@ -79,7 +81,7 @@ describe(`Tests ${Model.modelName}`, () => {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/getList`)
-      .set("Authorization", ``)
+      .set('Authorization', ``)
       .end((err, res) => {
         if (err) {
           console.error(err);
@@ -92,14 +94,14 @@ describe(`Tests ${Model.modelName}`, () => {
     const body = {
       id: paymentMethodId,
       data: {
-        paymentMethodName: 'MOMO'
-      }
+        paymentMethodName: 'MOMO',
+      },
     };
 
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/updateById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -112,13 +114,13 @@ describe(`Tests ${Model.modelName}`, () => {
 
   it('delete payment method', done => {
     const body = {
-      id: paymentMethodId
+      id: paymentMethodId,
     };
 
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/PaymentMethod/deleteById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -128,4 +130,4 @@ describe(`Tests ${Model.modelName}`, () => {
         done();
       });
   });
-})
+});

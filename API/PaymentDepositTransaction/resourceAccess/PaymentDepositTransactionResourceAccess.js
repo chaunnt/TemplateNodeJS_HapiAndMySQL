@@ -4,12 +4,7 @@
 require('dotenv').config();
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const {
-  DEPOSIT_TRX_STATUS,
-  DEPOSIT_TRX_CATEGORY,
-  DEPOSIT_TRX_UNIT,
-  DEPOSIT_TRX_TYPE,
-} = require('../PaymentDepositTransactionConstant');
+const { DEPOSIT_TRX_STATUS, DEPOSIT_TRX_CATEGORY, DEPOSIT_TRX_UNIT, DEPOSIT_TRX_TYPE } = require('../PaymentDepositTransactionConstant');
 
 const tableName = 'PaymentDepositTransaction';
 const primaryKeyField = 'paymentDepositTransactionId';
@@ -28,13 +23,14 @@ async function createTable() {
           table.float('paymentAmount', 48, 24).defaultTo(0); //số tiền nạp
           table.float('paymentRewardAmount', 48, 24).defaultTo(0); //số tiền được thưởng
           table.float('paymentRefAmount', 48, 24).defaultTo(0); //số tiền quy đổi hoặc tham chiếu
-          table.string('paymentUnit').defaultTo(DEPOSIT_TRX_UNIT.VND); //don vi tien
+          table.string('paymentUnit').defaultTo(DEPOSIT_TRX_UNIT.USDT); //don vi tien
           table.integer('isUserDeposit').defaultTo(0);
           table.string('paymentType').defaultTo(DEPOSIT_TRX_TYPE.USER_DEPOSIT);
           table.string('paymentStatus').defaultTo(DEPOSIT_TRX_STATUS.NEW);
           table.string('paymentCategory').defaultTo(DEPOSIT_TRX_CATEGORY.BANK);
           table.string('paymentNote').defaultTo(''); //Ghi chu
           table.string('paymentRef').defaultTo(''); //Ma hoa don,ma giao dich thuc te
+          table.string('paymentSecondaryRef').defaultTo(''); //Ma hoa don,ma giao dich thuc te
           table.string('paymentOwner').defaultTo(''); //ten nguoi gui, ten tai khoan
           table.string('paymentOriginSource').defaultTo(''); //ten ngan hang, ten mang (blockchain)
           table.string('paymentOriginName').defaultTo(''); //so tai khoan, dia chi vi
@@ -68,7 +64,9 @@ async function updateById(id, data) {
 async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
-
+async function findById(id) {
+  return await Common.findById(tableName, primaryKeyField, id);
+}
 async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
@@ -123,6 +121,7 @@ async function sumAmountDistinctByDate(filter, startDate, endDate) {
 module.exports = {
   insert,
   find,
+  findById,
   count,
   updateById,
   initDB,

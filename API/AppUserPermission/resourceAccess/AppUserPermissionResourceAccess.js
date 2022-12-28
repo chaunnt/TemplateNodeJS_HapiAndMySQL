@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AppUserPermission";
-const primaryKeyField = "appUserPermissionId";
+const tableName = 'AppUserPermission';
+const primaryKeyField = 'appUserPermissionId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -24,26 +26,28 @@ async function createTable() {
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
           let initialAppUserPermissions = [
-            "Manage customer",
-            "Manage record",
-            "Manage app user",
-            "Manage settings",
-            "Manage schedule",
-            "Manage news",
+            'Manage customer',
+            'Manage record',
+            'Manage app user',
+            'Manage settings',
+            'Manage schedule',
+            'Manage news',
           ];
           let appUserPermissionArr = [];
           for (let i = 0; i < initialAppUserPermissions.length; i++) {
             const appUserPermission = initialAppUserPermissions[i];
             appUserPermissionArr.push({
               appUserPermissionName: appUserPermission,
-              appUserPermissionKey: appUserPermission.toUpperCase().replace(/\s/ig, '_')
+              appUserPermissionKey: appUserPermission.toUpperCase().replace(/\s/gi, '_'),
             });
           }
 
-          DB(`${tableName}`).insert(appUserPermissionArr).then((result) => {
-            Logger.info(`${tableName}`, `init ${tableName}` + result);
-            resolve();
-          });
+          DB(`${tableName}`)
+            .insert(appUserPermissionArr)
+            .then(result => {
+              Logger.info(`${tableName}`, `init ${tableName}` + result);
+              resolve();
+            });
         });
     });
   });
@@ -76,5 +80,5 @@ module.exports = {
   find,
   count,
   updateById,
-  initDB
+  initDB,
 };

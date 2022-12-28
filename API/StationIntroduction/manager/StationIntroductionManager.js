@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const StationIntroFunction = require('../StationIntroductionFunctions');
 const Logger = require('../../../utils/logging');
 
@@ -13,10 +15,10 @@ async function updateById(req) {
     if (result) {
       resolve(result);
     } else {
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getStationIntroductionDetail(req) {
   return new Promise(async (resolve, reject) => {
@@ -25,10 +27,10 @@ async function getStationIntroductionDetail(req) {
     if (result) {
       resolve(result);
     } else {
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   getStationIntroductionDetail,

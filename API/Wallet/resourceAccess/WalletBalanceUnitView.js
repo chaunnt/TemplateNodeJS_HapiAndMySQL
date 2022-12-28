@@ -117,6 +117,12 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
   return await query.count(`${primaryKeyField} as count`);
 }
 
+async function findById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.findById(tableName, dataId, id);
+}
+
 module.exports = {
   insert,
   find,
@@ -126,4 +132,5 @@ module.exports = {
   sum,
   customSearch,
   customCount,
+  findById,
 };

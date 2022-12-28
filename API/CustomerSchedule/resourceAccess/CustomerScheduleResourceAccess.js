@@ -1,14 +1,16 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const moment = require('moment');
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { SCHEDULE_STATUS } = require('../CustomerScheduleConstants');
 const tableName = 'CustomerSchedule';
 
-const primaryKeyField = "customerScheduleId";
+const primaryKeyField = 'customerScheduleId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -49,7 +51,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -66,12 +68,12 @@ async function insert(data) {
 async function updateById(customerScheduleId, data) {
   let dataId = {};
   dataId[primaryKeyField] = customerScheduleId;
-  return await Common.updateById(tableName,dataId,data)
+  return await Common.updateById(tableName, dataId, data);
 }
-async function deleteById(customerScheduleId){
+async function deleteById(customerScheduleId) {
   let dataId = {};
   dataId[primaryKeyField] = customerScheduleId;
-  return await Common.deleteById(tableName,dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function findById(id) {
@@ -95,41 +97,41 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
       this.orWhere('customerIdentity', 'like', `%${searchText}%`)
         .orWhere('customerPhone', 'like', `%${searchText}%`)
         .orWhere('customerEmail', 'like', `%${searchText}%`)
-        .orWhere('customerName', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerName', 'like', `%${searchText}%`);
+    });
   } else {
     if (filterData.customerName) {
-      queryBuilder.where('customerName', 'like', `%${filterData.customerName}%`)
+      queryBuilder.where('customerName', 'like', `%${filterData.customerName}%`);
       delete filterData.customerName;
     }
 
     if (filterData.customerEmail) {
-      queryBuilder.where('customerEmail', 'like', `%${filterData.customerEmail}%`)
+      queryBuilder.where('customerEmail', 'like', `%${filterData.customerEmail}%`);
       delete filterData.customerEmail;
     }
 
     if (filterData.customerPhone) {
-      queryBuilder.where('customerPhone', 'like', `%${filterData.customerPhone}%`)
+      queryBuilder.where('customerPhone', 'like', `%${filterData.customerPhone}%`);
       delete filterData.customerPhone;
     }
 
     if (filterData.customerIdentity) {
-      queryBuilder.where('customerIdentity', 'like', `%${filterData.customerIdentity}%`)
+      queryBuilder.where('customerIdentity', 'like', `%${filterData.customerIdentity}%`);
       delete filterData.customerIdentity;
     }
   }
 
   if (startDate) {
-    let _startDate = moment(startDate).format("YYYY/MM/DD");
+    let _startDate = moment(startDate).format('YYYY/MM/DD');
     // let _startTime = moment(startDate).format("HH:mm");
-    queryBuilder.where('customerScheduleDate', '>=', _startDate)
+    queryBuilder.where('customerScheduleDate', '>=', _startDate);
     // queryBuilder.where('customerScheduleTime', '>=', _startTime)
   }
 
   if (endDate) {
-    let _endDate = moment(endDate).format("YYYY/MM/DD");
+    let _endDate = moment(endDate).format('YYYY/MM/DD');
     // let _endTime = moment(endDate).format("HH:mm");
-    queryBuilder.where('customerScheduleDate', '<=', _endDate)
+    queryBuilder.where('customerScheduleDate', '<=', _endDate);
     // queryBuilder.where('customerScheduleTime', '<=', _endTime)
   }
 
@@ -148,7 +150,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -162,13 +164,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -184,5 +185,5 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-  deleteById
+  deleteById,
 };

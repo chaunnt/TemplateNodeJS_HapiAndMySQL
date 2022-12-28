@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,7 +17,7 @@ const modelName = 'GeneralInformation';
 const app = require('../../../server');
 
 describe(`Tests ${modelName}`, function () {
-  let userToken = "";
+  let userToken = '';
   before(done => {
     new Promise(async function (resolve, reject) {
       let userdata = await TestFunctions.loginUser();
@@ -25,11 +27,11 @@ describe(`Tests ${modelName}`, function () {
   });
 
   it('user getAboutUs', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getAboutUs`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -40,7 +42,7 @@ describe(`Tests ${modelName}`, function () {
       });
   });
   it('user getAboutUs ( no token )', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getAboutUs`)
@@ -55,11 +57,11 @@ describe(`Tests ${modelName}`, function () {
       });
   });
   it('user getAppPolicy', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getAppPolicy`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -70,7 +72,7 @@ describe(`Tests ${modelName}`, function () {
       });
   });
   it('user getAppPolicy ( no token )', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getAppPolicy`)
@@ -86,11 +88,11 @@ describe(`Tests ${modelName}`, function () {
   });
 
   it('user getGeneralRule', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getGeneralRule`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -101,7 +103,7 @@ describe(`Tests ${modelName}`, function () {
       });
   });
   it('user getGeneralRule ( no token )', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getGeneralRule`)
@@ -117,11 +119,11 @@ describe(`Tests ${modelName}`, function () {
   });
 
   it('user getQuestionAndAnwser', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getQuestionAndAnwser`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -132,7 +134,7 @@ describe(`Tests ${modelName}`, function () {
       });
   });
   it('user getQuestionAndAnwser ( no token )', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/user/getQuestionAndAnwser`)
@@ -146,5 +148,4 @@ describe(`Tests ${modelName}`, function () {
         done();
       });
   });
-
 });

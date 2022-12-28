@@ -1,7 +1,9 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 //This model is use to display info of Stations in public.
-//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL 
-const Joi = require("joi");
+//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL
+const Joi = require('joi');
 
 const rawRealEstateSchema = Joi.object({
   realEstateTitle: Joi.string().required(),
@@ -30,17 +32,16 @@ const rawRealEstateSchema = Joi.object({
   realEstateHouseBedRooms: Joi.number(),
   realEstateHouseToilets: Joi.number(),
   realEstateContactTypeId: Joi.number(),
-  realEstateImage: Joi.array().items(Joi.string())
-
+  realEstateImage: Joi.array().items(Joi.string()),
 });
 
 function fromData(data) {
   let modelData = {
     ...data,
-  }
+  };
 
   let outputModel = rawRealEstateSchema.validate(modelData);
-  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === "") {
+  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === '') {
     return outputModel.value;
   } else {
     console.error(outputModel.error);
@@ -81,10 +82,10 @@ function fromCrawlerData(crawlerData) {
     realEstateImage: crawlerData.ImagesHouse,
     //Các thông tin khác được xử lý bằng cách mapping dữ liệu
     //Do vậy phần mapping dữ liệu không cần để vào model
-  }
+  };
 
   let outputModel = rawRealEstateSchema.validate(modelData);
-  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === "") {
+  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === '') {
     return outputModel.value;
   } else {
     console.error(outputModel.error);
@@ -95,5 +96,5 @@ function fromCrawlerData(crawlerData) {
 module.exports = {
   fromData,
   fromCrawlerData,
-  schema: rawRealEstateSchema
+  schema: rawRealEstateSchema,
 };

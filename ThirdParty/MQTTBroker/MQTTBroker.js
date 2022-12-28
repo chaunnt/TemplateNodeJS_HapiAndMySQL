@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 require('dotenv').config();
 
 const MQTT_ADMIN_USERNAME = process.env.MQTT_ADMIN_USERNAME || 'mqttadmin';
@@ -8,7 +10,7 @@ const WEBSOCKET_SSL_PORT = parseInt(process.env.WEBSOCKET_SSL_PORT || 6666);
 const WEBSOCKET_PORT = parseInt(process.env.WEBSOCKET_PORT || 7777);
 
 const ws = require('websocket-stream');
-const fs    = require("fs");
+const fs = require('fs');
 const aedes = require('aedes')();
 // const aedes = require('aedes')({
 //   authenticate: (client, username, password, callback) => {
@@ -23,18 +25,17 @@ const aedes = require('aedes')();
 //   }
 // });
 
-
 //MQTT Broker
-const mqttBroker = require('net').createServer(aedes.handle)
+const mqttBroker = require('net').createServer(aedes.handle);
 mqttBroker.listen(MQTT_PORT, function () {
-  console.log('mqtt broker started and listening on port ', MQTT_PORT)
-})
+  console.log('mqtt broker started and listening on port ', MQTT_PORT);
+});
 
 //Websocket 'WS'
 const httpServer = require('http').createServer();
-ws.createServer({ server: httpServer }, aedes.handle)
+ws.createServer({ server: httpServer }, aedes.handle);
 httpServer.listen(WEBSOCKET_PORT, function () {
-  console.log('Aedes MQTT-WS listening on port: ' + WEBSOCKET_PORT)
+  console.log('Aedes MQTT-WS listening on port: ' + WEBSOCKET_PORT);
 });
 
 async function initHttpsServer() {
@@ -54,17 +55,17 @@ async function initHttpsServer() {
           }
           //Websocket SSL 'WSS'
           const httpsServer = require('https').createServer({
-            "key": keyData,
-            "cert": certData,
+            key: keyData,
+            cert: certData,
           });
-          ws.createServer({ server: httpsServer }, aedes.handle)
+          ws.createServer({ server: httpsServer }, aedes.handle);
           httpsServer.listen(WEBSOCKET_SSL_PORT, function () {
-            console.log('Aedes MQTT-WSS listening on port: ' + WEBSOCKET_SSL_PORT)
-            resolve("ok");
+            console.log('Aedes MQTT-WSS listening on port: ' + WEBSOCKET_SSL_PORT);
+            resolve('ok');
           });
         });
       });
-  
+
       // //Websocket SSL 'WSS'
       // const httpsServer = require('https').createServer({
       //   "key": fs.readFileSync(`${process.env.KEY_PATH}openssl1/privkey.pem`),
@@ -82,7 +83,7 @@ async function initHttpsServer() {
 }
 
 var refreshIntervalId = setInterval(() => {
-  initHttpsServer().then((result) => {
+  initHttpsServer().then(result => {
     console.log(result);
     if (result) {
       clearInterval(refreshIntervalId);
@@ -144,7 +145,7 @@ async function publishJson(topic, json) {
     retain: false,
   };
   return _publish(message);
-};
+}
 
 async function publishMessage(topic, message) {
   const packetData = {
@@ -154,9 +155,9 @@ async function publishMessage(topic, message) {
     retain: false,
   };
   return _publish(packetData);
-};
+}
 
 module.exports = {
   publishMessage,
-  publishJson
+  publishJson,
 };

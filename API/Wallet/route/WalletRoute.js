@@ -12,8 +12,9 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 const { WALLET_TYPE } = require('../WalletConstant');
 
 const insertSchema = {
-  userId: Joi.number(),
+  appUserId: Joi.number(),
   walletType: Joi.string().max(255),
+  walletBalanceUnitId: Joi.number().min(0),
 };
 
 const updateSchema = {
@@ -34,7 +35,7 @@ module.exports = {
   insert: {
     tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },

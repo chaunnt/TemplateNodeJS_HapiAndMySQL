@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const UtilFunction = require('../../ApiUtils/utilFunctions');
-const tableName = "BooksCategory";
-const primaryKeyField = "booksCategoryId";
+const tableName = 'BooksCategory';
+const primaryKeyField = 'booksCategoryId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -32,73 +34,75 @@ async function createTable() {
 
 async function seeding() {
   let categories = [
-    "Action",
-    "Drama",
-    "Fantasy",
-    "Manhua",
-    "Truyện Màu",
-    "Comedy",
-    "Manhwa",
-    "Adventure",
-    "Supernatural",
-    "Mystery",
-    "Xuyên Không",
-    "Historical",
-    "Romance",
-    "Shoujo",
-    "Đam Mỹ",
-    "Manga",
-    "School Life",
-    "Seinen",
-    "Slice Of Life",
-    "Chuyển Sinh",
-    "Shounen",
-    "Gender Bender",
-    "Cổ Đại",
-    "Martial Arts",
-    "Harem",
-    "Horror",
-    "Comic",
-    "Soft Yaoi",
-    "Yaoi",
-    "Sci-Fi",
-    "Webtoon",
-    "Mature",
-    "Josei",
-    "Psychological",
-    "Tragedy",
-    "Sports",
-    "Shoujo Ai",
-    "Trinh Thám",
-    "Soft Yuri",
-    "Yuri",
-    "Doujinshi",
-    "Mecha",
-    "Anime",
-    "Tạp Chí Truyện Tranh",
-    "One Shot",
-    "Thiếu Nhi",
-    "Cooking",
-    "Live Action",
-    "Việt Nam",
-    "Shounen Ai",
-    "Truyện Scan",
+    'Action',
+    'Drama',
+    'Fantasy',
+    'Manhua',
+    'Truyện Màu',
+    'Comedy',
+    'Manhwa',
+    'Adventure',
+    'Supernatural',
+    'Mystery',
+    'Xuyên Không',
+    'Historical',
+    'Romance',
+    'Shoujo',
+    'Đam Mỹ',
+    'Manga',
+    'School Life',
+    'Seinen',
+    'Slice Of Life',
+    'Chuyển Sinh',
+    'Shounen',
+    'Gender Bender',
+    'Cổ Đại',
+    'Martial Arts',
+    'Harem',
+    'Horror',
+    'Comic',
+    'Soft Yaoi',
+    'Yaoi',
+    'Sci-Fi',
+    'Webtoon',
+    'Mature',
+    'Josei',
+    'Psychological',
+    'Tragedy',
+    'Sports',
+    'Shoujo Ai',
+    'Trinh Thám',
+    'Soft Yuri',
+    'Yuri',
+    'Doujinshi',
+    'Mecha',
+    'Anime',
+    'Tạp Chí Truyện Tranh',
+    'One Shot',
+    'Thiếu Nhi',
+    'Cooking',
+    'Live Action',
+    'Việt Nam',
+    'Shounen Ai',
+    'Truyện Scan',
   ];
 
   let booksCategories = [];
   for (let i = 0; i < categories.length; i++) {
     const categoryName = categories[i];
-    const categoryCode = UtilFunction.nonAccentVietnamese(categoryName).replace(' ','-').replace(' ','-').replace(' ','-').replace(' ','-');
+    const categoryCode = UtilFunction.nonAccentVietnamese(categoryName).replace(' ', '-').replace(' ', '-').replace(' ', '-').replace(' ', '-');
     booksCategories.push({
       booksCategoryName: categoryName,
-      booksCategoryCode: categoryCode
+      booksCategoryCode: categoryCode,
     });
   }
   return new Promise(async (resolve, reject) => {
-    DB(`${tableName}`).insert(booksCategories).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    DB(`${tableName}`)
+      .insert(booksCategories)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 async function initDB() {
@@ -128,5 +132,5 @@ module.exports = {
   find,
   count,
   updateById,
-  initDB
+  initDB,
 };

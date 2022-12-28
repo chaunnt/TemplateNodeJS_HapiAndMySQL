@@ -47,9 +47,7 @@ async function InitCryptoWalletForAllUser() {
           walletBalanceUnitId: userPackageData.packageUnitId,
         });
         if (createNewUnitWallet === undefined) {
-          Logger.error(
-            `userBuyServicePackage can not create new wallet crypto user ${user.appUserId} - unitId ${package.packageUnitId}`,
-          );
+          Logger.error(`userBuyServicePackage can not create new wallet crypto user ${user.appUserId} - unitId ${package.packageUnitId}`);
         }
       }
     }

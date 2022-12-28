@@ -4,7 +4,7 @@ const Product = require('./ProductImageRoute');
 
 module.exports = [
   //Product APIs
-  // { method: 'POST', path: '/Product/insert', config: Product.insert },
+  //  { method: 'POST', path: '/Product/insert', config: Product.insert },
   // { method: 'POST', path: '/Product/find', config: Product.find },
   // { method: 'POST', path: '/Product/findById', config: Product.findById },
   // { method: 'POST', path: '/Product/updateById', config: Product.updateById },

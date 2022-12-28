@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -8,16 +10,15 @@ const TestFunctions = require('../../Common/test/CommonTestFunctions');
 
 const app = require('../../../server');
 
-
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
 describe(`Tests StationServicesCategory`, function () {
   let stationServicesCategoryId;
-  let staffToken = "";
+  let staffToken = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
-  fakeUserName = fakeUserName.replace("'", "");
+  fakeUserName = fakeUserName.replace("'", '');
   before(done => {
     new Promise(async function (resolve, reject) {
       let staffData = await TestFunctions.loginStaff();
@@ -28,13 +29,13 @@ describe(`Tests StationServicesCategory`, function () {
 
   it('insert stationServicesCategory', done => {
     const body = {
-      "stationServicesCategoryTitle": fakeUserName,
-      "stationServicesCategoryContent": fakeUserName,
+      stationServicesCategoryTitle: fakeUserName,
+      stationServicesCategoryContent: fakeUserName,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationServicesCategory/insert`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -48,12 +49,12 @@ describe(`Tests StationServicesCategory`, function () {
 
   it('find stationServicesCategory', done => {
     const body = {
-      "filter": {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationServicesCategory/find`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -66,15 +67,15 @@ describe(`Tests StationServicesCategory`, function () {
 
   it('updateDisplayIndexById stationServicesCategory', done => {
     const body = {
-      "id": stationServicesCategoryId,
+      id: stationServicesCategoryId,
       data: {
-        displayIndex: 0
-      }
+        displayIndex: 0,
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationServicesCategory/updateDisplayIndexById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -87,12 +88,12 @@ describe(`Tests StationServicesCategory`, function () {
 
   it('find by Id stationServicesCategory', done => {
     const body = {
-      "id": stationServicesCategoryId,
+      id: stationServicesCategoryId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationServicesCategory/findById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -105,12 +106,12 @@ describe(`Tests StationServicesCategory`, function () {
 
   it('delete by id stationServicesCategory', done => {
     const body = {
-      "id": stationServicesCategoryId
+      id: stationServicesCategoryId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationServicesCategory/deleteById`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -120,5 +121,4 @@ describe(`Tests StationServicesCategory`, function () {
         done();
       });
   });
-
 });

@@ -1,16 +1,18 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 
-const { CronInstance, executeJob } = require("../ThirdParty/Cronjob/CronInstance");
+const { CronInstance, executeJob } = require('../ThirdParty/Cronjob/CronInstance');
 const Logger = require('../utils/logging');
 
 const CustomerRecordJob = require('../API/CustomerRecord/cronjob/StationsRecordAutoCheck');
 const CustomerMessageJob = require('../API/CustomerMessage/cronjob/StationsMessageAutoSend');
 
 async function startSchedule() {
-  Logger.info("startSchedule ", new Date());
+  Logger.info('startSchedule ', new Date());
 
   //do not run schedule on DEV environments
   if (process.env.NODE_ENV === 'dev') {

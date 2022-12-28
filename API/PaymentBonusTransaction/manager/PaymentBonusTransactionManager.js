@@ -77,26 +77,10 @@ async function find(req) {
         filter = {};
       }
 
-      let transactionList = await BonusTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let transactionList = await BonusTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await BonusTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await BonusTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
 
         //hien thi companyName la ten cua nguoi tham chieu, khong phai ten nguoi nhan
         for (let i = 0; i < transactionList.length; i++) {
@@ -202,26 +186,10 @@ async function userGetBonusHistory(req) {
         return;
       }
 
-      let transactionList = await BonusTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await BonusTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await BonusTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await BonusTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
 
         //hien thi companyName la ten cua nguoi tham chieu, khong phai ten nguoi nhan
         for (let i = 0; i < transactionList.length; i++) {
@@ -273,14 +241,7 @@ async function userSummaryBonusByStatus(req) {
         return;
       }
 
-      let transactionList = await BonusTransactionUserView.sumAmountDistinctByStatus(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        order,
-      );
+      let transactionList = await BonusTransactionUserView.sumAmountDistinctByStatus(filter, skip, limit, startDate, endDate, order);
 
       if (transactionList && transactionList.length > 0) {
         resolve({
@@ -303,11 +264,7 @@ async function userSummaryBonusByStatus(req) {
 async function denyBonusTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
-      let denyResult = await PaymentBonusFunction.denyBonusTransaction(
-        req.payload.id,
-        req.currentUser,
-        req.payload.paymentNote,
-      );
+      let denyResult = await PaymentBonusFunction.denyBonusTransaction(req.payload.id, req.currentUser, req.payload.paymentNote);
       if (denyResult) {
         resolve('success');
       } else {
@@ -465,12 +422,7 @@ async function userRequestWithdrawBonus(req) {
       }
       user = user[0];
 
-      let result = await PaymentBonusFunction.createBonusTransactionByUserId(
-        appUserId,
-        paymentAmount,
-        INVALID_REFER_USER,
-        bankInfomation,
-      );
+      let result = await PaymentBonusFunction.createBonusTransactionByUserId(appUserId, paymentAmount, INVALID_REFER_USER, bankInfomation);
 
       if (result) {
         resolve(result);

@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const RecordResource = require('../resourceAccess/CustomerRecordResourceAccess');
 const { CHECKING_STATUS } = require('../CustomerRecordConstants');
 const Logger = require('../../../utils/logging');
@@ -23,28 +25,28 @@ async function completeProcessForAllRecord(station) {
     }
 
     let lastStepIndex = 0;
-    //get latest index of step 
+    //get latest index of step
     //-> if car already gone to end of sequence, we will skip it
     for (let i = 0; i < processes.length; i++) {
       const processConfig = processes[i];
       if (processConfig.stepIndex > lastStepIndex) {
         lastStepIndex = processConfig.stepIndex;
       }
-    };
+    }
 
     let completedData = {
       customerRecordState: lastStepIndex,
-      customerRecordCheckStatus: CHECKING_STATUS.COMPLETED
+      customerRecordCheckStatus: CHECKING_STATUS.COMPLETED,
     };
 
     let completeFilter = {
       customerStationId: station.stationsId,
     };
 
-    await RecordResource.updateAll(completedData, completeFilter)
-    resolve("done");
+    await RecordResource.updateAll(completedData, completeFilter);
+    resolve('done');
   });
-};
+}
 
 module.exports = {
   completeProcessForAllRecord,

@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -10,28 +12,26 @@ const Model = require('../resourceAccess/StationIntroductionResourceAccess');
 const app = require('../../../server');
 const { modelName } = require('../resourceAccess/StationIntroductionResourceAccess');
 
-
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
-
 describe(`Tests ${Model.modelName}`, function () {
   let stationsId = 0;
-  let stationUrl = "";
-  let token = "";
+  let stationUrl = '';
+  let token = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
-  fakeUserName = fakeUserName.replace("'", "");
+  fakeUserName = fakeUserName.replace("'", '');
 
   async function getStationDetails(stationId) {
     const body = {
-      "id": stationId
+      id: stationId,
     };
     return new Promise((resolve, reject) => {
       chai
         .request(`0.0.0.0:${process.env.PORT}`)
         .post(`/Stations/getDetailById`)
-        .set("Authorization", `Bearer ${token}`)
+        .set('Authorization', `Bearer ${token}`)
         .send(body)
         .end((err, res) => {
           if (err) {
@@ -50,14 +50,14 @@ describe(`Tests ${Model.modelName}`, function () {
       token = staffData.token;
       let stationData = await getStationDetails(staffData.stationsId);
       stationsId = staffData.stationsId;
-      stationUrl = stationData.stationUrl.replace('https://','');
+      stationUrl = stationData.stationUrl.replace('https://', '');
       resolve();
     }).then(() => done());
   });
 
   it('POST /StationsIntro/stationIntroductionDetail', done => {
     const body = {
-      "stationUrl": stationUrl
+      stationUrl: stationUrl,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -75,8 +75,8 @@ describe(`Tests ${Model.modelName}`, function () {
 
   it('POST /StationIntroduction/updateStationIntro', done => {
     const body = {
-      "id": stationsId,
-      "data": {
+      id: stationsId,
+      data: {
         stationIntroductionTitle: 'not updated',
         slideBanners: 'not updated',
         stationIntroductionSlogan: 'not updated',
@@ -91,12 +91,12 @@ describe(`Tests ${Model.modelName}`, function () {
         stationTwitterUrl: 'not updated',
         stationYoutubeUrl: 'not updated',
         stationInstagramUrl: 'not updated',
-      }
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${modelName}/updateStationIntro`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {

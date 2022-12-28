@@ -13,9 +13,7 @@ const { PACKAGE_STATUS, PACKAGE_CATEGORY, PACKAGE_TYPE } = require('../PaymentSe
 
 const insertSchema = {
   packageName: Joi.string().required(),
-  packageType: Joi.string()
-    .required()
-    .allow([PACKAGE_TYPE.A1000FAC.type, PACKAGE_TYPE.A100FAC.type, PACKAGE_TYPE.A500FAC.type]),
+  packageType: Joi.string().required().allow([PACKAGE_TYPE.A1000FAC.type, PACKAGE_TYPE.A100FAC.type, PACKAGE_TYPE.A500FAC.type]),
   packageDescription: Joi.string().max(500),
   packagePrice: Joi.number().required(),
   packageDiscountPrice: Joi.string().allow(''),

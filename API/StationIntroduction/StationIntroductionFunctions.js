@@ -1,9 +1,11 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
-const StationIntroductionResourceAccess = require("./resourceAccess/StationIntroductionResourceAccess");
-const StationsResourceAccess = require('../Stations/resourceAccess/StationsResourceAccess')
+const StationIntroductionResourceAccess = require('./resourceAccess/StationIntroductionResourceAccess');
+const StationsResourceAccess = require('../Stations/resourceAccess/StationsResourceAccess');
 
 const FUNC_FAILED = undefined;
 async function updateStationIntro(stationId, data) {
@@ -30,14 +32,18 @@ async function updateStationIntro(stationId, data) {
       return FUNC_FAILED;
     }
   }
-  return "ok";
+  return 'ok';
 }
 
 async function getStationIntroByUrl(stationUrl) {
   //lookup station by using url
-  let station = await StationsResourceAccess.find({
-    stationUrl: stationUrl
-  }, 0, 1);
+  let station = await StationsResourceAccess.find(
+    {
+      stationUrl: stationUrl,
+    },
+    0,
+    1,
+  );
   if (station === undefined || station.length < 1) {
     return FUNC_FAILED;
   }
@@ -50,13 +56,12 @@ async function getStationIntroByUrl(stationUrl) {
 
   if (existingStationIntroData) {
     return existingStationIntroData;
-  }
-  else {
+  } else {
     return FUNC_FAILED;
   }
 }
 
 module.exports = {
   updateStationIntro,
-  getStationIntroByUrl
-}
+  getStationIntroByUrl,
+};

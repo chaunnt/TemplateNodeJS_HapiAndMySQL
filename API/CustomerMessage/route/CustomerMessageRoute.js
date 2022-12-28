@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -9,20 +9,17 @@ const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
-const {
-  MESSAGE_CATEGORY,
-  MESSAGE_TYPE,
-  MESSAGE_STATUS,
-  MESSAGE_TOPIC,
-  MESSAGE_RECEIVER,
-} = require('../CustomerMessageConstant');
+const { MESSAGE_CATEGORY, MESSAGE_TYPE, MESSAGE_STATUS, MESSAGE_TOPIC } = require('../CustomerMessageConstant');
 
 const insertSchema = {
-  customerMessageType: Joi.string().default(MESSAGE_TYPE.USER),
-  customerMessageContent: Joi.string().required().max(2000),
-  customerMessageTitle: Joi.string().required().max(255),
-  customerMessageImage: Joi.string().max(255),
-  customerId: Joi.number().required(),
+  groupCustomerMessageCategories: Joi.string().default(MESSAGE_CATEGORY.FIREBASE_PUSH),
+  // groupCustomerMessageTopic: Joi.string().default(MESSAGE_TOPIC.GENERAL),
+  // groupCustomerMessageStatus: Joi.string().default(MESSAGE_STATUS.NEW),
+  // groupCustomerMessageType: Joi.string().default(MESSAGE_TYPE.GENERAL),
+  groupCustomerMessageContent: Joi.string().required(),
+  groupCustomerMessageTitle: Joi.string().required(),
+  groupCustomerMessageImage: Joi.string(),
+  groupCustomerMessageTemplateId: Joi.string(),
 };
 
 const updateSchema = {

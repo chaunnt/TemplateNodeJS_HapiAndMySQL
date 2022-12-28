@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -12,11 +14,11 @@ chai.use(chaiHttp);
 
 const app = require('../../../server');
 
-describe(`Tests customer Statistical `, function() {
-  let token = "";
-  let staffToken = "";
+describe(`Tests customer Statistical `, function () {
+  let token = '';
+  let staffToken = '';
   before(done => {
-    new Promise(async function(resolve, reject) {
+    new Promise(async function (resolve, reject) {
       let userData = await TestFunctions.loginUser();
       token = userData.token;
       let staffData = await TestFunctions.loginStaff();
@@ -29,30 +31,29 @@ describe(`Tests customer Statistical `, function() {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
         done();
       });
   });
-  
 
   it(`Report by startDate and EndDate`, done => {
     const body = {
-      "startDate": "2021-10-20T23:43:53.000Z",
-      "endDate": "2021-10-23T23:43:53.000Z"
+      startDate: '2021-10-20T23:43:53.000Z',
+      endDate: '2021-10-23T23:43:53.000Z',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -62,15 +63,15 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by startDate`, done => {
     const body = {
-      "startDate": "2021-10-20T23:43:53.000Z"
+      startDate: '2021-10-20T23:43:53.000Z',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -80,15 +81,15 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by endDate`, done => {
     const body = {
-      "endDate": "2021-10-20T23:43:53.000Z"
+      endDate: '2021-10-20T23:43:53.000Z',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -98,16 +99,16 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by Date failse format`, done => {
     const body = {
-      "startDate": "2021",
-      "endDate": "2021"
+      startDate: '2021',
+      endDate: '2021',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -117,16 +118,16 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by startDate > endDate`, done => {
     const body = {
-      "startDate": "2022-10-20T23:43:53.000Z",
-      "endDate": "2021-10-23T23:43:53.000Z"
+      startDate: '2022-10-20T23:43:53.000Z',
+      endDate: '2021-10-23T23:43:53.000Z',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
@@ -136,15 +137,15 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by startDate ký tự đặt biệt`, done => {
     const body = {
-      "startDate": "' or '1=1--"
+      startDate: "' or '1=1--",
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 500);
@@ -153,16 +154,16 @@ describe(`Tests customer Statistical `, function() {
   });
   it(`Report by Date failse is format`, done => {
     const body = {
-      "startDate": "asdb",
-      "endDate": "asgdgk"
+      startDate: 'asdb',
+      endDate: 'asgdgk',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 500);
@@ -172,16 +173,16 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by Date failse is format`, done => {
     const body = {
-      "startDate": "asdb",
-      "endDate": "asgdgk"
+      startDate: 'asdb',
+      endDate: 'asgdgk',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 500);
@@ -191,15 +192,15 @@ describe(`Tests customer Statistical `, function() {
 
   it(`Report by Date failse is format year`, done => {
     const body = {
-      "startDate": "20/10/200006"
+      startDate: '20/10/200006',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/report`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 500);
@@ -207,23 +208,22 @@ describe(`Tests customer Statistical `, function() {
       });
   });
 
-
   it(`Report all station by startDate and EndDate`, done => {
     const body = {
-      "startDate": "2021-10-20T23:43:53.000Z",
-      "endDate": "2021-10-23T23:43:53.000Z"
+      startDate: '2021-10-20T23:43:53.000Z',
+      endDate: '2021-10-23T23:43:53.000Z',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/CustomerStatistical/reportAllStation`)
-      .set("Authorization", `Bearer ${staffToken}`)
+      .set('Authorization', `Bearer ${staffToken}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
         done();
       });
   });
-})
+});

@@ -15,11 +15,7 @@ const filterSchema = {
   packageUnitId: Joi.number(),
   packageStatus: Joi.number(),
   bonusPackageExpireDate: Joi.string().max(255),
-  bonusPackageClaimable: Joi.number().allow([
-    CLAIMABLE_STATUS.ENABLE,
-    CLAIMABLE_STATUS.DISABLE,
-    CLAIMABLE_STATUS.CLAIMED,
-  ]),
+  bonusPackageClaimable: Joi.number().allow([CLAIMABLE_STATUS.ENABLE, CLAIMABLE_STATUS.DISABLE, CLAIMABLE_STATUS.CLAIMED]),
   firstName: Joi.string().max(255),
   lastName: Joi.string().max(255),
   username: Joi.string().max(255),
@@ -33,11 +29,7 @@ const updateSchema = {
   bonusPackageId: Joi.number(),
   bonusPackageExpireDate: Joi.string().max(255),
   bonusPackageClaimedDate: Joi.string().max(255),
-  bonusPackageClaimable: Joi.number().allow([
-    CLAIMABLE_STATUS.ENABLE,
-    CLAIMABLE_STATUS.DISABLE,
-    CLAIMABLE_STATUS.CLAIMED,
-  ]),
+  bonusPackageClaimable: Joi.number().allow([CLAIMABLE_STATUS.ENABLE, CLAIMABLE_STATUS.DISABLE, CLAIMABLE_STATUS.CLAIMED]),
   bonusPackageDescription: Joi.string().max(255),
 };
 

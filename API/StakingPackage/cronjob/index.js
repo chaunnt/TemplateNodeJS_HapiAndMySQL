@@ -12,7 +12,7 @@ const dailyPayment = () => {
 };
 
 async function startSchedule() {
-  console.info('start StakingPackage schedule');
+  console.log('start StakingPackage schedule');
   dailyPayment();
 }
 

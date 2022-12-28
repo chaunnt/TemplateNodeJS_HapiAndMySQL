@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -12,10 +14,10 @@ chai.use(chaiHttp);
 
 const app = require('../../../server');
 
-describe(`Tests AppUserRole`, function() {
-  let token = "";
+describe(`Tests AppUserRole`, function () {
+  let token = '';
   before(done => {
-    new Promise(async function(resolve, reject) {
+    new Promise(async function (resolve, reject) {
       let userData = await TestFunctions.loginUser();
       token = userData.token;
       resolve();
@@ -26,15 +28,14 @@ describe(`Tests AppUserRole`, function() {
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/AppUserRole/find`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
-        if ( err ) {
+        if (err) {
           console.error(err);
         }
         checkResponseStatus(res, 200);
         done();
       });
   });
-
-})
+});

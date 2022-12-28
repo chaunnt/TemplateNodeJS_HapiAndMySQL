@@ -1,18 +1,18 @@
-const redis = require("redis");
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const redis = require('redis');
 
 const RedisClient = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASS
+  password: process.env.REDIS_PASS,
 });
 const DEFAULT_EXPIRE = 300; //5 minutes
-const PROJECT_NAME = process.env.PROJECT_NAME || "PROJECTNAME";
-const NODE_ENV = process.env.NODE_ENV || "dev";
+const PROJECT_NAME = process.env.PROJECT_NAME || 'PROJECTNAME';
+const NODE_ENV = process.env.NODE_ENV || 'dev';
 
-RedisClient.on("connect", function() {
-  console.log(
-    `Redis connected on ${process.env.REDIS_HOST}:${process.env.REDIS_PORT} for project ${PROJECT_NAME} with ${NODE_ENV} environment`
-  );
+RedisClient.on('connect', function () {
+  console.log(`Redis connected on ${process.env.REDIS_HOST}:${process.env.REDIS_PORT} for project ${PROJECT_NAME} with ${NODE_ENV} environment`);
 });
 
 async function initRedis() {
@@ -25,8 +25,8 @@ async function setWithExpire(key, value, expire = DEFAULT_EXPIRE) {
       resolve(null);
     }
 
-    let redisKey = PROJECT_NAME + "_" + NODE_ENV + "_" + key;
-    RedisClient.set(redisKey, value, "EX", expire, (err, reply) => {
+    let redisKey = PROJECT_NAME + '_' + NODE_ENV + '_' + key;
+    RedisClient.set(redisKey, value, 'EX', expire, (err, reply) => {
       if (err) {
         console.log(err.toString());
         reject(err);
@@ -42,7 +42,7 @@ async function setNoExpire(key, value) {
     if (!RedisClient.connected) {
       resolve(null);
     }
-    let redisKey = PROJECT_NAME + "_" + NODE_ENV + "_" + key;
+    let redisKey = PROJECT_NAME + '_' + NODE_ENV + '_' + key;
     RedisClient.set(redisKey, value, (err, reply) => {
       if (err) {
         console.log(err.toString());
@@ -59,7 +59,7 @@ async function increment(key) {
     if (!RedisClient.connected) {
       resolve(null);
     }
-    let redisKey = PROJECT_NAME + "_" + NODE_ENV + "_" + key;
+    let redisKey = PROJECT_NAME + '_' + NODE_ENV + '_' + key;
     RedisClient.incr(redisKey, (err, reply) => {
       if (err) {
         console.log(err.toString());
@@ -76,13 +76,13 @@ async function get(key) {
     if (!RedisClient.connected) {
       resolve(null);
     }
-    let redisKey = PROJECT_NAME + "_" + NODE_ENV + "_" + key;
+    let redisKey = PROJECT_NAME + '_' + NODE_ENV + '_' + key;
     RedisClient.get(redisKey, (err, reply) => {
       if (err) {
         console.log(err.toString());
-        reject("");
+        reject('');
       } else {
-        resolve((reply));
+        resolve(reply);
       }
     });
   });
@@ -90,7 +90,7 @@ async function get(key) {
 
 async function getJson(key) {
   let value = await get(key);
-  if (value === "") {
+  if (value === '') {
     return undefined;
   } else {
     return JSON.parse(value);
@@ -99,8 +99,8 @@ async function getJson(key) {
 
 deleteAllKeys();
 async function deleteAllKeys() {
-  console.log("Delete all redis key");
-  RedisClient.keys("*", function(err, rows) {
+  console.log('Delete all redis key');
+  RedisClient.keys('*', function (err, rows) {
     rows.forEach(row => {
       RedisClient.del(row);
     });
@@ -114,5 +114,5 @@ module.exports = {
   increment,
   setNoExpire,
   setWithExpire,
-  deleteAllKeys
+  deleteAllKeys,
 };

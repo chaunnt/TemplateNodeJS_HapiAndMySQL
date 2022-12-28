@@ -1,8 +1,10 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
-const Handlebars = require("handlebars");
+const Handlebars = require('handlebars');
 
 const CustomerMessageResourceAccess = require('./resourceAccess/CustomerMessageResourceAccess');
 const MessageCustomerResourceAccess = require('./resourceAccess/MessageCustomerResourceAccess');
@@ -15,14 +17,15 @@ const FUNC_FAILED = undefined;
 const messageTemplate = [
   {
     messageTemplateId: 1,
-    messageTemplateContent: "Mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}",
-    messageTemplateName: "CSKH",
+    messageTemplateContent: 'Mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}',
+    messageTemplateName: 'CSKH',
     // messageTemplateScope: [CustomerRecord.modelName]
   },
   {
     messageTemplateId: 2,
-    messageTemplateName: "Nhắc đăng kiểm",
-    messageTemplateContent: "Ô tô BKS số {{customerRecordPlatenumber}} hết hạn đăng kiểm vào {{customerRecordCheckExpiredDate}}. Mời bạn đăng ký đăng kiểm tại {{stationsAddress}}",
+    messageTemplateName: 'Nhắc đăng kiểm',
+    messageTemplateContent:
+      'Ô tô BKS số {{customerRecordPlatenumber}} hết hạn đăng kiểm vào {{customerRecordCheckExpiredDate}}. Mời bạn đăng ký đăng kiểm tại {{stationsAddress}}',
     // messageTemplateScope: [CustomerRecord.modelName]
   },
 ];
@@ -31,10 +34,10 @@ async function checkValidMessage(customerMessageId) {
   //check if using template and template is valid
   let templateData = undefined;
   if (customerMessageId) {
-    templateData = await CustomerMessageResourceAccess.findById(customerMessageId)
+    templateData = await CustomerMessageResourceAccess.findById(customerMessageId);
 
     if (!templateData) {
-      console.error(`there is no message with id ${customerMessageId}`)
+      console.error(`there is no message with id ${customerMessageId}`);
       return FUNC_FAILED;
     }
   }
@@ -50,28 +53,28 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
   //check if using template and template is valid
   let templateData = await checkValidMessage(messageTemplateId);
   if (templateData === undefined) {
-    console.error(`there is no template with id ${messageTemplateId}`)
+    console.error(`there is no template with id ${messageTemplateId}`);
     return FUNC_FAILED;
   }
 
   //generate content by template & customer data
   let templateParams = {
     ...customer,
-    ...station
+    ...station,
   };
 
   //if this message is "REMIND SCHEDULE" message
   //else default is "CUSTOMER SERVICE" message
   if (templateData.messageTemplateScope.indexOf(CustomerSchedule.modelName) > -1) {
     let scheduleData = CustomerSchedule.find({
-      licensePlates: customer.customerRecordPlatenumber
+      licensePlates: customer.customerRecordPlatenumber,
     });
     if (scheduleData && scheduleData.length > 0) {
       scheduleData = scheduleData[0];
       templateParams = {
         ...templateParams,
         ...scheduleData,
-      }
+      };
     }
   }
 
@@ -81,7 +84,7 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
 
 //Send message to many customer
 async function sendMessageToManyCustomer(customerList, messageNote, customerMessageId, messageType) {
-  if(customerList === 0) {
+  if (customerList === 0) {
     return FUNC_FAILED;
   }
 
@@ -91,7 +94,7 @@ async function sendMessageToManyCustomer(customerList, messageNote, customerMess
     console.error(`can not create new message`);
     return FUNC_FAILED;
   }
-  
+
   // message list
   let messageList = [];
   for (var i = 0; i < customerList.length; i++) {
@@ -101,8 +104,8 @@ async function sendMessageToManyCustomer(customerList, messageNote, customerMess
       messageNote: messageNote,
       messageSendStatus: MESSAGE_STATUS.COMPLETED,
       messageTimeSent: new Date().toISOString(),
-      isRead: 0
-    }
+      isRead: 0,
+    };
     messageList.push(customerMessage);
   }
 
@@ -116,18 +119,24 @@ async function sendMessageToManyCustomer(customerList, messageNote, customerMess
     await MessageCustomerResourceAccess.insert(messageList);
   }
 
-  const { customerMessageCategories, customerMessageTitle, customerMessageContent } = message
-  let sendMessageResult = await pushNotificationByTopic(customerMessageCategories, customerMessageTitle, customerMessageContent, undefined, messageType);
-  if(sendMessageResult) {
-    await CustomerMessageResourceAccess.updateById(customerMessageId, { 
+  const { customerMessageCategories, customerMessageTitle, customerMessageContent } = message;
+  let sendMessageResult = await pushNotificationByTopic(
+    customerMessageCategories,
+    customerMessageTitle,
+    customerMessageContent,
+    undefined,
+    messageType,
+  );
+  if (sendMessageResult) {
+    await CustomerMessageResourceAccess.updateById(customerMessageId, {
       messageSendStatus: MESSAGE_STATUS.COMPLETED,
-      messageTimeSent: new Date().toISOString()
+      messageTimeSent: new Date().toISOString(),
     });
     return FUNC_SUCCESS;
   } else {
-    await CustomerMessageResourceAccess.updateById(customerMessageId, { 
+    await CustomerMessageResourceAccess.updateById(customerMessageId, {
       messageSendStatus: MESSAGE_STATUS.FAILED,
-      messageTimeSent: new Date().toISOString()
+      messageTimeSent: new Date().toISOString(),
     });
     return FUNC_FAILED;
   }
@@ -140,5 +149,5 @@ async function getTemplateMessages() {
 module.exports = {
   getTemplateMessages,
   sendMessageToManyCustomer,
-  getMessageContentByTemplate
-}
+  getMessageContentByTemplate,
+};

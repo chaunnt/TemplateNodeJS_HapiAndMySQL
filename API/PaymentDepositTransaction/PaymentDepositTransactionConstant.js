@@ -17,9 +17,11 @@ module.exports = {
   DEPOSIT_TRX_CATEGORY: {
     BANK: 'ATM/BANK',
     FROM_BONUS: 'FROM_BONUS',
+    BLOCKCHAIN: 'BLOCKCHAIN',
   },
   DEPOSIT_TRX_UNIT: {
     VND: 'VND',
+    USDT: 'USDT',
   },
   DEPOSIT_TRX_TYPE: {
     USER_DEPOSIT: 'USER_DEPOSIT',

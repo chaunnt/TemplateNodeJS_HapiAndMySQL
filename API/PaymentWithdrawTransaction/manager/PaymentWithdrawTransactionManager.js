@@ -15,6 +15,10 @@ const { WITHDRAW_TRX_STATUS, INVALID } = require('../PaymentWithdrawTransactionC
 const Logger = require('../../../utils/logging');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const { ERROR } = require('../../Common/CommonConstant');
+const moment = require('moment');
+const CustomerMessageResourceAccess = require('../../CustomerMessage/resourceAccess/CustomerMessageResourceAccess');
+const { MESSAGE_CATEGORY, MESSAGE_TOPIC } = require('../../CustomerMessage/CustomerMessageConstant');
+const { publishJson } = require('../../../ThirdParty/MQTTBroker/MQTTBroker');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -71,28 +75,11 @@ async function find(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
-      let transactionList = await WithdrawTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
-      let transactionCount = await WithdrawTransactionUserView.customCount(
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let transactionList = await WithdrawTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let transactionCount = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, searchText, order);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         transactionList = await WithdrawTransactionFunction.addStaffNameInTransactionList(transactionList);
-
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -103,8 +90,6 @@ async function find(req) {
           total: 0,
         });
       }
-      console.error(`error withdraw transaction find :${ERROR}`);
-      reject('failed');
     } catch (e) {
       console.error(e);
       reject('failed');
@@ -125,9 +110,7 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(
-          `error withdraw transaction updateById with transactionRequestId ${req.payload.id} : update transaction failed`,
-        );
+        console.error(`error withdraw transaction updateById with transactionRequestId ${req.payload.id} : update transaction failed`);
         reject('update transaction failed');
       }
     } catch (e) {
@@ -171,25 +154,9 @@ async function getList(req) {
         return;
       }
 
-      let transactionList = await WithdrawTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await WithdrawTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await WithdrawTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -225,26 +192,10 @@ async function withdrawHistoryUSDT(req) {
         return;
       }
 
-      let transactionList = await WithdrawTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await WithdrawTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await WithdrawTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -280,26 +231,10 @@ async function withdrawHistoryPOINT(req) {
         return;
       }
 
-      let transactionList = await WithdrawTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await WithdrawTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await WithdrawTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -335,26 +270,10 @@ async function withdrawHistoryBTC(req) {
         return;
       }
 
-      let transactionList = await WithdrawTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await WithdrawTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await WithdrawTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -383,11 +302,18 @@ async function approveWithdrawTransaction(req) {
         req.payload.paymentRef,
       );
       if (result) {
+        let transaction = await WithdrawTransactionResourceAccess.findById(req.payload.id);
+
+        await CustomerMessageResourceAccess.insert({
+          customerMessageContent: `Bạn đã rút thành công ${transaction.paymentAmount} vào lúc ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
+          customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
+          customerMessageTopic: MESSAGE_TOPIC.USER,
+          customerMessageTitle: `Rút tiền thành công`,
+          customerId: req.currentUser.appUserId,
+        });
         resolve(result);
       } else {
-        console.error(
-          `error withdraw transaction approveWithdrawTransaction with transactionRequestId:${req.payload.id}: ${ERROR}`,
-        );
+        console.error(`error withdraw transaction approveWithdrawTransaction with transactionRequestId:${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -402,11 +328,16 @@ async function denyWithdrawTransaction(req) {
     try {
       let result = await WithdrawTransactionFunction.rejectWithdrawRequest(req.payload.id, req.payload.paymentNote);
       if (result) {
+        await CustomerMessageResourceAccess.insert({
+          customerMessageContent: `Yêu cầu rút tiền #${req.payload.id} của bạn đã bị từ chối vào lúc ${moment().format('YYYY-MM-DD HH:mm:ss')}`,
+          customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
+          customerMessageTopic: MESSAGE_TOPIC.USER,
+          customerMessageTitle: `Rút tiền thất bại`,
+          customerId: req.currentUser.appUserId,
+        });
         resolve(result);
       } else {
-        console.error(
-          `error withdraw transaction denyWithdrawTransaction with transactionRequestId:${req.payload.id}: ${ERROR}`,
-        );
+        console.error(`error withdraw transaction denyWithdrawTransaction with transactionRequestId:${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -424,14 +355,7 @@ async function summaryUser(req) {
       let filter = req.payload.filter;
       filter.userId = req.currentUser.userId;
 
-      let result = await WithdrawTransactionResourceAccess.customSum(
-        'paymentAmount',
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-      );
+      let result = await WithdrawTransactionResourceAccess.customSum('paymentAmount', filter, undefined, undefined, startDate, endDate);
       if (result) {
         resolve(result[0]);
       } else {
@@ -452,14 +376,7 @@ async function summaryAll(req) {
       let endDate = req.payload.endDate;
       let filter = req.payload.filter;
 
-      let result = await WithdrawTransactionResourceAccess.customSum(
-        'paymentAmount',
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-      );
+      let result = await WithdrawTransactionResourceAccess.customSum('paymentAmount', filter, undefined, undefined, startDate, endDate);
       if (result) {
         resolve(result[0]);
       } else {
@@ -481,10 +398,7 @@ async function requestWithdrawUSDT(req) {
 
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
@@ -526,10 +440,7 @@ async function requestWithdraw(req) {
       };
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);
@@ -548,6 +459,8 @@ async function requestWithdraw(req) {
         paymentFeeAmount,
       );
       if (createResult) {
+        let transaction = await WithdrawTransactionResourceAccess.findById(createResult[0]);
+        await publishJson('STAFF_GENERAL', transaction);
         resolve(createResult);
       } else {
         Logger.error(`can not WithdrawTransactionFunction.createWithdrawRequest`);
@@ -567,10 +480,7 @@ async function requestWithdrawBTC(req) {
 
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} requestWithdraw`);
           reject(USER_ERROR.NOT_AUTHORIZED);

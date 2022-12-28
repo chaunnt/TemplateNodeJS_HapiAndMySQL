@@ -1,20 +1,22 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const AppUserPermissionResourceAccess = require("../resourceAccess/AppUserPermissionResourceAccess");
+'use strict';
+const AppUserPermissionResourceAccess = require('../resourceAccess/AppUserPermissionResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -27,41 +29,41 @@ async function find(req) {
       let appUserPermissions = await AppUserPermissionResourceAccess.find(filter, skip, limit, order);
       let appUserPermissionsCount = await AppUserPermissionResourceAccess.count(filter, order);
       if (appUserPermissions && appUserPermissionsCount) {
-        resolve({data: appUserPermissions, total: appUserPermissionsCount});
-      }else{
-        resolve({data: [], total: 0 });
+        resolve({ data: appUserPermissions, total: appUserPermissionsCount });
+      } else {
+        resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,
   find,
   updateById,
-  findById
+  findById,
 };

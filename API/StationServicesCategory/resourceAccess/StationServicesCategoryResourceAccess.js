@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "StationServicesCategory";
-const primaryKeyField = "stationServicesCategoryId";
+const tableName = 'StationServicesCategory';
+const primaryKeyField = 'stationServicesCategoryId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -30,10 +32,10 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then((result) => {
+          seeding().then(result => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
-          })
+          });
         });
     });
   });
@@ -45,36 +47,39 @@ async function initDB() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    let initialStaff = [{
-      "stationServicesCategoryTitle": "Gym",
-      "stationServicesCategoryContent": "Gym",
-      "displayIndex": 0,
-    },
-    {
-      "stationServicesCategoryTitle": "Yoga",
-      "stationServicesCategoryContent": "Yoga",
-      "displayIndex": 1,
-    },
-    {
-      "stationServicesCategoryTitle": "Cardio",
-      "stationServicesCategoryContent": "Cardio",
-      "displayIndex": 2,
-    },
-    {
-      "stationServicesCategoryTitle": "Tập máy",
-      "stationServicesCategoryContent": "Tập máy",
-      "displayIndex": 3,
-    },
-    {
-      "stationServicesCategoryTitle": "Body combat",
-      "stationServicesCategoryContent": "Body combat",
-      "displayIndex": 3,
-    },
-    ]
-    DB(`${tableName}`).insert(initialStaff).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    let initialStaff = [
+      {
+        stationServicesCategoryTitle: 'Gym',
+        stationServicesCategoryContent: 'Gym',
+        displayIndex: 0,
+      },
+      {
+        stationServicesCategoryTitle: 'Yoga',
+        stationServicesCategoryContent: 'Yoga',
+        displayIndex: 1,
+      },
+      {
+        stationServicesCategoryTitle: 'Cardio',
+        stationServicesCategoryContent: 'Cardio',
+        displayIndex: 2,
+      },
+      {
+        stationServicesCategoryTitle: 'Tập máy',
+        stationServicesCategoryContent: 'Tập máy',
+        displayIndex: 3,
+      },
+      {
+        stationServicesCategoryTitle: 'Body combat',
+        stationServicesCategoryContent: 'Body combat',
+        displayIndex: 3,
+      },
+    ];
+    DB(`${tableName}`)
+      .insert(initialStaff)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -106,26 +111,24 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('stationServicesCategoryTitle', 'like', `%${searchText}%`)
-        .orWhere('stationServicesCategoryContent', 'like', `%${searchText}%`)
-    })
-  }
-  else {
+      this.orWhere('stationServicesCategoryTitle', 'like', `%${searchText}%`).orWhere('stationServicesCategoryContent', 'like', `%${searchText}%`);
+    });
+  } else {
     if (filterData.stationServicesCategoryTitle) {
-      queryBuilder.where('stationServicesCategoryTitle', 'like', `%${filterData.stationServicesCategoryTitle}%`)
+      queryBuilder.where('stationServicesCategoryTitle', 'like', `%${filterData.stationServicesCategoryTitle}%`);
       delete filterData.stationServicesCategoryTitle;
     }
     if (filterData.stationServicesCategoryContent) {
-      queryBuilder.where('stationServicesCategoryContent', 'like', `%${filterData.stationServicesCategoryContent}%`)
+      queryBuilder.where('stationServicesCategoryContent', 'like', `%${filterData.stationServicesCategoryContent}%`);
       delete filterData.stationServicesCategoryContent;
     }
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -143,7 +146,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -158,13 +161,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -186,9 +188,9 @@ async function addViewCount(stationServicesCategoryId) {
   let filter = {};
   filter[primaryKeyField] = stationServicesCategoryId;
 
-  await DB(tableName).where(filter).increment('stationServicesCategoryTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('stationServicesCategoryTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
@@ -209,7 +211,7 @@ async function resetWeekViewedCount() {
 async function deleteById(stationServicesCategoryId) {
   let dataId = {};
   dataId[primaryKeyField] = stationServicesCategoryId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function increaseDisplayIndex(stationServicesCategoryId) {
@@ -235,5 +237,5 @@ module.exports = {
   updateSearchCount,
   addViewCount,
   deleteById,
-  increaseDisplayIndex
+  increaseDisplayIndex,
 };

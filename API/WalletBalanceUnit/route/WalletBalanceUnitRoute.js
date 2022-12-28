@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -11,9 +11,9 @@ const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
-  walletBalanceUnitCode: Joi.string().max(255),
-  walletBalanceUnitDisplayName: Joi.string().max(255),
-  walletBalanceUnitAvatar: Joi.string().max(500),
+  walletBalanceUnitCode: Joi.string(),
+  walletBalanceUnitDisplayName: Joi.string(),
+  walletBalanceUnitAvatar: Joi.string(),
   originalPrice: Joi.number().min(0),
   userSellPrice: Joi.number().min(0),
   agencySellPrice: Joi.number().min(0),

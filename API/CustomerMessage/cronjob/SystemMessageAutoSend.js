@@ -10,6 +10,7 @@
 const GenerateMessageProcess = require('./GenerateCustomerMessage');
 
 async function systemAutoGenerateMessage() {
+  console.log(`systemAutoGenerateMessage`);
   let promiseList = [];
 
   //tao ra message cho tung customer tu group message
@@ -34,7 +35,7 @@ async function systemAutoGenerateMessage() {
   // promiseList.push(promiseSMS);
 
   Promise.all(promiseList).then(values => {
-    console.info(`systemAutoGenerateMessage response ${values}`);
+    console.log(`systemAutoGenerateMessage response ${values}`);
   });
 }
 

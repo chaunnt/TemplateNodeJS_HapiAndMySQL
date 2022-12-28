@@ -1,6 +1,8 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 
-const Joi = require("joi");
+const Joi = require('joi');
 
 const schema = Joi.object({
   stationsId: Joi.number(),
@@ -11,7 +13,7 @@ const schema = Joi.object({
   stationBookingConfig: Joi.array().items({
     index: Joi.number(),
     time: Joi.string(),
-    limit:Joi.number()
+    limit: Joi.number(),
   }),
   stationStatus: Joi.number(),
   isHidden: Joi.number(),
@@ -36,7 +38,7 @@ const schema = Joi.object({
   stationsEnableAd: Joi.number(),
   stationsCustomAdBannerLeft: Joi.string().allow(''),
   stationsCustomAdBannerRight: Joi.string().allow(''),
-})
+});
 
 function fromData(data) {
   let modelData = {
@@ -55,10 +57,10 @@ function fromData(data) {
     stationsCustomAdBannerRight: data.stationsCustomAdBannerRight === null ? '' : data.stationsCustomAdBannerRight,
     stationsLogoThumbnails: data.stationsLogoThumbnails === null ? '' : data.stationsLogoThumbnails,
     stationsDescription: data.stationsDescription === null ? '' : data.stationsDescription,
-  }
+  };
 
   let outputModel = schema.validate(modelData);
-  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === "") {
+  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === '') {
     return outputModel.value;
   } else {
     console.error(outputModel.error);
@@ -67,5 +69,5 @@ function fromData(data) {
 }
 
 module.exports = {
-  fromData
+  fromData,
 };

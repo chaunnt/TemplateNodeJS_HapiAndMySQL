@@ -3,10 +3,10 @@
 'use strict';
 const AppUser = require('../AppUsers/resourceAccess/AppUserView');
 
-async function getListMemberShip(filter, skip, limit, startDate, endDate, order) {
-  let result = await AppUser.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
+async function getListMemberShip(filter, skip, limit, startDay, endDay, order) {
+  let result = await AppUser.customSearch(filter, skip, limit, startDay, endDay, order);
   if (result) {
-    let resultCount = await AppUser.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
+    let resultCount = await AppUser.customCount(filter, order);
     if (resultCount) {
       return { data: result, total: resultCount[0].count };
     } else {

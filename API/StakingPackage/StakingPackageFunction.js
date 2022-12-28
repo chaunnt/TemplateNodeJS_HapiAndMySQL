@@ -69,7 +69,9 @@ async function requestStakingForUser(appUserId, stakingAmount, stakingPackage) {
 }
 
 async function completeStakingPackage(stakingId) {
-  let Result = await StackingResoureAccess.updateById(stakingId, { stakingStatus: STACKING_ACTIVITY_STATUS.COMPLETED });
+  let Result = await StackingResoureAccess.updateById(stakingId, {
+    stakingStatus: STACKING_ACTIVITY_STATUS.COMPLETED,
+  });
   if (Result) {
     return Result;
   } else {
@@ -79,7 +81,9 @@ async function completeStakingPackage(stakingId) {
 }
 
 async function cancelStakingPackage(stakingId) {
-  let Result = await StackingResoureAccess.updateById(stakingId, { stakingStatus: STACKING_ACTIVITY_STATUS.COMPLETED });
+  let Result = await StackingResoureAccess.updateById(stakingId, {
+    stakingStatus: STACKING_ACTIVITY_STATUS.COMPLETED,
+  });
   if (Result) {
     return Result;
   } else {

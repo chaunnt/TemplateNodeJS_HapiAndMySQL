@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -6,13 +6,7 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const {
-  MESSAGE_STATUS,
-  MESSAGE_CATEGORY,
-  MESSAGE_TOPIC,
-  MESSAGE_TYPE,
-  MESSAGE_RECEIVER,
-} = require('../CustomerMessageConstant');
+const { MESSAGE_STATUS, MESSAGE_CATEGORY, MESSAGE_TOPIC, MESSAGE_TYPE, MESSAGE_RECEIVER } = require('../CustomerMessageConstant');
 const tableName = 'CustomerMessage';
 const primaryKeyField = 'customerMessageId';
 
@@ -139,7 +133,7 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
@@ -147,10 +141,7 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }

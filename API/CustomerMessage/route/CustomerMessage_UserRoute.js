@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -25,7 +25,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          //isRead: Joi.number(),
+          isRead: Joi.number(),
         }),
         startDate: Joi.string(),
         endDate: Joi.string(),
@@ -99,7 +99,6 @@ module.exports = {
       Response(req, res, 'userReadAllNotificationMessage');
     },
   },
-
   userDeleteNotificationMessage: {
     tags: ['api', `${moduleName}`],
     description: `userDeleteNotificationMessage ${moduleName}`,

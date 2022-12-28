@@ -38,11 +38,7 @@ async function _createSMSMessage(req) {
           return;
         }
         // auto approve transaction
-        await PaymentDepositTransactionFunctions.approveDepositTransaction(
-          paymentDepositId,
-          null,
-          'SYSTEM_AUTO_APPROVE',
-        );
+        await PaymentDepositTransactionFunctions.approveDepositTransaction(paymentDepositId, null, 'SYSTEM_AUTO_APPROVE');
       } else {
         formattedData = {};
         data.smsMessageStatus = SMS_MESSAGE_STATUS.SKIP;
@@ -95,24 +91,9 @@ async function _find(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
 
-      let listSMSMessage = await SMSMessageResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let listSMSMessage = await SMSMessageResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
       if (listSMSMessage) {
-        let count = await SMSMessageResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-        );
+        let count = await SMSMessageResourceAccess.customCount(filter, undefined, undefined, startDate, endDate, searchText);
         resolve({ data: listSMSMessage, count: count[0].count });
       } else {
         resolve({ data: [], count: 0 });

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -26,7 +26,7 @@ async function createTable() {
           table.index(`appUserId`);
         })
         .then(() => {
-          console.info(`${tableName} table created done`);
+          console.log(`${tableName} table created done`);
           resolve();
         });
     });

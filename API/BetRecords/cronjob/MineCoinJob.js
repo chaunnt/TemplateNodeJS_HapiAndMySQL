@@ -116,9 +116,7 @@ async function mineCoin() {
             });
 
             if (!updateProfitResult) {
-              Logger.error(
-                `can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`,
-              );
+              Logger.error(`can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`);
             }
           }
         }

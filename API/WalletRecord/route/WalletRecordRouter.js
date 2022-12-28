@@ -16,13 +16,11 @@ const filterSchema = {
   WalletRecordType: Joi.string().max(255),
   walletType: Joi.string().max(255),
 };
-const filterUser = {
-  WalletRecordType: Joi.string().max(255),
-};
+
 module.exports = {
   find: {
     tags: ['api', `${moduleName}`],
-    description: `update ${moduleName}`,
+    description: `find ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',

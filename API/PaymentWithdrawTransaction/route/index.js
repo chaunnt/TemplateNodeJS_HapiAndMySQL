@@ -52,5 +52,5 @@ module.exports = [
     method: 'POST',
     path: '/PaymentWithdrawTransaction/user/withdrawHistoryPOINT',
     config: PaymentWithdrawTransaction.withdrawHistoryPOINT,
-  }
+  },
 ];

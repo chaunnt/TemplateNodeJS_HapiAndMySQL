@@ -2,12 +2,9 @@
 
 'use strict';
 require('dotenv').config();
-const { DB, timestamps } = require('../../../config/database');
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const primaryKeyField = 'productOrderId';
-const Logger = require('../../../utils/logging');
-
-const { PRODUCT_ORDER_STATUS } = require('../ProductOrderConstant');
 
 const tableName = 'ProductOrderUserViews';
 const rootTableName = 'ProductOrder';
@@ -26,6 +23,7 @@ async function createUserTotalBetView() {
     `${rootTableName}.fee`,
     `${rootTableName}.staffId`,
     `${rootTableName}.orderStatus`,
+    `${rootTableName}.orderType`,
     `${rootTableName}.customerName`,
     `${rootTableName}.customerPhone`,
     `${rootTableName}.customerIdentity`,
@@ -35,6 +33,8 @@ async function createUserTotalBetView() {
     `${rootTableName}.createdAt`,
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
+    `${rootTableName}.minOrderItemQuantity`,
+    `${rootTableName}.maxOrderItemQuantity`,
 
     `${UserTableName}.appUserId`,
     `${UserTableName}.referUserId`,

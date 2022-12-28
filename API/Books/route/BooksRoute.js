@@ -1,11 +1,13 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'Books';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const { BOOK_UPDATE_STATUS } = require('../BookConstants');
 const insertSchema = {
@@ -20,15 +22,15 @@ const insertSchema = {
 const updateSchema = {
   ...insertSchema,
   isDeleted: Joi.number(),
-}
+};
 
 const filterSchema = {
-  ...insertSchema
+  ...insertSchema,
 };
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -38,14 +40,14 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(insertSchema)
+      payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -58,14 +60,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -80,21 +82,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -105,15 +103,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
   bookList: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     validate: {
       payload: Joi.object({
@@ -124,17 +122,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string().default("updatedAt"),
-          value: Joi.string().default("desc")
-        })
-      })
+          key: Joi.string().default('updatedAt'),
+          value: Joi.string().default('desc'),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "bookList");
-    }
+      Response(req, res, 'bookList');
+    },
   },
   searchBooks: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     validate: {
       payload: Joi.object({
@@ -146,38 +144,38 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string().default("updatedAt"),
-          value: Joi.string().default("desc")
-        })
-      })
+          key: Joi.string().default('updatedAt'),
+          value: Joi.string().default('desc'),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "searchBooks");
-    }
+      Response(req, res, 'searchBooks');
+    },
   },
   bookDetail: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `get details ${moduleName}`,
     validate: {
       payload: Joi.object({
-        booksUrl: Joi.string()
-      })
+        booksUrl: Joi.string(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "bookDetail");
-    }
+      Response(req, res, 'bookDetail');
+    },
   },
   summaryView: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     validate: {
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "summaryView");
-    }
+      Response(req, res, 'summaryView');
+    },
   },
 };

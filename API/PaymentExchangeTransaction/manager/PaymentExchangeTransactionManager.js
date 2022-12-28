@@ -10,6 +10,12 @@ const ExchangeTransactionFunction = require('../PaymentExchangeTransactionFuncti
 const { EXCHANGE_TRX_STATUS } = require('../PaymentExchangeTransactionConstant');
 const { ERROR } = require('../../Common/CommonConstant');
 const Logger = require('../../../utils/logging');
+const ExchangePaymentMappingOrderView = require('../resourceAccess/ExchangePaymentMappingOrderView');
+const ProductOrderItemResourceAccess = require('../../ProductOrderItem/resourceAccess/ProductOrderItemResourceAccess');
+const { PRODUCT_ORDER_STATUS } = require('../../ProductOrder/ProductOrderConstant');
+const ProductOrderResourceAccess = require('../../ProductOrder/resourceAccess/ProductOrderResourceAccess');
+const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
+const { receiveExchangeFromOther } = require('../../WalletRecord/WalletRecordFunction');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -33,24 +39,8 @@ async function find(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
-      let transactionCount = await ExchangeTransactionUserView.customCount(
-        filter,
-        undefined,
-        undefined,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, searchText, order);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         resolve({
@@ -123,25 +113,9 @@ async function exchangeHistory(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -173,26 +147,10 @@ async function receiveHistory(req) {
       filter.receiveWalletId = null;
       filter.paymentStatus = EXCHANGE_TRX_STATUS.COMPLETED;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -221,26 +179,10 @@ async function viewExchangeRequests(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -265,6 +207,27 @@ async function approveExchangeTransaction(req) {
       let currentStaff = req.currentUser;
       let result = await ExchangeTransactionFunction.staffAcceptExchangeRequest(req.payload.id, currentStaff);
       if (result) {
+        let transaction = await ExchangePaymentMappingOrderView.find({
+          paymentExchangeTransactionId: req.payload.id,
+        });
+        transaction = transaction[0];
+        // update số lượng đã được chuyển
+        let payloadUpdateProductOrderItem = {
+          orderItemDeliveredQuantity: transaction.paymentAmount + transaction.orderItemDeliveredQuantity,
+        };
+        let updateExchangeResult = await ProductOrderItemResourceAccess.updateById(transaction.productOrderItemId, payloadUpdateProductOrderItem);
+        if (!updateExchangeResult) {
+          console.error(`UPDATE_EXCHANGE_FAILED transaction.productOrderItemId ${transaction.productOrderItemId}`);
+          return reject('UPDATE_EXCHANGE_FAILED');
+        }
+
+        // nếu đã mua đủ => close
+        // if (payloadUpdateProductOrderItem.orderItemDeliveredQuantity === transaction.orderItemQuantity) {
+        //   await ProductOrderResourceAccess.updateById(transaction.productOrderId, {
+        //     orderStatus: PRODUCT_ORDER_STATUS.COMPLETED,
+        //   });
+        // }
+
         resolve(result);
       } else {
         console.error(`exchange transaction: approveExchangeTransaction failed ${ERROR}`);
@@ -295,6 +258,40 @@ async function denyExchangeTransaction(req) {
   });
 }
 
+async function getList(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      let startDate = req.payload.startDate;
+      let endDate = req.payload.endDate;
+      let searchText = req.payload.searchText;
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      filter.appUserId = req.currentUser.appUserId;
+      let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, searchText, order);
+
+      if (transactionList && transactionCount && transactionList.length > 0) {
+        resolve({
+          data: transactionList,
+          total: transactionCount[0].count,
+        });
+      } else {
+        resolve({
+          data: [],
+          total: 0,
+        });
+      }
+      console.error(`error exchange transaction find: ${ERROR}`);
+      reject('failed');
+    } catch (e) {
+      Logger.error(e);
+      reject('failed');
+    }
+  });
+}
+
 module.exports = {
   insert,
   find,
@@ -305,4 +302,5 @@ module.exports = {
   denyExchangeTransaction,
   approveExchangeTransaction,
   viewExchangeRequests,
+  getList,
 };

@@ -1,24 +1,27 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const cron = require('node-cron');
 const { spawn } = require('child_process');
+const Logger = require('../../utils/logging');
 
-function executeJob(jobLocation) {
-  console.log('execute job : ' + jobLocation);
-  const ls = spawn('node', [jobLocation]);
+function executeJob(jobLocation, args) {
+  Logger.info('Cron Instance', 'execute job : ' + jobLocation);
+  const ls = spawn('node', [jobLocation, args]);
 
   ls.stdout.on('data', data => {
-    console.log(`stdout: ${data}`);
+    Logger.info('Cron Instance', `stdout: ${data}`);
   });
 
   ls.stderr.on('data', data => {
-    console.error(`stderr: ${data}`);
+    Logger.info('Cron Instance', `stderr: ${data}`);
   });
 
   ls.on('close', code => {
-    console.log(`child process exited with code ${code}`);
+    Logger.info('Cron Instance', `child process exited with code ${code}`);
   });
 }
 
 module.exports = {
   CronInstance: cron,
-  executeJob
+  executeJob,
 };

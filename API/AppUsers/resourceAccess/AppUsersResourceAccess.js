@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -78,6 +78,13 @@ async function createTable() {
           table.string('activeOTPCode');
           table.string('activeOTPAt');
           optionalFields(table);
+          table.string('province', 500).nullable(); //<<ID hoac ten cua province
+          table.string('district', 500).nullable(); //<<ID hoac ten cua district
+          table.string('ward', 500).nullable(); //<<ID hoac ten cua ward
+          table.string('address', 500).nullable(); //<<dia chi
+          table.string('sotaikhoan', 500).nullable();
+          table.string('tentaikhoan', 500).nullable();
+          table.string('tennganhang', 500).nullable();
           timestamps(table);
           table.index(`${primaryKeyField}`);
           table.unique('username');
@@ -135,13 +142,26 @@ async function insert(data) {
 }
 
 async function updateById(id, data) {
+  if (!data || Object.keys(data).length === 0) {
+    return 1;
+  }
   let filter = {};
   filter[`${primaryKeyField}`] = id;
   return await Common.updateById(tableName, filter, data);
 }
 
+async function deleteById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.deleteById(tableName, dataId);
+}
+
 async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
+}
+
+async function findById(id) {
+  return await Common.findById(tableName, primaryKeyField, id);
 }
 
 async function count(filter, order) {
@@ -170,6 +190,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`);
     });
@@ -214,10 +235,7 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -232,10 +250,7 @@ async function customCountMemberShip(filter, searchText, startDate, endDate, ord
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -286,14 +301,7 @@ function _makeQueryBuilderForReferedUser(
 }
 
 async function findReferedUserByUserId(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3) {
-  let queryBuilder = _makeQueryBuilderForReferedUser(
-    appUserId,
-    skip,
-    limit,
-    memberReferIdF1,
-    memberReferIdF2,
-    memberReferIdF3,
-  );
+  let queryBuilder = _makeQueryBuilderForReferedUser(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3);
   return await queryBuilder.select();
 }
 
@@ -326,6 +334,7 @@ module.exports = {
   insert,
   find,
   count,
+  deleteById,
   updateById,
   initDB,
   updateAll,

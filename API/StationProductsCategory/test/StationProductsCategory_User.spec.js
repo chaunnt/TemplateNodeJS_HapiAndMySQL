@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,9 +17,9 @@ chai.use(chaiHttp);
 
 describe(`Tests ${modelName}`, function () {
   let stationProductsCategoryId;
-  let userToken = "";
+  let userToken = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
-  fakeUserName = fakeUserName.replace("'", "");
+  fakeUserName = fakeUserName.replace("'", '');
   before(done => {
     new Promise(async function (resolve, reject) {
       let userData = await TestFunctions.loginUser();
@@ -28,13 +30,13 @@ describe(`Tests ${modelName}`, function () {
 
   it(`user getList ${modelName}`, done => {
     const body = {
-      "skip": 0,
-      "limit": 20,
+      skip: 0,
+      limit: 20,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationProductsCategory/user/getList`)
-      .set("Authorization", `Bearer ${userToken}`)
+      .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -47,8 +49,8 @@ describe(`Tests ${modelName}`, function () {
 
   it(`user getList ${modelName} (no token)`, done => {
     const body = {
-      "skip": 0,
-      "limit": 20,
+      skip: 0,
+      limit: 20,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)

@@ -1,11 +1,13 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'RealEstate';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 const insertSchema = {
   realEstateTitle: Joi.string().required(),
@@ -61,7 +63,7 @@ const insertSchema = {
   realEstatedeposits: Joi.number(),
   realEstateLocationHomeNumberStatus: Joi.number(),
   agencyPercent: Joi.number(),
-  realEstateLandUseSquare:Joi.number()
+  realEstateLandUseSquare: Joi.number(),
 };
 
 const updateSchema = {
@@ -119,9 +121,9 @@ const updateSchema = {
   realEstatedeposits: Joi.number(),
   realEstateLocationHomeNumberStatus: Joi.number(),
   agencyPercent: Joi.number(),
-  realEstateLandUseSquare:Joi.number(),
-  isHidden: Joi.number()
-}
+  realEstateLandUseSquare: Joi.number(),
+  isHidden: Joi.number(),
+};
 
 const filterSchema = {
   realEstateTitle: Joi.string(),
@@ -157,8 +159,8 @@ const filterSchema = {
   approveStatus: Joi.number(),
   agencyPercent: Joi.number(),
   agency: Joi.number(),
-  realEstateLandUseSquare:Joi.number(),
-  isHidden: Joi.number()
+  realEstateLandUseSquare: Joi.number(),
+  isHidden: Joi.number(),
 };
 const filterSchemaView = {
   realEstateTitle: Joi.string(),
@@ -214,12 +216,12 @@ const filterSchemaView = {
   appUserId: Joi.number(),
   agencyPercent: Joi.number(),
   agency: Joi.number(),
-  realEstateLandUseSquare:Joi.number(),
-  isHidden: Joi.number()
-}
+  realEstateLandUseSquare: Joi.number(),
+  isHidden: Joi.number(),
+};
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -229,20 +231,17 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(
-        {
-          data: Joi.object(insertSchema),
-          imagesLink: Joi.array().required(),
-        }
-
-      )
+      payload: Joi.object({
+        data: Joi.object(insertSchema),
+        imagesLink: Joi.array().required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -256,14 +255,14 @@ module.exports = {
         id: Joi.number().min(0).required(),
         data: Joi.object(updateSchema),
         imagesLink: Joi.array(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -275,35 +274,29 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(filterSchema),
-        filterClause: Joi.object(
-          {
-            startLandRealitySquare: Joi.number(),
-            endLandRealitySquare: Joi.number(),
-            startValueSalePrice: Joi.number(),
-            endValueSalePrice: Joi.number(),
-          }
-        ),
+        filterClause: Joi.object({
+          startLandRealitySquare: Joi.number(),
+          endLandRealitySquare: Joi.number(),
+          startValueSalePrice: Joi.number(),
+          endValueSalePrice: Joi.number(),
+        }),
         startDate: Joi.string(),
         endDate: Joi.string(),
         searchText: Joi.string(),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -314,16 +307,16 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0).required()
-      })
+        id: Joi.number().min(0).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
 
   getDetail: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
@@ -331,15 +324,15 @@ module.exports = {
         authorization: Joi.string().allow(''),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0).required()
-      })
+        id: Joi.number().min(0).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getDetail");
-    }
+      Response(req, res, 'getDetail');
+    },
   },
   deleteById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `delete by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -350,66 +343,60 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0).required()
-      })
+        id: Joi.number().min(0).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "deleteById");
-    }
+      Response(req, res, 'deleteById');
+    },
   },
   summaryView: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     validate: {
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "summaryView");
-    }
+      Response(req, res, 'summaryView');
+    },
   },
   getList: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `getList ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
       headers: Joi.object({
-        authorization: Joi.string().allow(""),
+        authorization: Joi.string().allow(''),
       }).unknown(),
 
       payload: Joi.object({
         filter: Joi.object(filterSchemaView),
-        filterClause: Joi.object(
-          {
-            startLandRealitySquare: Joi.number(),
-            endLandRealitySquare: Joi.number(),
-            startValueSalePrice: Joi.number(),
-            endValueSalePrice: Joi.number(),
-          }
-        ),
+        filterClause: Joi.object({
+          startLandRealitySquare: Joi.number(),
+          endLandRealitySquare: Joi.number(),
+          startValueSalePrice: Joi.number(),
+          endValueSalePrice: Joi.number(),
+        }),
         startDate: Joi.string(),
         endDate: Joi.string(),
         searchText: Joi.string(),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getList");
-    }
+      Response(req, res, 'getList');
+    },
   },
   hiddenById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `hidden by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -421,15 +408,15 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-        isHidden: Joi.number().valid([0, 1]).required()
-      })
+        isHidden: Joi.number().valid([0, 1]).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "hiddenById");
-    }
+      Response(req, res, 'hiddenById');
+    },
   },
   filterCategory: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -441,26 +428,22 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          realEstateCategoryId: Joi.number()
+          realEstateCategoryId: Joi.number(),
         }),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getList");
-    }
+      Response(req, res, 'getList');
+    },
   },
   filterProject: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -472,26 +455,22 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          realEstateProjectId: Joi.number()
+          realEstateProjectId: Joi.number(),
         }),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getList");
-    }
+      Response(req, res, 'getList');
+    },
   },
   filterUser: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -503,26 +482,22 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          appUserId: Joi.number()
+          appUserId: Joi.number(),
         }),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getList");
-    }
+      Response(req, res, 'getList');
+    },
   },
   getListByLocation: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -536,56 +511,52 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getListByLocation");
-    }
+      Response(req, res, 'getListByLocation');
+    },
   },
   getListByPrice: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
       headers: Joi.object({
-        authorization: Joi.string().allow(""),
+        authorization: Joi.string().allow(''),
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getListByPrice");
-    }
+      Response(req, res, 'getListByPrice');
+    },
   },
   getListByRating: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
     validate: {
       headers: Joi.object({
-        authorization: Joi.string().allow(""),
+        authorization: Joi.string().allow(''),
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getListByRating");
-    }
+      Response(req, res, 'getListByRating');
+    },
   },
 
   getListByUser: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `danh sách bài viết user đã đăng`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -597,34 +568,27 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(filterSchemaView),
-        filterClause: Joi.object(
-          {
-            startLandRealitySquare: Joi.number(),
-            endLandRealitySquare: Joi.number(),
-            startValueSalePrice: Joi.number(),
-            endValueSalePrice: Joi.number(),
-          }
-        ),
+        filterClause: Joi.object({
+          startLandRealitySquare: Joi.number(),
+          endLandRealitySquare: Joi.number(),
+          startValueSalePrice: Joi.number(),
+          endValueSalePrice: Joi.number(),
+        }),
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("activedDate")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-
-      })
+          key: Joi.string().default('activedDate').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getListByUser");
-    }
+      Response(req, res, 'getListByUser');
+    },
   },
   reviewRealEstate: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Staff duyệt bài đăng`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -636,15 +600,15 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number(),
-        status: Joi.number().valid([0, 1, -1])
-      })
+        status: Joi.number().valid([0, 1, -1]),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "reviewRealEstate");
-    }
+      Response(req, res, 'reviewRealEstate');
+    },
   },
   uploadImageRealEstate: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Upload image realEstate`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -656,20 +620,19 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         imageData: Joi.string().required(),
-        imageFormat: Joi.string().required()
-
-      })
+        imageFormat: Joi.string().required(),
+      }),
     },
     payload: {
-      maxBytes: 10*1024*1024, //10 mb
+      maxBytes: 10 * 1024 * 1024, //10 mb
       parse: true,
     },
     handler: function (req, res) {
-      Response(req, res, "uploadImage");
-    }
+      Response(req, res, 'uploadImage');
+    },
   },
   uploadVideoRealEstate: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Upload video realEstate`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -681,21 +644,20 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         videoData: Joi.string().required(),
-        videoFormat: Joi.string().required()
-
-      })
+        videoFormat: Joi.string().required(),
+      }),
     },
     payload: {
-      maxBytes: 30*1024*1024, //30 mb
+      maxBytes: 30 * 1024 * 1024, //30 mb
       parse: true,
     },
     handler: function (req, res) {
-      Response(req, res, "uploadVideo");
-    }
+      Response(req, res, 'uploadVideo');
+    },
   },
 
   pushNewRealEstate: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `API đẩy tin`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -706,15 +668,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number()
-      })
+        id: Joi.number(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "pushNewRealEstate");
-    }
+      Response(req, res, 'pushNewRealEstate');
+    },
   },
   statisticalRealEstateByMonth: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `report ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
@@ -722,20 +684,20 @@ module.exports = {
     },
     validate: {
       headers: Joi.object({
-        authorization: Joi.string().allow(""),
+        authorization: Joi.string().allow(''),
       }).unknown(),
 
       payload: Joi.object({
         startDate: Joi.string(),
         endDate: Joi.string(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "statisticalRealEstateByMonth");
-    }
+      Response(req, res, 'statisticalRealEstateByMonth');
+    },
   },
   callToRealEstateContact: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `handle processing when user click call to Contact of realestate`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -747,14 +709,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "callToRealEstateContact");
-    }
+      Response(req, res, 'callToRealEstateContact');
+    },
   },
   requestViewDetailProject: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `handle processing when user request to view detail project`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -766,14 +728,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "requestViewDetailProject");
-    }
+      Response(req, res, 'requestViewDetailProject');
+    },
   },
   exportExcel: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `exportExcel realEstate`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
@@ -791,21 +753,17 @@ module.exports = {
         skip: Joi.number().default(0).min(0),
         limit: Joi.number().default(20).max(100),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "exportExcel");
-    }
+      Response(req, res, 'exportExcel');
+    },
   },
   userHiddenById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `hidden by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -817,17 +775,17 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0).required(),
-        isHidden: Joi.number().valid([0, 1]).required()
-      })
+        isHidden: Joi.number().valid([0, 1]).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "userHiddenById");
-    }
+      Response(req, res, 'userHiddenById');
+    },
   },
   importRealEstateData: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `${moduleName} import realestate data`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken },],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -837,12 +795,11 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         file: Joi.binary().encoding('base64'),
-        fileFormat: Joi.string().valid(['xlsx', 'xls', 'csv']).required()
-      })
+        fileFormat: Joi.string().valid(['xlsx', 'xls', 'csv']).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "importRealEstateData");
+      Response(req, res, 'importRealEstateData');
     },
   },
-}
-
+};

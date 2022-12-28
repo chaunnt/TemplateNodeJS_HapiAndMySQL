@@ -26,10 +26,24 @@ async function createTable() {
           table.float('WalletRecordRefAmount', 48, 10).defaultTo(0); //Số tiền gì đó, dùng để tham khảo
           table.string('WalletRecordType');
           table.integer('staffId');
+          table.integer('betRecordId');
+          table.integer('gameRecordId');
+          table.integer('paymentDepositTransactionId');
+          table.integer('paymentWithdrawTransactionId');
+          table.integer('paymentExchangeTransactionId');
+          table.integer('paymentExternalTransactionId');
+          table.integer('paymentBonusTransactionId');
           timestamps(table);
           table.index('appUserId');
           table.index('walletId');
           table.index('staffId');
+          table.index('betRecordId');
+          table.index('gameRecordId');
+          table.index('paymentDepositTransactionId');
+          table.index('paymentWithdrawTransactionId');
+          table.index('paymentExchangeTransactionId');
+          table.index('paymentExternalTransactionId');
+          table.index('paymentBonusTransactionId');
         })
         .then(() => {
           console.info(`${tableName} table created done`);
@@ -61,35 +75,54 @@ async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
 
-async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order) {
   let queryBuilder = DB(tableName);
-  let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
+  let filterData = JSON.parse(JSON.stringify(filter));
+
+  if (searchText) {
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
+        .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+        .orWhere('companyName', 'like', `%${searchText}%`);
+    });
+  }
 
   queryBuilder.where(filterData);
 
   if (startDate) {
     queryBuilder.where('createdAt', '>=', startDate);
   }
-
   if (endDate) {
     queryBuilder.where('createdAt', '<=', endDate);
   }
 
-  return new Promise((resolve, reject) => {
-    try {
-      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
-        if (records && records[0].sumResult === null) {
-          resolve(undefined);
-        } else {
-          resolve(records);
-        }
-      });
-    } catch (e) {
-      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
-      Logger.error('ResourceAccess', e);
-      reject(undefined);
-    }
-  });
+  queryBuilder.where({ isDeleted: 0 });
+
+  queryBuilder.where(filterData);
+
+  if (limit) {
+    queryBuilder.limit(limit);
+  }
+
+  if (skip) {
+    queryBuilder.offset(skip);
+  }
+
+  if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
+    queryBuilder.orderBy(order.key, order.value);
+  } else {
+    queryBuilder.orderBy('createdAt', 'desc');
+  }
+
+  return queryBuilder;
+}
+
+async function customSum(sumField, filter, searchText, startDate, endDate, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, order);
+  return queryBuilder.sum(`${sumField} as sumResult`);
 }
 module.exports = {
   insert,

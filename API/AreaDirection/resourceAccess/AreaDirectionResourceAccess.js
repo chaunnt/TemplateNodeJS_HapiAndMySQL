@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AreaDirection";
-const primaryKeyField = "areaDirectionId";
+const tableName = 'AreaDirection';
+const primaryKeyField = 'areaDirectionId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -19,28 +21,21 @@ async function createTable() {
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          const data = [
-            "Đông",
-            "Tây",
-            "Nam",
-            "Bắc",
-            "Đông Nam",
-            "Đông Bắc",
-            "Tây Nam",
-            "Tây Bắc"
-          ]
+          const data = ['Đông', 'Tây', 'Nam', 'Bắc', 'Đông Nam', 'Đông Bắc', 'Tây Nam', 'Tây Bắc'];
           const formattedDAta = [];
-          for(let i = 0; i < data.length; i++) {
+          for (let i = 0; i < data.length; i++) {
             let obj = {
-              "areaDirectionName": data[i]
-            }
+              areaDirectionName: data[i],
+            };
             formattedDAta.push(obj);
           }
 
-          DB(`${tableName}`).insert(formattedDAta).then((result) => {
-            Logger.info(`${tableName}`, `init ${tableName}` + result);
-            resolve();
-          });
+          DB(`${tableName}`)
+            .insert(formattedDAta)
+            .then(result => {
+              Logger.info(`${tableName}`, `init ${tableName}` + result);
+              resolve();
+            });
           resolve();
         });
     });
@@ -74,5 +69,5 @@ module.exports = {
   find,
   count,
   updateById,
-  initDB
+  initDB,
 };

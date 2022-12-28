@@ -1,10 +1,12 @@
-"use strict";
-require("dotenv").config();
-const { DB, timestamps } = require("../../../config/database");
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { PAYMENT_TYPE } = require('../PaymentMethodConstant');
-const tableName = "PaymentMethod";
-const primaryKeyField = "paymentMethodId";
+const tableName = 'PaymentMethod';
+const primaryKeyField = 'paymentMethodId';
 
 async function createTable() {
   console.log(`createTable ${tableName}`);
@@ -14,10 +16,11 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments('paymentMethodId').primary();
           table.string('paymentMethodName');
-          table.integer('paymentMethodType').defaultTo(PAYMENT_TYPE.ATM_BANK);
+          table.integer('paymentMethodType').defaultTo(PAYMENT_TYPE.USDT);
           table.string('paymentMethodIdentityNumber');
           table.string('paymentMethodReferName');
           table.string('paymentMethodReceiverName');
+          table.string('paymentMethodImageUrl');
           timestamps(table);
           table.index('paymentMethodId');
           table.index('paymentMethodName');
@@ -26,18 +29,20 @@ async function createTable() {
           console.log(`${tableName} table created done`);
           let paymentMethods = [
             {
-              paymentMethodName: "USDT",
-              paymentMethodIdentityNumber: "",
-              paymentMethodReferName: "",
-              paymentMethodReceiverName: "TA6xG4AYZ9r6Lu98CH9ucy7y9Tu8Gj9m44",
-              paymentMethodType: PAYMENT_TYPE.CRYPTO
+              paymentMethodName: 'USDT',
+              paymentMethodIdentityNumber: '',
+              paymentMethodReferName: '',
+              paymentMethodReceiverName: 'TA6xG4AYZ9r6Lu98CH9ucy7y9Tu8Gj9m44',
+              paymentMethodType: PAYMENT_TYPE.TRC20,
             },
           ];
 
-          DB(`${tableName}`).insert(paymentMethods).then((result) => {
-            console.log(`init ${tableName}` + result);
-            resolve();
-          });
+          DB(`${tableName}`)
+            .insert(paymentMethods)
+            .then(result => {
+              console.log(`init ${tableName}` + result);
+              resolve();
+            });
         });
     });
   });
@@ -69,7 +74,7 @@ async function count(filter, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 module.exports = {
@@ -78,5 +83,5 @@ module.exports = {
   count,
   updateById,
   initDB,
-  deleteById
+  deleteById,
 };

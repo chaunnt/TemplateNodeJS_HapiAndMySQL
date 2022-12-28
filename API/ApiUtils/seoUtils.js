@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -168,7 +168,10 @@ function _getFacebookMetadata(title, description, url, imageUrl, keywords, creat
     content: description.substring(0, SEO_SHORT_DESC_LENGTH),
   });
 
-  metatags.push({ property: 'article:tag', content: 'Website đọc truyện tranh' });
+  metatags.push({
+    property: 'article:tag',
+    content: 'Website đọc truyện tranh',
+  });
   metatags.push({ property: 'article:tag', content: SITE_NAME });
 
   for (let i = 0; i < keywords.length; i++) {
@@ -226,12 +229,7 @@ function getMetatagsForBooks(booksData) {
   metatags = metatags.concat(facebookMetadata);
 
   /* Optimize for Google Search */
-  let googleMetadata = _getGoogleSEOMetadata(
-    booksData.booksName,
-    booksData.booksName,
-    keywords,
-    SITE_NAME + booksData.booksUrl,
-  );
+  let googleMetadata = _getGoogleSEOMetadata(booksData.booksName, booksData.booksName, keywords, SITE_NAME + booksData.booksUrl);
   metatags = metatags.concat(googleMetadata);
 
   let staticMetadata = _getStaticMetatags();

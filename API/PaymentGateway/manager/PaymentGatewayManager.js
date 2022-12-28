@@ -1,6 +1,8 @@
-"use strict";
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
 const Logger = require('../../../utils/logging');
-const PaymentGatewayFunctions = require("../PaymentGatewayFunctions");
+const PaymentGatewayFunctions = require('../PaymentGatewayFunctions');
 const PaymentDepositResource = require('../../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionResourceAccess');
 const PaymentServicePackage = require('../../PaymentServicePackage/resourceAccess/PaymentServicePackageResourceAccess');
 const WalletResource = require('../../Wallet/resourceAccess/WalletResourceAccess');
@@ -10,17 +12,21 @@ const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 async function _createNewDepositRecord(user, servicePackage, paymentMethodId = PAYMENT_METHOD.CASH) {
   let _paymentAmount = servicePackage.rechargePackage;
   if (servicePackage.promotion && servicePackage.promotion !== null && servicePackage.promotion !== '') {
-    _paymentAmount = _paymentAmount - servicePackage.rechargePackage * servicePackage.promotion / 100;
+    _paymentAmount = _paymentAmount - (servicePackage.rechargePackage * servicePackage.promotion) / 100;
   }
 
-  let userWallet = await WalletResource.find({
-    appUserId: user.appUserId,
-    walletType: WALLET_TYPE.POINT,
-  },0 ,1);
+  let userWallet = await WalletResource.find(
+    {
+      appUserId: user.appUserId,
+      walletType: WALLET_TYPE.POINT,
+    },
+    0,
+    1,
+  );
 
   if (!userWallet || userWallet.length <= 0) {
     Logger.error(`can not find wallet for user ${user.appUserId} to _createNewDepositRecord`);
-    return undefined
+    return undefined;
   }
 
   let depositData = {
@@ -43,10 +49,10 @@ async function receivePaymentVNPAY(req) {
   let params = req.query;
   let transactionResult = await PaymentGatewayFunctions.receiveVNPAYPaymentRequest(params);
   if (transactionResult) {
-    return transactionResult.result
+    return transactionResult.result;
   } else {
     //default response for VNPAY
-    return {"RspCode":"00","Message":"Confirm Success"}
+    return { RspCode: '00', Message: 'Confirm Success' };
   }
 }
 
@@ -57,28 +63,25 @@ function makePaymentRequestVNPAY(req) {
     let _servicePackage = await PaymentServicePackage.findById(servicePackageId);
     if (!_servicePackage) {
       Logger.error(`can not PaymentServicePackage.findById ${servicePackageId}`);
-      reject('failed')
+      reject('failed');
     }
 
     let _paymentAmount = _servicePackage.rechargePackage;
     if (_servicePackage.promotion && _servicePackage.promotion !== null && _servicePackage.promotion !== '') {
-      _paymentAmount = _paymentAmount - _servicePackage.rechargePackage * _servicePackage.promotion / 100;
+      _paymentAmount = _paymentAmount - (_servicePackage.rechargePackage * _servicePackage.promotion) / 100;
     }
 
     let newTransactionId = await _createNewDepositRecord(req.currentUser, _servicePackage, PAYMENT_METHOD.VNPAY);
     if (!newTransactionId) {
-      Logger.error(`can not create new transaction record`)
+      Logger.error(`can not create new transaction record`);
       reject('failed');
     }
 
-    let transactionResult = await PaymentGatewayFunctions.createVNPAYPaymentRequest(
-      newTransactionId,
-      _paymentAmount
-    );
+    let transactionResult = await PaymentGatewayFunctions.createVNPAYPaymentRequest(newTransactionId, _paymentAmount);
 
     resolve({
       ...transactionResult,
-      transactionId: newTransactionId
+      transactionId: newTransactionId,
     });
   });
 }
@@ -107,7 +110,7 @@ async function receivePaymentMOMO(req) {
       if (transactionResult) {
         resolve(transactionResult);
       } else {
-        reject('transaction failed');  
+        reject('transaction failed');
       }
     } catch (error) {
       console.error(error);
@@ -124,23 +127,21 @@ function makePaymentRequestMOMO(req) {
     let _servicePackage = await PaymentServicePackage.findById(servicePackageId);
     if (!_servicePackage) {
       Logger.error(`can not PaymentServicePackage.findById ${servicePackageId}`);
-      reject('failed')
+      reject('failed');
     }
 
     let _paymentAmount = _servicePackage.rechargePackage;
     if (_servicePackage.promotion && _servicePackage.promotion !== null && _servicePackage.promotion !== '') {
-      _paymentAmount = _paymentAmount - _servicePackage.rechargePackage * _servicePackage.promotion / 100;
+      _paymentAmount = _paymentAmount - (_servicePackage.rechargePackage * _servicePackage.promotion) / 100;
     }
 
     let newTransactionId = await _createNewDepositRecord(req.currentUser, _servicePackage, PAYMENT_METHOD.MOMO);
     if (!newTransactionId) {
-      Logger.error(`can not create new transaction record`)
+      Logger.error(`can not create new transaction record`);
       reject('failed');
     }
 
-    let transactionResult = PaymentMOMOGatewayFunctions.makePaymentRequestMOMO(
-      data,
-    );
+    let transactionResult = PaymentMOMOGatewayFunctions.makePaymentRequestMOMO(data);
     resolve(transactionResult);
   });
 }
@@ -151,5 +152,5 @@ module.exports = {
   verifyVNPAYPayment,
   finishVNPAYPayment,
   makePaymentRequestMOMO,
-  receivePaymentMOMO
-}
+  receivePaymentMOMO,
+};

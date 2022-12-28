@@ -1,6 +1,8 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 
-const Joi = require("joi");
+const Joi = require('joi');
 
 const schema = Joi.object({
   customerScheduleId: Joi.number(),
@@ -10,8 +12,8 @@ const schema = Joi.object({
   email: Joi.string(),
   dateSchedule: Joi.string(),
   time: Joi.string(),
-  stationsId: Joi.number()
-})
+  stationsId: Joi.number(),
+});
 
 function fromData(data) {
   let modelData = {
@@ -24,10 +26,10 @@ function fromData(data) {
     time: data.time,
     stationsId: data.stationsId,
     notificationMethod: data.notificationMethod,
-  }
+  };
   return schema.validate(modelData);
 }
 
 module.exports = {
-  fromData
+  fromData,
 };

@@ -112,7 +112,7 @@ async function deleteById(id) {
   return await Common.deleteById(tableName, dataId);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -142,33 +142,35 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customSearch(filter, skip, limit, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, order);
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, order);
   return await query.count(`${primaryKeyField} as count`);
 }
 
-async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
+async function customSum(filter, startDate, endDate) {
+  const _field = 'paymentAmount';
+
   let queryBuilder = DB(tableName);
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    DB.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    DB.where('createdAt', '<=', endDate);
   }
 
   if (filter.referAgentId) {
-    queryBuilder.where('referId', referAgentId);
+    DB.where('referId', referAgentId);
   }
 
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
+      queryBuilder.sum(`${_field} as sumResult`).then(records => {
         if (records && records[0].sumResult === null) {
           resolve(undefined);
         } else {
@@ -176,7 +178,7 @@ async function customSum(sumField, filter, skip, limit, startDate, endDate, sear
         }
       });
     } catch (e) {
-      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${sumField}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -7,9 +7,21 @@
 
 const Logger = require('../../../utils/logging');
 const errorCodes = {
-  405: { statusCode: 405, error: 'Method Not Allowed', message: 'An invalid operation occurred' },
-  500: { statusCode: 500, error: 'Internal Server Error', message: 'An internal server error occurred' },
-  505: { statusCode: 505, error: 'Unauthorized', message: 'An internal server unauthorized' },
+  405: {
+    statusCode: 405,
+    error: 'Method Not Allowed',
+    message: 'An invalid operation occurred',
+  },
+  500: {
+    statusCode: 500,
+    error: 'Internal Server Error',
+    message: 'An internal server error occurred',
+  },
+  505: {
+    statusCode: 505,
+    error: 'Unauthorized',
+    message: 'An internal server unauthorized',
+  },
   200: { statusCode: 200, error: null, message: 'Success', data: {} },
 };
 

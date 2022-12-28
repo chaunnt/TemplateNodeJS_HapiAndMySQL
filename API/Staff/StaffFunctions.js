@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -42,7 +42,9 @@ async function verifyCredentials(username, password) {
 async function changeStaffPassword(staffData, newPassword) {
   let newHashPassword = hashPassword(newPassword);
 
-  let result = await StaffResourceAccess.updateById(staffData.staffId, { password: newHashPassword });
+  let result = await StaffResourceAccess.updateById(staffData.staffId, {
+    password: newHashPassword,
+  });
 
   if (result) {
     return result;
@@ -53,7 +55,9 @@ async function changeStaffPassword(staffData, newPassword) {
 
 async function createNewStaff(staffData, newPassword) {
   //check existed username
-  let _existedUsers = await StaffResourceAccess.find({ username: staffData.username });
+  let _existedUsers = await StaffResourceAccess.find({
+    username: staffData.username,
+  });
   if (_existedUsers && _existedUsers.length > 0) {
     throw STAFF_ERROR.DUPLICATED_USER;
   }
@@ -68,7 +72,9 @@ async function createNewStaff(staffData, newPassword) {
 
   //check existed phoneNumber
   if (staffData.phoneNumber) {
-    _existedUsers = await StaffResourceAccess.find({ phoneNumber: staffData.phoneNumber });
+    _existedUsers = await StaffResourceAccess.find({
+      phoneNumber: staffData.phoneNumber,
+    });
     if (_existedUsers && _existedUsers.length > 0) {
       throw STAFF_ERROR.DUPLICATED_USER_PHONE;
     }

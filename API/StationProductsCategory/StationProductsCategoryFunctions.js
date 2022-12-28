@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -6,13 +8,7 @@
 const ProductCategoryResource = require('./resourceAccess/StationProductsCategoryResourceAccess');
 
 async function initNewCategoriesForStation(station) {
-  let categories = [
-    "Tin nổi bật",
-    "Tin tức trong ngành",
-    "Tin tức xã hội",
-    "Khoa học và kỹ thuật",
-    "Chuyên mục tư vấn",
-  ];
+  let categories = ['Tin nổi bật', 'Tin tức trong ngành', 'Tin tức xã hội', 'Khoa học và kỹ thuật', 'Chuyên mục tư vấn'];
 
   let _arrayData = [];
   const _MAX_VIEW = 1000;
@@ -42,7 +38,7 @@ async function updateCategoriesIndex(categoryId, categoryIndex, station) {
     filter.stationsId = station.stationsId;
   }
 
-  let categoryList = await ProductCategoryResource.customSearch(filter, 0, 100); 
+  let categoryList = await ProductCategoryResource.customSearch(filter, 0, 100);
 
   if (categoryList && categoryList.length > 0) {
     //update displayIndex for all other categories
@@ -55,7 +51,7 @@ async function updateCategoriesIndex(categoryId, categoryIndex, station) {
 
     //move selecting category into desired displayIndex
     let updatedResult = await ProductCategoryResource.updateById(categoryId, {
-      displayIndex: categoryIndex
+      displayIndex: categoryIndex,
     });
 
     return updatedResult;
@@ -66,5 +62,5 @@ async function updateCategoriesIndex(categoryId, categoryIndex, station) {
 
 module.exports = {
   initNewCategoriesForStation,
-  updateCategoriesIndex
-}
+  updateCategoriesIndex,
+};

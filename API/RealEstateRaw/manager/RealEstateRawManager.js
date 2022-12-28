@@ -1,7 +1,9 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const Logger = require('../../../utils/logging');
 const RealEstateCrawlerModel = require('../model/RealEstateCrawlerModel');
 const RealEstateRawModel = require('../model/RealEstateRawModel');
@@ -10,7 +12,7 @@ const RealEstateCategoryFunction = require('../../RealEstateCategory/RealEstateC
 const RealEstateSubCategoryFunction = require('../../RealEstateSubCategory/RealEstateSubCategoryFunctions');
 const PostTypeFunction = require('../../RealEstatePostType/RealEstatePostTypeFunctions');
 const RawRealEstateResource = require('../resourceAccess/RealEstateRawResourceAccess');
-const RealEstateResourceAccess = require('../../RealEstate/resourceAccess/RealEstateResourceAccess')
+const RealEstateResourceAccess = require('../../RealEstate/resourceAccess/RealEstateResourceAccess');
 
 async function _syncCrawlDataToModel(crawlerRealEstate) {
   let moreInfoData = {};
@@ -33,7 +35,7 @@ async function _syncCrawlDataToModel(crawlerRealEstate) {
   let realEstateCategory = await RealEstateCategoryFunction.findCategoryByName(crawlerRealEstate.AreaTypeName);
   if (realEstateCategory) {
     //if found any category, then update
-    moreInfoData.realEstateCategoryId = realEstateCategory.realEstateCategoryId
+    moreInfoData.realEstateCategoryId = realEstateCategory.realEstateCategoryId;
   } else {
     //if did not found any category, then check categoryId from subcategory if subcategory available
     if (realEstateSubCategory) {
@@ -46,7 +48,7 @@ async function _syncCrawlDataToModel(crawlerRealEstate) {
   moreInfoData.areaWardId = await AreaFunctions.findAreaIdByName(crawlerRealEstate.AreaProvinceName, moreInfoData.areaDistrictId);
   //TODO LATER
   // moreInfoData.areaStreetId = AreaFunctions.findProvinceIdByName(crawlerRealEstate.AreaProvinceName);
-  return moreInfoData
+  return moreInfoData;
 }
 
 async function insert(req) {
@@ -54,7 +56,7 @@ async function insert(req) {
     try {
       let realEstateRawDataList = req.payload;
       if (realEstateRawDataList && realEstateRawDataList.length <= 0) {
-        reject("failed");
+        reject('failed');
       }
 
       let rawDataList = [];
@@ -69,8 +71,8 @@ async function insert(req) {
         //add more info into object
         rawRealEstate = {
           ...rawRealEstate,
-          ...moreInfo
-        }
+          ...moreInfo,
+        };
 
         rawDataList.push(rawRealEstate);
       }
@@ -80,13 +82,13 @@ async function insert(req) {
           resolve(result);
         }
       }
-      resolve("Done");
+      resolve('Done');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -114,10 +116,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -130,10 +132,10 @@ async function updateById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -142,14 +144,14 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -162,30 +164,29 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function staffApproveRealEstateRaw(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let realEstateRawId = req.payload.id;
       let result = await RawRealEstateResource.findById(realEstateRawId);
-      if(result){
+      if (result) {
         delete result.realEstateRawId;
         let resultInsert = await RealEstateResourceAccess.insert(result);
-        if(resultInsert){
-          resolve("DONE");
+        if (resultInsert) {
+          resolve('DONE');
         }
       }
-      resolve("failed");
+      resolve('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 module.exports = {
   insert,
@@ -193,5 +194,5 @@ module.exports = {
   updateById,
   findById,
   deleteById,
-  staffApproveRealEstateRaw
+  staffApproveRealEstateRaw,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -6,7 +6,6 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-
 const tableName = 'Staff';
 const primaryKeyField = 'staffId';
 async function createTable() {
@@ -32,6 +31,7 @@ async function createTable() {
           table.string('appleId');
           table.string('staffAvatar', 2000); //Image from social login may be so long (include token)
           table.string('stationsId');
+          table.string('staffToken', 1000);
           timestamps(table);
           table.index('staffId');
           table.unique('username');
@@ -68,7 +68,7 @@ async function seeding() {
       {
         lastName: 'string',
         firstName: 'string',
-        username: 'string',
+        username: 'superadmin',
         email: 'string@string.com',
         password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
         phoneNumber: 'string',

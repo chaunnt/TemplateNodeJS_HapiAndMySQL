@@ -9,14 +9,14 @@ const primaryKeyField = 'productOrderItemId';
 const Logger = require('../../../utils/logging');
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
-  console.info(`create tavle ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(primaryKeyField).primary();
-          table.float('orderItemPrice', 20).defaultTo(0); //hình vé
-          table.integer('orderItemQuantity'); //bộ số của vé
+          table.float('orderItemPrice', 20).defaultTo(0); // giá / 1 đơn vị
+          table.integer('orderItemQuantity'); // số lượng
+          table.float('orderItemDeliveredQuantity', 48).defaultTo(0); // Số lượng đã khớp
           table.integer('productId');
           table.integer('productOrderId');
           timestamps(table);
@@ -60,6 +60,12 @@ async function deleteById(id) {
   return await Common.deleteById(tableName, dataId);
 }
 
+async function findById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.findById(tableName, dataId, id);
+}
+
 module.exports = {
   insert,
   find,
@@ -67,4 +73,5 @@ module.exports = {
   updateById,
   initDB,
   deleteById,
+  findById,
 };

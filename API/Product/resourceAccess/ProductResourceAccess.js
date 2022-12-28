@@ -7,7 +7,7 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'Product';
 const primaryKeyField = 'productId';
 const Logger = require('../../../utils/logging');
-const { PRODUCT_STATUS } = require('../ProductConstant');
+const { PRODUCT_STATUS, PRODUCT_TOKEN_TYPE } = require('../ProductConstant');
 
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -17,31 +17,40 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(primaryKeyField).primary();
-          table.string('producName'); // Bộ số (string)
-          table.string('productTitle');
-          table.text('productDescription');
+          table.string('productName'); // tên
+          table.string('productCode');
+          // table.string('productTxHash').notNullable(); // txHash mà đã tạo ra NFT
+          // table.integer('productBlockchainId').notNullable(); // Id trong blockchain
+          table.string('productTitle').defaultTo('');
+          table.string('productCategory').defaultTo(''); // phân loại
+          table.string('productChannel').defaultTo(''); //  bộ sưu tập
+          table.float('productPrice', 20, 5).defaultTo(0); //Giá BNB (Giá hiện tại của NFT này trên sàn)
+          table.text('productDescription'); // Mô tả
+          table.string('productCreator'); // Tác giả
           table.text('productShortDescription');
-          table.integer('quantity'); // số lượng nhập
-          table.string('productChannel').defaultTo(''); //Đài (kênh)
-          table.string('productCategory').defaultTo(''); //Nội dung giao dịch
-          table.string('productType').defaultTo(''); //đơn, cặp
-          table.integer('stockQuantity').defaultTo(0); //Số lượng tồn kho
+          table.string('productTokenType').defaultTo(PRODUCT_TOKEN_TYPE.ERC721); // Loại token (ERC721 / ERC1155)
+          table.string('productOwner'); // Địa chỉ ví sở hữu hiện tại
           table.string('productStatus').defaultTo(PRODUCT_STATUS.NEW); //Trạng thái
-          table.float('price', 20, 5).defaultTo(0); //Giá bán
-          table.string('expireDate'); //Ngày xổ
-          table.integer('staffId');
+          table.string('productThumbnail', 500); // Hình ảnh thumbnail của sản phẩm
+          table.string('productUrl').nullable(); // Link sản phẩm
+          table.integer('staffId'); // Nhân viên nhập
+          table.integer('quantity').defaultTo(1); //Số lượng nhập
+          table.integer('stockQuantity').defaultTo(1); //Số lượng tồn kho
           timestamps(table);
-          table.index('staffId'); // Nhân viên nhập
+          table.index('staffId');
           table.index('productChannel');
-          table.index('producName');
+          table.index('productName');
           table.index('productTitle');
           table.index('productStatus');
+          table.unique('productCode');
+          // table.unique('productTxHash');
+          // table.unique('productBlockchainId');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then(() => {
-            resolve();
-          });
+          // seeding().then(() => {
+          resolve();
+          // });
         });
     });
   });
@@ -50,22 +59,18 @@ async function createTable() {
 async function seeding() {
   let seedingData = [
     {
-      producName: '336713',
-      quantity: 11,
-      productChannel: 'TPHCM',
-      productType: 'SINGLE',
-      stockQuantity: 11,
-      expireDate: '2022/01/20',
-      price: 10500,
+      productName: 'XPAY #99999',
+      productChannel: 'XPAY',
+      productPrice: 134.79,
+      productCreator: 'johnIsland',
+      productDescription: 'By decentraweb DecentraWeb is a decentralized implementation of the DNS base layer protocol on the Ethereum Blockchain.',
     },
     {
-      producName: '36713',
-      quantity: 110,
-      productChannel: 'TPHCM',
-      productType: 'BATCH',
-      stockQuantity: 1,
-      expireDate: '2022/01/20',
-      price: 10500 * 110,
+      productName: 'Maxon #3713',
+      productChannel: 'Maxon',
+      productPrice: 3.089,
+      productCreator: 'ixaM_HTE',
+      productDescription: 'A handcrafted collection of 10,000 characters developed by artist DirtyRobot.',
     },
   ];
   return new Promise(async (resolve, reject) => {
@@ -102,7 +107,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('producName', 'like', `%${searchText}%`)
+      this.orWhere('productName', 'like', `%${searchText}%`)
         .orWhere('productTitle', 'like', `%${searchText}%`)
         .orWhere('productChannel', 'like', `%${searchText}%`)
         .orWhere('productType', 'like', `%${searchText}%`)
@@ -151,10 +156,7 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }

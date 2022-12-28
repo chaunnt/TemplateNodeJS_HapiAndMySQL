@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,11 +17,11 @@ const modelName = 'CustomerMeasureRecord';
 const app = require('../../../server');
 
 describe(`Tests ${modelName}`, function () {
-  let token = "";
+  let token = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
   let testId = 0;
   let testData = {};
-  fakeUserName = fakeUserName.replace("'", "");
+  fakeUserName = fakeUserName.replace("'", '');
   before(done => {
     new Promise(async function (resolve, reject) {
       let userData = await TestFunctions.loginUser();
@@ -30,15 +32,14 @@ describe(`Tests ${modelName}`, function () {
 
   it('find CustomerMeasureRecord', done => {
     const body = {
-      "filter": {
-      },
-      "skip": 0,
-      "limit": 20
+      filter: {},
+      skip: 0,
+      limit: 20,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/${modelName}/user/getList`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {

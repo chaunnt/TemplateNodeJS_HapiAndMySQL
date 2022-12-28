@@ -50,26 +50,10 @@ async function find(req) {
         filter.packageCategory = PACKAGE_CATEGORY.NORMAL;
       }
 
-      let paymentServices = await PackageUnitView.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await PackageUnitView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-          order,
-        );
+        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, undefined, undefined, searchText, order);
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -228,17 +212,11 @@ async function rewardProfitBonusForUser(req) {
     try {
       let servicePackageUserId = req.payload.paymentServicePackageUserId;
       let amount = req.payload.profitBonus;
-      let rewardResult = await ServicePackageUserResourceAccess.incrementBalance(
-        servicePackageUserId,
-        `profitBonus`,
-        amount,
-      );
+      let rewardResult = await ServicePackageUserResourceAccess.incrementBalance(servicePackageUserId, `profitBonus`, amount);
       if (rewardResult) {
         resolve('success');
       } else {
-        console.error(
-          `error service package rewardProfitBonusForUser with servicePackageUserId: ${servicePackageUserId}: ${ERROR}`,
-        );
+        console.error(`error service package rewardProfitBonusForUser with servicePackageUserId: ${servicePackageUserId}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {

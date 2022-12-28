@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -13,10 +13,11 @@ const { MESSAGE_CATEGORY, MESSAGE_TYPE, MESSAGE_STATUS, MESSAGE_TOPIC } = requir
 
 const insertSchema = {
   groupCustomerMessageCategories: Joi.string().default(MESSAGE_CATEGORY.FIREBASE_PUSH),
-  groupCustomerMessageContent: Joi.string().required().max(2000),
-  groupCustomerMessageTitle: Joi.string().required().max(255),
-  groupCustomerMessageImage: Joi.string().max(255),
+  groupCustomerMessageContent: Joi.string().required(),
+  groupCustomerMessageTitle: Joi.string().required(),
+  groupCustomerMessageImage: Joi.string(),
   groupCustomerMessageType: Joi.string().allow([MESSAGE_TYPE.GENERAL]),
+  // groupCustomerMessageTemplateId: Joi.string(),
 };
 
 const updateSchema = {

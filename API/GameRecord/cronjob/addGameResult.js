@@ -147,13 +147,7 @@ async function makeAutoWinPrice(gameRecordPrice, gameRecordSection, gameRecordUn
     evenTotal = makeRandomPrice(autoWinPrice);
   }
 
-  autoWinPrice = autoBalancePrice(
-    autoWinPrice,
-    upTotal < downTotal,
-    downTotal < upTotal,
-    oddTotal < evenTotal,
-    evenTotal < oddTotal,
-  );
+  autoWinPrice = autoBalancePrice(autoWinPrice, upTotal < downTotal, downTotal < upTotal, oddTotal < evenTotal, evenTotal < oddTotal);
 
   return (autoWinPrice * 1).toFixed(4);
 }

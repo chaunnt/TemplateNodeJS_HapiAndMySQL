@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 //This model is use to display info of Stations in public.
-//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL 
-const Joi = require("joi");
+//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL
+const Joi = require('joi');
 
 const schema = Joi.object({
   stationsName: Joi.string().required(),
@@ -15,9 +17,9 @@ const schema = Joi.object({
   stationBookingConfig: Joi.array().items({
     index: Joi.number(),
     time: Joi.string(),
-    limit:Joi.number()
+    limit: Joi.number(),
   }),
-})
+});
 
 function fromData(data) {
   let modelData = {
@@ -31,10 +33,10 @@ function fromData(data) {
     stationsEmail: data.stationsEmail === null ? '' : data.stationsEmail,
     stationBookingConfig: data.stationBookingConfig === '' ? {} : JSON.parse(data.stationBookingConfig),
     stationsEnableAd: data.stationsEnableAd,
-  }
+  };
 
   let outputModel = schema.validate(modelData);
-  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === "") {
+  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === '') {
     return outputModel.value;
   } else {
     console.error(outputModel.error);
@@ -43,5 +45,5 @@ function fromData(data) {
 }
 
 module.exports = {
-  fromData
+  fromData,
 };

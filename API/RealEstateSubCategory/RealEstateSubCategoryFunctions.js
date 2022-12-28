@@ -1,8 +1,10 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const SubCategoryResource = require("./resourceAccess/RealEstateSubCategoryResourceAccess");
+'use strict';
+const SubCategoryResource = require('./resourceAccess/RealEstateSubCategoryResourceAccess');
 const Logger = require('../../utils/logging');
 
 async function findSubCategoryByName(name, categoryId) {
@@ -10,7 +12,7 @@ async function findSubCategoryByName(name, categoryId) {
     try {
       let filter = {
         realEstateSubCategoryName: name,
-      }
+      };
 
       if (categoryId) {
         filter.realEstateCategoryId = categoryId;
@@ -28,7 +30,7 @@ async function findSubCategoryByName(name, categoryId) {
       resolve(undefined);
     }
   });
-};
+}
 
 module.exports = {
   findSubCategoryByName,

@@ -10,13 +10,7 @@ const ServicePackageResource = require('./resourceAccess/PaymentServicePackageRe
 const UserBonusPackageResource = require('./resourceAccess/UserBonusPackageResourceAccess');
 const ServicePackageWalletViews = require('./resourceAccess/ServicePackageWalletViews');
 const ServicePackageUserViews = require('./resourceAccess/ServicePackageUserViews');
-const {
-  ACTIVITY_STATUS,
-  PACKAGE_CATEGORY,
-  CLAIMABLE_STATUS,
-  PACKAGE_TYPE,
-  PACKAGE_STATUS,
-} = require('./PaymentServicePackageConstant');
+const { ACTIVITY_STATUS, PACKAGE_CATEGORY, CLAIMABLE_STATUS, PACKAGE_TYPE, PACKAGE_STATUS } = require('./PaymentServicePackageConstant');
 const PaymentRecordResource = require('./../PaymentRecord/resourceAccess/PaymentRecordResourceAccess');
 const Logger = require('../../utils/logging');
 const WalletRecordResoureAccess = require('../WalletRecord/resourceAccess/WalletRecordResoureAccess');
@@ -202,9 +196,7 @@ async function userBuyServicePackage(user, packageId) {
     };
     let newPaymentRecord = await PaymentRecordResource.insert(paymentRecordData);
     if (newPaymentRecord === undefined) {
-      Logger.error(
-        `userBuyServicePackage can not store payment record user ${user.appUserId} - packageId ${packageId} `,
-      );
+      Logger.error(`userBuyServicePackage can not store payment record user ${user.appUserId} - packageId ${packageId} `);
     }
 
     //create new wallet follow balance unit if wallet is not existed
@@ -220,9 +212,7 @@ async function userBuyServicePackage(user, packageId) {
         walletType: WALLET_TYPE.FAC,
       });
       if (createNewUnitWallet === undefined) {
-        Logger.error(
-          `userBuyServicePackage can not create new wallet FAC user ${user.appUserId} - unitId ${package.packageUnitId}`,
-        );
+        Logger.error(`userBuyServicePackage can not create new wallet FAC user ${user.appUserId} - unitId ${package.packageUnitId}`);
       }
     }
 
@@ -323,8 +313,7 @@ async function userCollectServicePackage(user, packageId) {
   }
   userPackage = userPackage[0];
 
-  let bonusPerformanceProfit =
-    userPackage.packageCurrentPerformance * getPerformanceBonusRateByMembership(userPackage.appUsermembershipId);
+  let bonusPerformanceProfit = userPackage.packageCurrentPerformance * getPerformanceBonusRateByMembership(userPackage.appUsermembershipId);
   let collectAmount = userPackage.profitActual * 1 + bonusPerformanceProfit;
   let claimedAmount = userPackage.profitClaimed * 1 + collectAmount * 1;
   let bonusAmount = userPackage.profitBonus * 1;

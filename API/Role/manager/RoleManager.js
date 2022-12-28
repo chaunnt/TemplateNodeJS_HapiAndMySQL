@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -6,7 +6,7 @@
 'use strict';
 const RoleResourceAccess = require('../resourceAccess/RoleResourceAccess');
 const Logger = require('../../../utils/logging');
-const { ERROR } = require('../../Common/CommonConstant');
+
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -15,7 +15,6 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error Role can not insert: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -32,16 +31,8 @@ async function find(req) {
       let limit = req.payload.limit;
       let order = req.payload.order;
 
-      let roles = await RoleResourceAccess.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
-      let rolesCount = await RoleResourceAccess.customCount(
-        filter,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        order,
-      );
+      let roles = await RoleResourceAccess.customSearch(filter, skip, limit, order);
+      let rolesCount = await RoleResourceAccess.customCount(filter, order);
       if (roles && rolesCount) {
         resolve({ data: roles, total: rolesCount[0].count });
       } else {
@@ -63,7 +54,6 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error Role updateById with roleId ${roleId}: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);

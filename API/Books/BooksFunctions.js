@@ -1,9 +1,11 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 
-const BooksResourceAccess = require("./resourceAccess/BooksResourceAccess");
+const BooksResourceAccess = require('./resourceAccess/BooksResourceAccess');
 const BooksOverviewModel = require('./model/BooksOverviewModel');
 const UtilFunctions = require('../ApiUtils/utilFunctions');
 const Logger = require('../../utils/logging');
@@ -16,10 +18,10 @@ async function mappingToBookOverviewModel(books) {
 
     let bookModel = BooksOverviewModel.fromData(bookData);
 
-    if (bookModel.error === undefined || bookModel.error === null || bookModel.error === "") {
+    if (bookModel.error === undefined || bookModel.error === null || bookModel.error === '') {
       bookList.push(bookModel.value);
     } else {
-      Logger.error("mappingToBookOverviewModel", bookModel.error);
+      Logger.error('mappingToBookOverviewModel', bookModel.error);
     }
   }
   return bookList;
@@ -27,7 +29,7 @@ async function mappingToBookOverviewModel(books) {
 
 async function getBookList(filter, skip, limit, order) {
   let books = await BooksResourceAccess.find(filter, skip, limit, order);
-  
+
   //Update search count
   for (let i = 0; i < books.length; i++) {
     const book = books[i];
@@ -37,16 +39,16 @@ async function getBookList(filter, skip, limit, order) {
   let bookList = await mappingToBookOverviewModel(books);
   let metadata = [];
   if (bookList && booksCount) {
-    return ({ data: bookList, total: booksCount[0].count , metadata: metadata});
+    return { data: bookList, total: booksCount[0].count, metadata: metadata };
   } else {
-    return ({ data: [], total: 0 });
+    return { data: [], total: 0 };
   }
 }
 
 async function getLatestUpdate(filter, skip, limit) {
   let order = {
-    key: "booksUpdatedAt",
-    value: "desc"
+    key: 'booksUpdatedAt',
+    value: 'desc',
   };
 
   return getBookList(filter, skip, limit, order);
@@ -54,44 +56,43 @@ async function getLatestUpdate(filter, skip, limit) {
 
 async function getMostSearch(filter, skip, limit) {
   let order = {
-    key: "searchCount",
-    value: "desc"
+    key: 'searchCount',
+    value: 'desc',
   };
   return getBookList(filter, skip, limit, order);
 }
 
 async function getTopWeek(filter, skip, limit) {
   let order = {
-    key: "weekViewed",
-    value: "desc"
+    key: 'weekViewed',
+    value: 'desc',
   };
   return getBookList(filter, skip, limit, order);
 }
 
 async function getTopMonth(filter, skip, limit) {
   let order = {
-    key: "monthViewed",
-    value: "desc"
+    key: 'monthViewed',
+    value: 'desc',
   };
   return getBookList(filter, skip, limit, order);
 }
 
 async function getTopDay(filter, skip, limit) {
   let order = {
-    key: "dayViewed",
-    value: "desc"
+    key: 'dayViewed',
+    value: 'desc',
   };
   return getBookList(filter, skip, limit, order);
 }
 
 async function getMostViewed(filter, skip, limit) {
   let order = {
-    key: "booksTotalViewed",
-    value: "desc"
+    key: 'booksTotalViewed',
+    value: 'desc',
   };
   return getBookList(filter, skip, limit, order);
 }
-
 
 async function getSummaryBooks(skip, limit) {
   let filter = {};
@@ -119,12 +120,12 @@ async function getBookDetailsByUrl(booksUrl) {
     await BooksResourceAccess.addViewCount(bookInfo.booksId);
     await BooksResourceAccess.updateSearchCount(bookInfo.booksId);
   }
-  
+
   return bookInfo;
 }
 
 async function registerNewBook(bookData) {
-  Logger.info("registerNewBook", JSON.stringify(bookData));
+  Logger.info('registerNewBook', JSON.stringify(bookData));
   try {
     //check existing booksUrl
 
@@ -132,14 +133,14 @@ async function registerNewBook(bookData) {
 
     if (booksUrl === undefined) {
       //generate booksUrl from booksName and check existing again
-      booksUrl = UtilFunctions.nonAccentVietnamese(bookData.booksName)
+      booksUrl = UtilFunctions.nonAccentVietnamese(bookData.booksName);
       booksUrl = UtilFunctions.convertToURLFormat(booksUrl);
       bookData.booksUrl = booksUrl;
     }
 
     let existedBook = await BooksResourceAccess.find({ booksUrl: bookData.booksUrl }, 0, 1);
     if (existedBook && existedBook.length > 0) {
-      Logger.info("registerNewBook existing", JSON.stringify(bookData));
+      Logger.info('registerNewBook existing', JSON.stringify(bookData));
       return;
     }
 
@@ -149,7 +150,7 @@ async function registerNewBook(bookData) {
     let insertResult = await BooksResourceAccess.insert(bookData);
     return insertResult;
   } catch (error) {
-    Logger.error("registerNewBook", error);
+    Logger.error('registerNewBook', error);
     return undefined;
   }
 }
@@ -157,7 +158,7 @@ async function registerNewBook(bookData) {
 async function createBooksTagCloud(bookData) {
   let booksCategoryList = bookData.booksCategories.split(';');
   let projectName = process.env.PROJECT_NAME || 'makefamousapp.com';
-  let booksName = bookData.booksName || "";
+  let booksName = bookData.booksName || '';
   let tagCloud = [];
   for (let i = 0; i < booksCategoryList.length; i++) {
     tagCloud.push(booksCategoryList[i]);
@@ -168,7 +169,7 @@ async function createBooksTagCloud(bookData) {
     tagCloud.push(`${projectName} ${booksName} ${booksCategoryList[i]}`);
     tagCloud.push(`${booksName} ${projectName} ${booksCategoryList[i]}`);
   }
-  return tagCloud.join(";");
+  return tagCloud.join(';');
 }
 module.exports = {
   getLatestUpdate,
@@ -182,5 +183,5 @@ module.exports = {
   getBookList,
   mappingToBookOverviewModel,
   registerNewBook,
-  createBooksTagCloud
-}
+  createBooksTagCloud,
+};

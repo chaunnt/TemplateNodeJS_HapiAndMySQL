@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -32,6 +32,7 @@ async function createRoleStaffView() {
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.staffAvatar`,
+    `${rootTableName}.staffToken`,
 
     `${RoleTableName}.permissions`,
     `${RoleTableName}.roleName`,
@@ -104,8 +105,8 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   queryBuilder.where(filterData);
 
-  queryBuilder.whereNotIn('roleId', [1]);
-  queryBuilder.whereNotIn('staffId', [1]);
+  queryBuilder.where('roleId', '<>', 1);
+  queryBuilder.where('staffId', '<>', 1);
 
   if (limit) {
     queryBuilder.limit(limit);

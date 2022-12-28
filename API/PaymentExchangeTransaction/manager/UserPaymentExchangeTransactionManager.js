@@ -5,7 +5,9 @@
  */
 'use strict';
 
-const ExchangeTransactionResourceAccess = require('../resourceAccess/PaymentExchangeTransactionResourceAccess');
+const ProductOrderItemResourceAccess = require('../../ProductOrderItem/resourceAccess/ProductOrderItemResourceAccess');
+const ProductOrderResourceAccess = require('../../ProductOrder/resourceAccess/ProductOrderResourceAccess');
+const ExchangePaymentMappingOrderView = require('../resourceAccess/ExchangePaymentMappingOrderView');
 const ExchangeTransactionUserView = require('../resourceAccess/ExchangeTransactionUserView');
 const ExchangeTransactionFunction = require('../PaymentExchangeTransactionFunctions');
 const AppUserFunctions = require('../../AppUsers/AppUsersFunctions');
@@ -16,6 +18,7 @@ const { EXCHANGE_TRX_STATUS, EXCHANGE_ERROR } = require('../PaymentExchangeTrans
 const Logger = require('../../../utils/logging');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const { ERROR } = require('../../Common/CommonConstant');
+const { PRODUCT_ORDER_STATUS } = require('../../ProductOrder/ProductOrderConstant');
 
 async function userExchangeFACHistory(req) {
   return new Promise(async (resolve, reject) => {
@@ -36,26 +39,10 @@ async function userExchangeFACHistory(req) {
         return;
       }
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -87,33 +74,15 @@ async function userExchangePOINTHistory(req) {
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
       } else {
-        console.error(
-          `error User exchange transaction userExchangePOINTHistory AppUserId:${req.currentUser.appUserId}`,
-        );
+        console.error(`error User exchange transaction userExchangePOINTHistory AppUserId:${req.currentUser.appUserId}`);
         reject('failed');
         return;
       }
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -145,26 +114,10 @@ async function userReceiveHistory(req) {
       filter.receiveWalletId = req.currentUser.appUserId;
       filter.paymentStatus = EXCHANGE_TRX_STATUS.COMPLETED;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -195,35 +148,17 @@ async function userViewExchangeRequests(req) {
       if (req.currentUser.appUserId) {
         filter.referId = req.currentUser.appUserId;
       } else {
-        console.error(
-          `error User exchange transaction userViewExchangeRequests AppUserId:${req.currentUser.appUserId}`,
-        );
+        console.error(`error User exchange transaction userViewExchangeRequests AppUserId:${req.currentUser.appUserId}`);
         reject('failed');
         return;
       }
 
       filter.paymentStatus = EXCHANGE_TRX_STATUS.NEW;
 
-      let transactionList = await ExchangeTransactionUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        undefined,
-        order,
-      );
+      let transactionList = await ExchangeTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
 
       if (transactionList && transactionList.length > 0) {
-        let transactionCount = await ExchangeTransactionUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          undefined,
-          order,
-        );
+        let transactionCount = await ExchangeTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -250,10 +185,7 @@ async function userRequestExchange(req) {
 
       //if system support for secondary password
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} ExchangeTransactionFunction.createExchangeRequest`);
           reject(USER_ERROR.NOT_AUTHORIZED);
@@ -261,11 +193,7 @@ async function userRequestExchange(req) {
         }
       }
 
-      let createResult = await ExchangeTransactionFunction.createExchangeRequest(
-        req.currentUser,
-        paymentAmount,
-        walletBalanceUnitId,
-      );
+      let createResult = await ExchangeTransactionFunction.createExchangeRequest(req.currentUser, paymentAmount, walletBalanceUnitId);
       if (createResult) {
         resolve(createResult);
       } else {
@@ -289,11 +217,24 @@ async function userAcceptExchangeRequest(req) {
     try {
       let result = await ExchangeTransactionFunction.userAcceptExchangeRequest(req.payload.id, req.currentUser);
       if (result) {
+        let transaction = await ExchangePaymentMappingOrderView.find({
+          paymentExchangeTransactionId: req.payload.id,
+        });
+        transaction = transaction[0];
+        // update số lượng đã được chuyển
+        let payloadUpdateProductOrderItem = {
+          orderItemDeliveredQuantity: transaction.paymentAmount + transaction.orderItemDeliveredQuantity,
+        };
+        await ProductOrderItemResourceAccess.updateById(transaction.productOrderItemId, payloadUpdateProductOrderItem);
+        // nếu đã mua đủ => close
+        if (payloadUpdateProductOrderItem.orderItemDeliveredQuantity === transaction.orderItemQuantity) {
+          await ProductOrderResourceAccess.updateById(transaction.productOrderId, {
+            orderStatus: PRODUCT_ORDER_STATUS.COMPLETED,
+          });
+        }
         resolve(result);
       } else {
-        console.error(
-          `error User exchange transaction userAcceptExchangeRequest  with transactionRequestId ${req.payload.id}: ${ERROR}`,
-        );
+        console.error(`error User exchange transaction userAcceptExchangeRequest  with transactionRequestId ${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -310,9 +251,7 @@ async function userDenyExchangeRequest(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(
-          `error User exchange transaction userDenyExchangeRequest with transactionRequestId ${req.payload.id}: ${ERROR}`,
-        );
+        console.error(`error User exchange transaction userDenyExchangeRequest with transactionRequestId ${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -329,9 +268,7 @@ async function userCancelExchangeRequest(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(
-          `error User exchange transaction userCancelExchangeRequest with transactionRequestId ${req.payload.id}: ${ERROR}`,
-        );
+        console.error(`error User exchange transaction userCancelExchangeRequest with transactionRequestId ${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -346,21 +283,14 @@ async function userExchangeFAC(req) {
       let paymentAmount = req.payload.paymentAmount;
       let walletType = WALLET_TYPE.FAC;
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} ExchangeTransactionFunction.createExchangeRequest`);
           reject(USER_ERROR.NOT_AUTHORIZED);
           return;
         }
       }
-      let createResult = await ExchangeTransactionFunction.requestExchangeFACtoUSDT(
-        req.currentUser,
-        paymentAmount,
-        walletType,
-      );
+      let createResult = await ExchangeTransactionFunction.requestExchangeFACtoUSDT(req.currentUser, paymentAmount, walletType);
       if (createResult) {
         resolve(createResult);
       } else {
@@ -385,21 +315,14 @@ async function userExchangePOINT(req) {
       let paymentAmount = req.payload.paymentAmount;
       let walletType = WALLET_TYPE.POINT;
       if (req.payload.secondaryPassword) {
-        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(
-          req.currentUser.username,
-          req.payload.secondaryPassword,
-        );
+        let verifyResult = await AppUserFunctions.verifyUserSecondaryPassword(req.currentUser.username, req.payload.secondaryPassword);
         if (verifyResult === undefined) {
           Logger.error(`${USER_ERROR.NOT_AUTHORIZED} ExchangeTransactionFunction.createExchangeRequest`);
           reject(USER_ERROR.NOT_AUTHORIZED);
           return;
         }
       }
-      let createResult = await ExchangeTransactionFunction.requestExchangeBonusToFAC(
-        req.currentUser,
-        paymentAmount,
-        walletType,
-      );
+      let createResult = await ExchangeTransactionFunction.requestExchangeBonusToFAC(req.currentUser, paymentAmount, walletType);
       if (createResult) {
         resolve(createResult);
       } else {

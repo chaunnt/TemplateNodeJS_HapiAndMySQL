@@ -16,30 +16,17 @@ async function startSchedule() {
   }
 
   //G8-G7-G6-G5-G4-G3-G2-G1-GDB
-  const SAMPLE_RESULT =
-    '--;---;----;----;----;----;-----;-----;-----;-----;-----;-----;-----;-----;-----;-----;-----;------';
+  const SAMPLE_RESULT = '--;---;----;----;----;----;-----;-----;-----;-----;-----;-----;-----;-----;-----;-----;-----;------';
   // await GameRecordFunctions.completeAllPendingGameRecord();
 
   // every monday
   CronInstance.schedule('0 7 * * 1', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.CA_MAU}_${newSection}`,
-      PRODUCT_CHANNEL.CA_MAU,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.CA_MAU}_${newSection}`, PRODUCT_CHANNEL.CA_MAU, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.TPHCM}_${newSection}`,
-      PRODUCT_CHANNEL.TPHCM,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.TPHCM}_${newSection}`, PRODUCT_CHANNEL.TPHCM, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.DONG_THAP}_${newSection}`,
-      PRODUCT_CHANNEL.DONG_THAP,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.DONG_THAP}_${newSection}`, PRODUCT_CHANNEL.DONG_THAP, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -60,23 +47,11 @@ async function startSchedule() {
   // every tuesday
   CronInstance.schedule('0 7 * * 2', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.BAC_LIEU}_${newSection}`,
-      PRODUCT_CHANNEL.BAC_LIEU,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.BAC_LIEU}_${newSection}`, PRODUCT_CHANNEL.BAC_LIEU, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.BEN_TRE}_${newSection}`,
-      PRODUCT_CHANNEL.BEN_TRE,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.BEN_TRE}_${newSection}`, PRODUCT_CHANNEL.BEN_TRE, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.VUNG_TAU}_${newSection}`,
-      PRODUCT_CHANNEL.VUNG_TAU,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.VUNG_TAU}_${newSection}`, PRODUCT_CHANNEL.VUNG_TAU, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -97,23 +72,11 @@ async function startSchedule() {
   // every webnesday
   CronInstance.schedule('0 7 * * 3', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.CAN_THO}_${newSection}`,
-      PRODUCT_CHANNEL.CAN_THO,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.CAN_THO}_${newSection}`, PRODUCT_CHANNEL.CAN_THO, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.DONG_NAI}_${newSection}`,
-      PRODUCT_CHANNEL.DONG_NAI,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.DONG_NAI}_${newSection}`, PRODUCT_CHANNEL.DONG_NAI, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.SOC_TRANG}_${newSection}`,
-      PRODUCT_CHANNEL.SOC_TRANG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.SOC_TRANG}_${newSection}`, PRODUCT_CHANNEL.SOC_TRANG, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -134,23 +97,11 @@ async function startSchedule() {
   // every thursday
   CronInstance.schedule('0 7 * * 4', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.AN_GIANG}_${newSection}`,
-      PRODUCT_CHANNEL.AN_GIANG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.AN_GIANG}_${newSection}`, PRODUCT_CHANNEL.AN_GIANG, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.BINH_THUAN}_${newSection}`,
-      PRODUCT_CHANNEL.BINH_THUAN,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.BINH_THUAN}_${newSection}`, PRODUCT_CHANNEL.BINH_THUAN, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.TAY_NINH}_${newSection}`,
-      PRODUCT_CHANNEL.TAY_NINH,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.TAY_NINH}_${newSection}`, PRODUCT_CHANNEL.TAY_NINH, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -171,23 +122,11 @@ async function startSchedule() {
   // every friday
   CronInstance.schedule('0 7 * * 5', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.BINH_DUONG}_${newSection}`,
-      PRODUCT_CHANNEL.BINH_DUONG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.BINH_DUONG}_${newSection}`, PRODUCT_CHANNEL.BINH_DUONG, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.TRA_VINH}_${newSection}`,
-      PRODUCT_CHANNEL.TRA_VINH,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.TRA_VINH}_${newSection}`, PRODUCT_CHANNEL.TRA_VINH, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.VINH_LONG}_${newSection}`,
-      PRODUCT_CHANNEL.VINH_LONG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.VINH_LONG}_${newSection}`, PRODUCT_CHANNEL.VINH_LONG, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -208,29 +147,13 @@ async function startSchedule() {
   // every saturday
   CronInstance.schedule('0 7 * * 6', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.TPHCM}_${newSection}`,
-      PRODUCT_CHANNEL.TPHCM,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.TPHCM}_${newSection}`, PRODUCT_CHANNEL.TPHCM, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.BINH_PHUOC}_${newSection}`,
-      PRODUCT_CHANNEL.BINH_PHUOC,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.BINH_PHUOC}_${newSection}`, PRODUCT_CHANNEL.BINH_PHUOC, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.HAU_GIANG}_${newSection}`,
-      PRODUCT_CHANNEL.HAU_GIANG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.HAU_GIANG}_${newSection}`, PRODUCT_CHANNEL.HAU_GIANG, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.LONG_AN}_${newSection}`,
-      PRODUCT_CHANNEL.LONG_AN,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.LONG_AN}_${newSection}`, PRODUCT_CHANNEL.LONG_AN, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),
@@ -251,23 +174,11 @@ async function startSchedule() {
   // every sunday
   CronInstance.schedule('0 7 * * 7', async function () {
     let newSection = moment().format('YYYYMMDD');
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.KIEN_GIANG}_${newSection}`,
-      PRODUCT_CHANNEL.KIEN_GIANG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.KIEN_GIANG}_${newSection}`, PRODUCT_CHANNEL.KIEN_GIANG, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.LAM_DONG}_${newSection}`,
-      PRODUCT_CHANNEL.LAM_DONG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.LAM_DONG}_${newSection}`, PRODUCT_CHANNEL.LAM_DONG, SAMPLE_RESULT);
 
-    await GameRecordFunctions.addNewGameRecord(
-      `${PRODUCT_CHANNEL.TIEN_GIANG}_${newSection}`,
-      PRODUCT_CHANNEL.TIEN_GIANG,
-      SAMPLE_RESULT,
-    );
+    await GameRecordFunctions.addNewGameRecord(`${PRODUCT_CHANNEL.TIEN_GIANG}_${newSection}`, PRODUCT_CHANNEL.TIEN_GIANG, SAMPLE_RESULT);
     // let previousSection1 = moment().format('YYYYMMDDHHmm');
     // GameRecordFunctions.completeGameRecord(
     //   previousSection1 + GAME_RECORD_TYPE.GAMEWINGO1.replace('WINGO', '0'),

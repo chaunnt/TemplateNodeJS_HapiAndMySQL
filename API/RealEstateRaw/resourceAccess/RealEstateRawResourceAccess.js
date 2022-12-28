@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 const knex = require('knex');
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "RealEstateRaw";
-const primaryKeyField = "realEstateRawId";
+const tableName = 'RealEstateRaw';
+const primaryKeyField = 'realEstateRawId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -13,83 +15,83 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(`${primaryKeyField}`).primary();
-          table.string('realEstateTitle');// Tiêu đề
-          table.string('realEstateDescription', 1000);// Mô tả
-          table.integer('appUserId');// id user người đăng
+          table.string('realEstateTitle'); // Tiêu đề
+          table.string('realEstateDescription', 1000); // Mô tả
+          table.integer('appUserId'); // id user người đăng
           table.integer('staffId');
-          table.integer('approveStatus').defaultTo(0);//trạng thái bài đăng 0 - chưa duyệt/ 1-đã duyệt/ -1 từ chối
-          table.integer('approvePIC').nullable()// id của staff duyệt
-          table.string('approveDate').nullable()// ngày duyệt
-          table.integer('realEstateCategoryId');//thể loại bài đăng (Nhà phố / đất / chung cư)
-          table.integer('realEstateSubCategoryId');//thể loại con của loại bài đăng (Nhà mặt tiền / nhà hẻm / căn hộ cao cấp .v.v.)
-          table.integer('realEstatePostTypeId');// kiểu bài đăng(Mua bán- cho thuê-dự án)
-          table.timestamp('activedDate').defaultTo(DB.fn.now())
+          table.integer('approveStatus').defaultTo(0); //trạng thái bài đăng 0 - chưa duyệt/ 1-đã duyệt/ -1 từ chối
+          table.integer('approvePIC').nullable(); // id của staff duyệt
+          table.string('approveDate').nullable(); // ngày duyệt
+          table.integer('realEstateCategoryId'); //thể loại bài đăng (Nhà phố / đất / chung cư)
+          table.integer('realEstateSubCategoryId'); //thể loại con của loại bài đăng (Nhà mặt tiền / nhà hẻm / căn hộ cao cấp .v.v.)
+          table.integer('realEstatePostTypeId'); // kiểu bài đăng(Mua bán- cho thuê-dự án)
+          table.timestamp('activedDate').defaultTo(DB.fn.now());
 
           //Thông tin liên hệ
-          table.string('realEstatePhone');// SDT
-          table.string('realEstateEmail').nullable();//Email
-          table.string('realEstateContacAddress');// địa chỉ liên hệ
-          table.integer('realEstateContactTypeId');//id (loại liên hệ (chủ nhà/Môi giới) )
+          table.string('realEstatePhone'); // SDT
+          table.string('realEstateEmail').nullable(); //Email
+          table.string('realEstateContacAddress'); // địa chỉ liên hệ
+          table.integer('realEstateContactTypeId'); //id (loại liên hệ (chủ nhà/Môi giới) )
           //Thông tin về vị trí BDS
-          table.integer('realEstateLocationFrontStreetWidth').nullable();//Đường trước nhà
-          table.integer('realEstateLocationStreetWidth').nullable();// chiều rộng đường
-          table.string('realEstateLocationHomeNumber').nullable();//số nhà
-          table.integer('realEstateLocationHomeNumberStatus').defaultTo(0);//ẩn hiện số nhà(0/1)
-          table.integer('realEstateDirection');// hướng BDS
-          table.integer('areaCountryId');// id Quốc gia
-          table.integer('areaProvinceId');// tĩnh thành phố
+          table.integer('realEstateLocationFrontStreetWidth').nullable(); //Đường trước nhà
+          table.integer('realEstateLocationStreetWidth').nullable(); // chiều rộng đường
+          table.string('realEstateLocationHomeNumber').nullable(); //số nhà
+          table.integer('realEstateLocationHomeNumberStatus').defaultTo(0); //ẩn hiện số nhà(0/1)
+          table.integer('realEstateDirection'); // hướng BDS
+          table.integer('areaCountryId'); // id Quốc gia
+          table.integer('areaProvinceId'); // tĩnh thành phố
           table.integer('areaDistrictId'); // Quận- Huyện
-          table.integer('areaWardId');// Phường- Xã
-          table.integer('areaStreetId').nullable();// Đường
+          table.integer('areaWardId'); // Phường- Xã
+          table.integer('areaStreetId').nullable(); // Đường
           table.decimal('lat', 30, 20).nullable();
           table.decimal('lng', 30, 20).nullable();
 
           //Thông tin về đất của BDS
-          table.integer('realEstateLandRealitySquare').nullable();//Diện tích thực tế
-          table.integer('realEstateLandDefaultSquare').nullable();// Diện tích công nhận
-          table.integer('realEstateLandRoadSquare').nullable();// Diện tích lộ giới
-          table.integer('realEstateLandRealConstructionSquare').nullable();// Diện tích xây dựng
-          table.integer('realEstateLandLongs').nullable();// chiều dài
-          table.integer('realEstateLandWidth').nullable();// chiều rộng
-          table.integer('realEstateLandShapeName').nullable();// id (hình dạng BDS)
+          table.integer('realEstateLandRealitySquare').nullable(); //Diện tích thực tế
+          table.integer('realEstateLandDefaultSquare').nullable(); // Diện tích công nhận
+          table.integer('realEstateLandRoadSquare').nullable(); // Diện tích lộ giới
+          table.integer('realEstateLandRealConstructionSquare').nullable(); // Diện tích xây dựng
+          table.integer('realEstateLandLongs').nullable(); // chiều dài
+          table.integer('realEstateLandWidth').nullable(); // chiều rộng
+          table.integer('realEstateLandShapeName').nullable(); // id (hình dạng BDS)
 
           //Thông tin về nhà trên BDS
-          table.integer('realEstateHouseDirection').nullable();//id(hướng nhà)
-          table.integer('realEstateBalconyDirection').nullable();//id(hướng ban công)
-          table.string('realEstateHouseFurnitureList').nullable();// danh sách nội thất đi kèm
-          table.integer('realEstateHouseFurniture').nullable();//id(tình trạng nội thất)
-          table.integer('realEstateHouseFloors').nullable();// số tầng nhà
-          table.integer('realEstateHouseBedRooms').nullable();// số phòng ngủ
-          table.integer('realEstateHouseToilets').nullable();// số phòng tolet
-          table.integer('realEstateHouseKitchen').nullable();// số phòng bếp
-          table.integer('realEstateHouseLivingRoom').nullable();// số khách
+          table.integer('realEstateHouseDirection').nullable(); //id(hướng nhà)
+          table.integer('realEstateBalconyDirection').nullable(); //id(hướng ban công)
+          table.string('realEstateHouseFurnitureList').nullable(); // danh sách nội thất đi kèm
+          table.integer('realEstateHouseFurniture').nullable(); //id(tình trạng nội thất)
+          table.integer('realEstateHouseFloors').nullable(); // số tầng nhà
+          table.integer('realEstateHouseBedRooms').nullable(); // số phòng ngủ
+          table.integer('realEstateHouseToilets').nullable(); // số phòng tolet
+          table.integer('realEstateHouseKitchen').nullable(); // số phòng bếp
+          table.integer('realEstateHouseLivingRoom').nullable(); // số khách
 
           //Thông tin về giá
-          table.double('realEstateValueSalePrice');// Giá BDS
-          table.double('realEstateUnitPrice');//Giá m2 
-          table.double('realEstatePlanRentPrice');//Giá cho thuê
-          table.double('realEstatedeposits').nullable();//Tiền Đặt cọc
+          table.double('realEstateValueSalePrice'); // Giá BDS
+          table.double('realEstateUnitPrice'); //Giá m2
+          table.double('realEstatePlanRentPrice'); //Giá cho thuê
+          table.double('realEstatedeposits').nullable(); //Tiền Đặt cọc
 
           //Thông tin pháp lý
-          table.integer('realEstateJuridicalName').nullable();// id (loại giấy tờ)
+          table.integer('realEstateJuridicalName').nullable(); // id (loại giấy tờ)
 
           //Thông tin khác của BDS
-          table.string('realEstateImage').nullable();// hình ảnh BDS
-          table.string('realEstateVideo').nullable();// Video của BDS
-          table.string('realEstateCommonPlace', 1000).nullable();// danh sách địa điểm xung quanh BDS
+          table.string('realEstateImage').nullable(); // hình ảnh BDS
+          table.string('realEstateVideo').nullable(); // Video của BDS
+          table.string('realEstateCommonPlace', 1000).nullable(); // danh sách địa điểm xung quanh BDS
           table.string('realEstateUtil').nullable(); // danh sách tiện ích của BDS
 
           //Thông tin dự án liên quan
-          table.integer('realEstateProjectId').nullable();//id dự án
-          table.string('apartmentCode').nullable();// Mã Căn hộ
-          table.string('apartmentBlockCode').nullable();// Mã block căn hộ
-          table.integer('apartmentCodeStatus').nullable();// ẩn hiện mã căn hộ(0/1)
-          table.boolean('apartmentCornerPosition').defaultTo(0);// căn hộ nằm ở góc hay không (Không: 0/ Có: 1)
+          table.integer('realEstateProjectId').nullable(); //id dự án
+          table.string('apartmentCode').nullable(); // Mã Căn hộ
+          table.string('apartmentBlockCode').nullable(); // Mã block căn hộ
+          table.integer('apartmentCodeStatus').nullable(); // ẩn hiện mã căn hộ(0/1)
+          table.boolean('apartmentCornerPosition').defaultTo(0); // căn hộ nằm ở góc hay không (Không: 0/ Có: 1)
 
           //thông tin khác
-          table.boolean('agencyStatus').defaultTo(0);// cho phép môi giới hay không
-          table.boolean('agency').defaultTo(0);// Mua giới- chủ nhà(0-1)
-          table.float('agencyPercent').nullable();// Phần trăm môi giới
+          table.boolean('agencyStatus').defaultTo(0); // cho phép môi giới hay không
+          table.boolean('agency').defaultTo(0); // Mua giới- chủ nhà(0-1)
+          table.float('agencyPercent').nullable(); // Phần trăm môi giới
           //Thông tin về thống kê
           table.integer('realEstateViews').defaultTo(0);
           table.integer('realEstateClick').defaultTo(0);
@@ -100,7 +102,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -131,7 +133,7 @@ async function find(filter, skip, limit, order) {
 async function deleteById(id) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function count(filter, order) {
@@ -144,30 +146,29 @@ function _makeQueryBuilderByFilter(filter, filterClause, skip, limit, startDate,
   let filterDataClause = filterClause ? JSON.parse(JSON.stringify(filterClause)) : {};
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('realEstatePhone', 'like', `%${searchText}%`)
-        .orWhere('realEstateEmail', 'like', `%${searchText}%`)
-    })
+      this.orWhere('realEstatePhone', 'like', `%${searchText}%`).orWhere('realEstateEmail', 'like', `%${searchText}%`);
+    });
   }
   if (filterDataClause.startLandRealitySquare) {
-    queryBuilder.where('realEstateLandRealitySquare', '>=', filterDataClause.startLandRealitySquare)
+    queryBuilder.where('realEstateLandRealitySquare', '>=', filterDataClause.startLandRealitySquare);
   }
 
   if (filterDataClause.endLandRealitySquare) {
-    queryBuilder.where('realEstateLandRealitySquare', '<=', filterDataClause.endLandRealitySquare)
+    queryBuilder.where('realEstateLandRealitySquare', '<=', filterDataClause.endLandRealitySquare);
   }
   if (filterDataClause.startValueSalePrice) {
-    queryBuilder.where('realEstateValueSalePrice', '>=', filterDataClause.startValueSalePrice)
+    queryBuilder.where('realEstateValueSalePrice', '>=', filterDataClause.startValueSalePrice);
   }
 
   if (filterDataClause.endValueSalePrice) {
-    queryBuilder.where('realEstateValueSalePrice', '<=', filterDataClause.endValueSalePrice)
+    queryBuilder.where('realEstateValueSalePrice', '<=', filterDataClause.endValueSalePrice);
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });
@@ -182,7 +183,7 @@ function _makeQueryBuilderByFilter(filter, filterClause, skip, limit, startDate,
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -214,9 +215,9 @@ async function addViewCount(booksId) {
   let filter = {};
   filter[primaryKeyField] = booksId;
 
-  await DB(tableName).where(filter).increment('booksTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('booksTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
@@ -250,5 +251,5 @@ module.exports = {
   updateFollowCount,
   updateSearchCount,
   addViewCount,
-  deleteById
+  deleteById,
 };

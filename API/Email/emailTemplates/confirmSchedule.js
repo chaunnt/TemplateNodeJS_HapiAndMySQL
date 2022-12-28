@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 module.exports = {
   subject: '[KiemDinhOto.vn] XÁC NHẬN LỊCH HẸN',
   htmlBody: `<div class="container">
@@ -21,5 +23,5 @@ module.exports = {
         <p>Trân thành cảm ơn quý khách</p>
      </div>
   </div>`,
-  body: ''
+  body: '',
 };

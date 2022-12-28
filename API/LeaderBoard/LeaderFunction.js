@@ -4,7 +4,6 @@ const BetRecordsViews = require('../BetRecords/resourceAccess/UserBetRecordsView
 const LeaderBoardViews = require('./resourceAccess/LeaderBoardViews');
 const LeaderBoardResourAccess = require('./resourceAccess/LeaderBoardResourAccess');
 const moment = require('moment');
-const { ERROR } = require('../Common/CommonConstant');
 async function _calculatePlayScore(appUserId) {
   let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
   let lastWeekEnd = moment().subtract(1, 'weeks').endOf('week').add(1, 'day').format();
@@ -68,15 +67,7 @@ async function updateRankingForAllUsers() {
 
   console.info(`start updateRankingForAllUsers ${lastWeekStart} -- ${lastWeekEnd}`);
 
-  let result = await LeaderBoardViews.customSearch(
-    undefined,
-    undefined,
-    limit,
-    lastWeekStart,
-    lastWeekEnd,
-    undefined,
-    order,
-  );
+  let result = await LeaderBoardViews.customSearch(undefined, undefined, limit, lastWeekStart, lastWeekEnd, undefined, order);
   if (result && result.length > 0) {
     let dataUpdate = {};
     for (var i = 0; i < result.length; i++) {
@@ -111,18 +102,9 @@ async function adminUpdateRanking(appUserId, ranking, totalScore) {
 
       let resultUpdate = await LeaderBoardResourAccess.updateById(appUserId, dataUpdate);
       if (!resultUpdate) {
-        console.error(`error Leader adminUpdateRanking: ${ERROR}`);
         reject('failed');
       } else {
-        let resultFind = await LeaderBoardViews.customSearch(
-          undefined,
-          undefined,
-          limit,
-          undefined,
-          undefined,
-          ranking,
-          order,
-        );
+        let resultFind = await LeaderBoardViews.customSearch(undefined, undefined, limit, undefined, undefined, ranking, order);
         if (resultFind && resultFind.length > 0) {
           let newArray = [];
           for (var i = 0; i < resultFind.length; i++) {
@@ -144,7 +126,7 @@ async function adminUpdateRanking(appUserId, ranking, totalScore) {
         }
       }
     } catch (e) {
-      console.error(`error admin Update Ranking`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -157,6 +139,7 @@ async function rewardForTopRanking() {
   };
 
   let topRankUsers = await LeaderBoardViews.customSearch(undefined, 0, 3, undefined, undefined, undefined, order);
+  console.log(topRankUsers);
   const { addEventBonus } = require('../WalletRecord/WalletRecordFunction');
   const FIRST_PRIZE = 1000; //thuong 1000 USDT
   const SECOND_PRIZE = 300; //thuong 1000 USDT

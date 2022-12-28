@@ -4,16 +4,20 @@
  * Created by A on 7/18/17.
  */
 'use strict';
-const { WALLET_TYPE } = require('../WalletConstant');
-const WalletFunction = require('../WalletFunctions');
 const WalletRecordFunction = require('../../WalletRecord/WalletRecordFunction');
 const UserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const { ERROR } = require('../../Common/CommonConstant');
+const WalletResource = require('../resourceAccess/WalletResourceAccess');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve('success');
+      let insertRes = await WalletResource.insert(req.payload);
+      if (insertRes) {
+        resolve(insertRes);
+      } else {
+        reject('failed');
+      }
     } catch (e) {
       console.error(`error Wallet cannot insert`, e);
       reject('failed');

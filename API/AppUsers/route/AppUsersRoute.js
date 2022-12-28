@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -12,7 +12,6 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 const AppUsersFunctions = require('../AppUsersFunctions');
 const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;
 const { USER_SEX, USER_TYPE } = require('../AppUserConstant');
-
 const insertSchema = {
   lastName: Joi.string().max(255),
   firstName: Joi.string().max(255),
@@ -27,56 +26,51 @@ const insertSchema = {
   sex: Joi.number().min(USER_SEX.MALE).max(USER_SEX.FEMALE),
   companyName: Joi.string().max(255),
   userHomeAddress: Joi.string().max(255),
+  province: Joi.string(),
+  district: Joi.string(),
+  ward: Joi.string(),
+  address: Joi.string(),
 };
-
-const registerUserByPhoneSchema = {
-  phoneNumber: Joi.string().required().max(15),
-  password: Joi.string().required().min(6),
-  fullName: Joi.string().required().max(255),
-  userHomeAddress: Joi.string().max(255),
-  identityNumber: Joi.string().max(12).required(),
-  email: Joi.string().email().max(255),
-  referCode: Joi.string().allow('').max(100),
-};
-
 const updateSchema = {
-  lastName: Joi.string().max(255),
-  firstName: Joi.string().max(255),
-  phoneNumber: Joi.string().max(15),
-  userHomeAddress: Joi.string().max(255),
-  email: Joi.string().email().max(255),
-  birthDay: Joi.string(),
+  lastName: Joi.string().allow(''),
+  firstName: Joi.string().allow(''),
+  phoneNumber: Joi.string(),
+  email: Joi.string().email(),
+  birthDay: Joi.string().allow(''),
   active: Joi.number().min(0).max(1),
   limitWithdrawDaily: Joi.number().min(0).max(1000000000),
   memberLevelName: Joi.string(),
-  twoFACode: Joi.string().max(255),
+  twoFACode: Joi.string(),
   twoFAEnable: Joi.number().min(0).max(1),
   userAvatar: Joi.string().allow(''),
   identityNumber: Joi.string(),
   sex: Joi.number().min(USER_SEX.MALE).max(USER_SEX.FEMALE),
-  firebaseToken: Joi.string().max(255),
-  telegramId: Joi.string().max(255),
+  firebaseToken: Joi.string(),
+  telegramId: Joi.string(),
   isDeleted: Joi.number(),
-  sotaikhoan: Joi.string().max(255),
-  tentaikhoan: Joi.string().max(255),
-  tennganhang: Joi.string().max(255),
-  diachiviUSDT: Joi.string().max(255),
-  diachiviBTC: Joi.string().allow('').max(255),
-  companyName: Joi.string().max(255),
+  sotaikhoan: Joi.string().allow(['', null]),
+  tentaikhoan: Joi.string().allow(['', null]),
+  tennganhang: Joi.string().allow(['', null]),
+  diachiviUSDT: Joi.string().allow(['', null]),
+  diachiviBTC: Joi.string().allow(['', null]),
+  companyName: Joi.string(),
+  province: Joi.string(),
+  district: Joi.string(),
+  ward: Joi.string(),
+  address: Joi.string(),
 };
 
 const filterSchema = {
-  active: Joi.number(),
-  username: Joi.string().alphanum().max(255),
-  email: Joi.string().max(255),
-  phoneNumber: Joi.string().max(15),
-  userHomeAddress: Joi.string().max(255),
+  active: Joi.number().min(0).max(100),
+  username: Joi.string().alphanum(),
+  email: Joi.string(),
+  phoneNumber: Joi.string(),
   referUser: Joi.string(),
-  name: Joi.string().max(255),
-  userType: Joi.number(),
-  isVerified: Joi.number(),
-  isVerifiedEmail: Joi.number(),
-  isVerifiedPhoneNumber: Joi.number(),
+  name: Joi.string(),
+  userType: Joi.number().min(0).max(100),
+  isVerified: Joi.number().min(0).max(100),
+  isVerifiedEmail: Joi.number().min(0).max(100),
+  isVerifiedPhoneNumber: Joi.number().min(0).max(100),
   memberLevelName: Joi.string(),
 };
 
@@ -154,6 +148,25 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'findById');
+    },
+  },
+  deleteById: {
+    tags: ['api', `${moduleName}`],
+    description: `find by id ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'deleteById');
     },
   },
   loginUser: {
@@ -320,7 +333,9 @@ module.exports = {
     description: `register ${moduleName}`,
     validate: {
       payload: Joi.object({
-        ...registerUserByPhoneSchema,
+        password: Joi.string().required().min(6),
+        phoneNumber: Joi.string().required().max(15),
+        companyName: Joi.string(),
       }),
     },
     handler: function (req, res) {
@@ -336,6 +351,7 @@ module.exports = {
     description: `register ${moduleName}`,
     validate: {
       payload: Joi.object({
+        referCode: Joi.string().allow('').max(100),
         referUser: Joi.string().allow(''),
         secondaryPassword: Joi.string().min(6),
         password: Joi.string().required().min(6),
@@ -367,13 +383,14 @@ module.exports = {
       Response(req, res, 'forgotPassword');
     },
   },
-  forgotPasswordOTP: {
+  forgotPasswordEmailOTP: {
     tags: ['api', `${moduleName}`],
     description: `user forgot ${moduleName}`,
     validate: {
       payload: Joi.object({
-        phoneNumber: Joi.string().required(),
-        password: Joi.string().required().min(6),
+        email: Joi.string().required().max(255),
+        newPassword: Joi.string().required().min(6),
+        otpCode: Joi.string().required().max(6),
       }),
     },
     handler: function (req, res) {
@@ -381,7 +398,25 @@ module.exports = {
         res('maintain').code(500);
         return;
       }
-      Response(req, res, 'forgotPasswordOTP');
+      Response(req, res, 'forgotPasswordEmailOTP');
+    },
+  },
+  forgotPasswordSMSOTP: {
+    tags: ['api', `${moduleName}`],
+    description: `user forgot ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        otpCode: Joi.string().required().max(6),
+        phoneNumber: Joi.string().required(),
+        newPassword: Joi.string().required().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      if (SystemStatus.all === false) {
+        res('maintain').code(500);
+        return;
+      }
+      Response(req, res, 'forgotPasswordSMSOTP');
     },
   },
   verifyEmailUser: {
@@ -714,7 +749,25 @@ module.exports = {
       Response(req, res, 'resetPasswordBaseOnUserToken');
     },
   },
-
+  resetPasswordBaseOnToken: {
+    tags: ['api', `${moduleName}`],
+    description: `change password ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        password: Joi.string().required().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'resetPasswordBaseOnUserToken');
+    },
+  },
   adminResetPasswordUser: {
     tags: ['api', `${moduleName}`],
     description: `user forgot ${moduleName}`,
@@ -832,7 +885,6 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'userViewsListMembership');
-      er;
     },
   },
   findAllUsersFollowingReferId: {

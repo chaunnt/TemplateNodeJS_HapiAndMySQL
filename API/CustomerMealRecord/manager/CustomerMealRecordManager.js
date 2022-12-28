@@ -1,14 +1,16 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const CustomerMealRecordResourceAccess = require("../resourceAccess/CustomerMealRecordResourceAccess");
+'use strict';
+const CustomerMealRecordResourceAccess = require('../resourceAccess/CustomerMealRecordResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function _addNewCustomerMealRecord(mealData) {
   let result = await CustomerMealRecordResourceAccess.insert(mealData);
   if (result) {
-    return (result);
+    return result;
   }
 
   return undefined;
@@ -19,19 +21,19 @@ async function userInsertMealRecord(req) {
     try {
       let customerRecordData = req.payload;
       customerRecordData.appUserId = req.currentUser.appUserId;
-      
+
       let addResult = await _addNewCustomerMealRecord(customerRecordData);
       if (addResult) {
-        resolve(addResult)
+        resolve(addResult);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetListMealRecord(req) {
   return new Promise(async (resolve, reject) => {
@@ -45,8 +47,8 @@ async function userGetListMealRecord(req) {
       let searchText = req.payload.searchText;
 
       if (!filter) {
-        filter = {}
-      };
+        filter = {};
+      }
 
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
@@ -62,10 +64,10 @@ async function userGetListMealRecord(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userUpdateMealRecord(req) {
   return new Promise(async (resolve, reject) => {
@@ -77,14 +79,14 @@ async function userUpdateMealRecord(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetDetailMealRecordById(req) {
   return new Promise(async (resolve, reject) => {
@@ -95,15 +97,14 @@ async function userGetDetailMealRecordById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-      
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -112,7 +113,7 @@ async function deleteById(req) {
 
       let oldRecord = await CustomerMealRecordResourceAccess.findById(customerRecordId);
       if (oldRecord === undefined) {
-        reject("invalid record");
+        reject('invalid record');
         return;
       }
 
@@ -120,18 +121,15 @@ async function deleteById(req) {
       if (result) {
         await CustomerFuntion.notifyCustomerStatusDeleted(oldRecord);
         resolve(result);
+      } else {
+        reject('failed');
       }
-      else {
-        reject("failed");
-      }
-
     } catch (e) {
-
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffGetDetailMealRecordById(req) {
   return new Promise(async (resolve, reject) => {
@@ -142,15 +140,14 @@ async function staffGetDetailMealRecordById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-      
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffGetListMealRecordByUserId(req) {
   return new Promise(async (resolve, reject) => {
@@ -164,8 +161,8 @@ async function staffGetListMealRecordByUserId(req) {
       let searchText = req.payload.searchText;
 
       if (!filter) {
-        filter = {}
-      };
+        filter = {};
+      }
 
       let customerRecord = await CustomerMealRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
@@ -177,10 +174,10 @@ async function staffGetListMealRecordByUserId(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 module.exports = {
   userInsertMealRecord,
   userGetListMealRecord,

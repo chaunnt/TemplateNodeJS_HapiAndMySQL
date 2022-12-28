@@ -104,11 +104,7 @@ function _detectBatchResult(existedGameRecord, existedBetRecord) {
     result.push(GAME_RESULT.G7);
   }
 
-  if (
-    gameValues[2] === existedBetRecordNum4 ||
-    gameValues[3] === existedBetRecordNum4 ||
-    gameValues[4] === existedBetRecordNum4
-  ) {
+  if (gameValues[2] === existedBetRecordNum4 || gameValues[3] === existedBetRecordNum4 || gameValues[4] === existedBetRecordNum4) {
     result.push(GAME_RESULT.G6); // giải 6 gồm 4 số trùng nhau
   }
 
@@ -231,11 +227,7 @@ function _detectSingleResult(existedGameRecord, existedBetRecord) {
     result.push(GAME_RESULT.G7);
   }
 
-  if (
-    gameValues[2] === existedBetRecordNum4 ||
-    gameValues[3] === existedBetRecordNum4 ||
-    gameValues[4] === existedBetRecordNum4
-  ) {
+  if (gameValues[2] === existedBetRecordNum4 || gameValues[3] === existedBetRecordNum4 || gameValues[4] === existedBetRecordNum4) {
     result.push(GAME_RESULT.G6); // giải 6 gồm 4 số trùng nhau
   }
 

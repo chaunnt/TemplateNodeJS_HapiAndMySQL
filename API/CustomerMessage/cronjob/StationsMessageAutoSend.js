@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -10,6 +10,7 @@ const CustomerMessageSMSProcess = require('./CustomerMessageSMSJob');
 const GenerateMessageProcess = require('./GenerateCustomerMessage');
 
 async function autoSendMessageForCustomer() {
+  console.log(`autoSendMessageForCustomer`);
   let stationsList = await StationsResource.find({}, undefined, undefined);
 
   if (stationsList && stationsList.length > 0) {
@@ -40,7 +41,7 @@ async function autoSendMessageForCustomer() {
     }
 
     Promise.all(promiseList).then(values => {
-      console.info(`autoSendMessageForCustomer response ${values}`);
+      console.log(`autoSendMessageForCustomer response ${values}`);
     });
   }
 }

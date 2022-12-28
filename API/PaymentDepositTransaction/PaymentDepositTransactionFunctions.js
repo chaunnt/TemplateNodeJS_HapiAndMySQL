@@ -15,7 +15,7 @@ const CustomerMessageFunctions = require('../CustomerMessage/CustomerMessageFunc
 const moment = require('moment');
 const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 
-async function createDepositTransaction(user, amount, paymentRef, walletId, bankInfomation, staff) {
+async function createDepositTransaction(user, amount, paymentRef, walletId, bankInfomation, staff, paymentSecondaryRef) {
   let filter = {};
 
   if (walletId) {
@@ -29,8 +29,8 @@ async function createDepositTransaction(user, amount, paymentRef, walletId, bank
       walletType: WALLET_TYPE.POINT,
     };
   }
-  let wallet = await UserWallet.find(filter);
 
+  let wallet = await UserWallet.find(filter);
   if (!wallet || wallet.length < 1) {
     console.error('user wallet is invalid');
     return undefined;
@@ -63,10 +63,7 @@ async function createDepositTransaction(user, amount, paymentRef, walletId, bank
     if (_existingPaymentRefs && _existingPaymentRefs.length > 0) {
       for (let i = 0; i < _existingPaymentRefs.length; i++) {
         const _payment = _existingPaymentRefs[i];
-        if (
-          _payment.paymentStatus === DEPOSIT_TRX_STATUS.NEW ||
-          _payment.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED
-        ) {
+        if (_payment.paymentStatus === DEPOSIT_TRX_STATUS.NEW || _payment.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED) {
           //khong cho trung transaction Id
           throw 'DUPLICATE_TRANSACTION_ID';
         }
@@ -74,6 +71,9 @@ async function createDepositTransaction(user, amount, paymentRef, walletId, bank
     }
   }
 
+  if (paymentSecondaryRef) {
+    transactionData.paymentSecondaryRef = paymentSecondaryRef;
+  }
   let result = await DepositTransactionAccess.insert(transactionData);
   if (result) {
     return result;
@@ -97,8 +97,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
 
   // nếu đã COMPLETED hoặc CANCELED thì trả về false
   const isCompletedOrCanceled =
-    transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED ||
-    transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
+    transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED || transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
   if (isCompletedOrCanceled) {
     console.error('deposit transaction was approved or canceled');
     return undefined;
@@ -146,11 +145,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
   if (updateTransactionResult) {
     let updateWalletResult = undefined;
     //Update wallet balance and WalletRecord in DB
-    updateWalletResult = await WalletRecordFunction.depositPointWalletBalance(
-      transaction.appUserId,
-      transaction.paymentAmount,
-      staff,
-    );
+    updateWalletResult = await WalletRecordFunction.depositPointWalletBalance(transaction.appUserId, transaction.paymentAmount, staff);
 
     if (updateWalletResult) {
       let notifyTitle = 'Nạp tiền thành công';
@@ -161,9 +156,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
 
       return updateWalletResult;
     } else {
-      console.error(
-        `updateWalletResult error pointWallet.walletId ${pointWallet.walletId} - ${JSON.stringify(transaction)}`,
-      );
+      console.error(`updateWalletResult error pointWallet.walletId ${pointWallet.walletId} - ${JSON.stringify(transaction)}`);
       return undefined;
     }
   } else {
@@ -186,8 +179,7 @@ async function denyDepositTransaction(transactionId, staff, paymentNote) {
 
   // nếu đã COMPLETED hoặc CANCELED thì trả về false
   const isCompletedOrCanceled =
-    transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED ||
-    transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
+    transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED || transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
   if (isCompletedOrCanceled) {
     console.error('deposit transaction was approved or canceled');
     return undefined;

@@ -1,11 +1,13 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'Download';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const bookFilterSchema = {
@@ -19,7 +21,7 @@ const bookFilterSchema = {
 
 module.exports = {
   downloadBookReport: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `${moduleName} download media`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -31,10 +33,10 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(bookFilterSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "downloadBookReport");
+      Response(req, res, 'downloadBookReport');
     },
   },
 };

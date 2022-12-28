@@ -1,10 +1,12 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moment = require('moment');
 
-const CustomerScheduleResourceAccess = require("../resourceAccess/CustomerScheduleResourceAccess");
+const CustomerScheduleResourceAccess = require('../resourceAccess/CustomerScheduleResourceAccess');
 const CustomerScheduleStaffServiceView = require('../resourceAccess/CustomerScheduleStaffServiceView');
 const StationResource = require('../../Stations/resourceAccess/StationsResourceAccess');
 const ScheduleFunctions = require('../CustomerScheduleFunctions');
@@ -16,7 +18,7 @@ const Logger = require('../../../utils/logging');
 const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 
 function _generateScheduleCode(customerScheduleId) {
-  let _scheduleCode = utilFunctions.convertStringToHex(customerScheduleId + "");
+  let _scheduleCode = utilFunctions.convertStringToHex(customerScheduleId + '');
   _scheduleCode = _scheduleCode.toUpperCase();
   _scheduleCode = utilFunctions.padLeadingZeros(_scheduleCode, 6);
   return _scheduleCode;
@@ -36,7 +38,7 @@ async function _addNewCustomerSchedule(scheduleData, stationsData) {
     let newScheduleCode = _generateScheduleCode(scheduleData.customerScheduleId);
 
     await CustomerScheduleResourceAccess.updateById(scheduleData.customerScheduleId, {
-      scheduleCode: newScheduleCode
+      scheduleCode: newScheduleCode,
     });
 
     await CustomerMessageFunction.sendMessageNewSchedule(scheduleData, stationsData);
@@ -78,14 +80,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -99,7 +101,7 @@ async function find(req) {
       let startDate = req.payload.startDate;
 
       if (!filter) {
-        filter = {}
+        filter = {};
       }
 
       //only get data of current station
@@ -111,16 +113,19 @@ async function find(req) {
 
       if (customerScheduleList && customerScheduleList.length > 0) {
         let customerScheduleCount = await CustomerScheduleStaffServiceView.customCount(filter, startDate, endDate, searchText, order);
-        resolve({ data: customerScheduleList, total: customerScheduleCount[0].count });
+        resolve({
+          data: customerScheduleList,
+          total: customerScheduleCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -131,13 +136,13 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -147,14 +152,14 @@ async function findById(req) {
       if (_scheduleData) {
         resolve(_scheduleData);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -164,18 +169,15 @@ async function deleteById(req) {
       let result = await CustomerScheduleResourceAccess.deleteById(customerScheduleId);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      else {
-        reject("failed");
-      }
-
     } catch (e) {
-
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 //kiem tra thoi gian hen
 async function _allowScheduleByTimeDiffFromLastSchedule(appUserId, customerScheduleData) {
@@ -185,10 +187,18 @@ async function _allowScheduleByTimeDiffFromLastSchedule(appUserId, customerSched
   _lastScheduledLimitTime.setMinutes(moment(customerScheduleData.customerScheduleTime, 'HH:mm').toDate().getMinutes());
 
   //danh sach lich hen hien tai
-  let _scheduleList = await CustomerScheduleResourceAccess.customSearch({
-    appUserId: appUserId,
-    customerScheduleStatus: SCHEDULE_STATUS.NEW
-  }, 0, 10, undefined, undefined, undefined, { key: "customerScheduleDate", value: "desc" });
+  let _scheduleList = await CustomerScheduleResourceAccess.customSearch(
+    {
+      appUserId: appUserId,
+      customerScheduleStatus: SCHEDULE_STATUS.NEW,
+    },
+    0,
+    10,
+    undefined,
+    undefined,
+    undefined,
+    { key: 'customerScheduleDate', value: 'desc' },
+  );
   if (_scheduleList && _scheduleList.length > 0) {
     for (let i = 0; i < _scheduleList.length; i++) {
       const _schedule = _scheduleList[i];
@@ -219,7 +229,7 @@ async function userInsertSchedule(req) {
       let _verifySchedule = await _allowScheduleByTimeDiffFromLastSchedule(_currentUser.appUserId, customerScheduleData);
       if (_verifySchedule !== true) {
         Logger.error(`_allowScheduleByTimeDiffFromLastSchedule false for appUserId ${_currentUser.appUserId}`);
-        reject("NEW_SCHEDULE_TOO_SOON");
+        reject('NEW_SCHEDULE_TOO_SOON');
         return;
       }
 
@@ -228,7 +238,7 @@ async function userInsertSchedule(req) {
         selectedStation = await StationResource.find({ stationUrl: req.payload.stationUrl }, 0, 1);
         if (!selectedStation && selectedStation.length <= 0) {
           Logger.error(`can not find station for userInsertSchedule`);
-          reject("failed");
+          reject('failed');
           return;
         } else {
           selectedStation = selectedStation[0];
@@ -240,7 +250,7 @@ async function userInsertSchedule(req) {
         selectedStation = await StationResource.find({ stationsId: req.payload.stationsId }, 0, 1);
         if (!selectedStation && selectedStation.length <= 0) {
           Logger.error(`can not find station for userInsertSchedule`);
-          reject("failed");
+          reject('failed');
           return;
         } else {
           selectedStation = selectedStation[0];
@@ -259,14 +269,14 @@ async function userInsertSchedule(req) {
         resolve(result);
         return;
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userGetListSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -287,16 +297,19 @@ async function userGetListSchedule(req) {
 
       if (customerScheduleList && customerScheduleList.length > 0) {
         let customerScheduleCount = await CustomerScheduleStaffServiceView.customCount(filter, startDate, endDate, searchText, order);
-        resolve({ data: customerScheduleList, total: customerScheduleCount[0].count });
+        resolve({
+          data: customerScheduleList,
+          total: customerScheduleCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function _validCancelTimeForSchedule(customerScheduleId) {
   let _schedule = await CustomerScheduleStaffServiceView.findById(customerScheduleId);
@@ -317,7 +330,6 @@ async function _validCancelTimeForSchedule(customerScheduleId) {
   }
   const ALLOWED = true;
   return ALLOWED;
-
 }
 
 async function userCancelSchedule(req) {
@@ -328,26 +340,26 @@ async function userCancelSchedule(req) {
       let _verifySchedule = await _validCancelTimeForSchedule(customerScheduleId);
       if (_verifySchedule !== true) {
         Logger.error(`_validCancelTimeForSchedule false for appUserId ${_currentUser.appUserId}`);
-        reject("CANCEL_SCHEDULE_TOO_LATE");
+        reject('CANCEL_SCHEDULE_TOO_LATE');
         return;
       }
 
       let customerScheduleData = {
         customerScheduleStatus: SCHEDULE_STATUS.CANCELED,
-        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : "Người dùng tự hủy"
+        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : 'Người dùng tự hủy',
       };
       let result = await CustomerScheduleResourceAccess.updateById(customerScheduleId, customerScheduleData);
       if (result) {
-        await _notifyCancelSchedule
+        await _notifyCancelSchedule;
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
+}
 
 async function userGetDetailSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -357,14 +369,14 @@ async function userGetDetailSchedule(req) {
       if (_scheduleData) {
         resolve(_scheduleData);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffInsertSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -375,7 +387,7 @@ async function staffInsertSchedule(req) {
       let _verifySchedule = await _allowScheduleByTimeDiffFromLastSchedule(customerScheduleData.appUserId);
       if (_verifySchedule !== true) {
         Logger.error(`_allowScheduleByTimeDiffFromLastSchedule false for appUserId ${customerScheduleData.appUserId}`);
-        reject("NEW_SCHEDULE_TOO_SOON");
+        reject('NEW_SCHEDULE_TOO_SOON');
         return;
       }
 
@@ -400,14 +412,14 @@ async function staffInsertSchedule(req) {
         resolve(result);
         return;
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffGetListSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -421,7 +433,7 @@ async function staffGetListSchedule(req) {
       let startDate = req.payload.startDate;
 
       if (!filter) {
-        filter = {}
+        filter = {};
       }
       //only get data of current station
       if (filter && req.currentUser.stationsId) {
@@ -438,16 +450,19 @@ async function staffGetListSchedule(req) {
 
       if (customerScheduleList && customerScheduleList.length > 0) {
         let customerScheduleCount = await CustomerScheduleStaffServiceView.customCount(filter, startDate, endDate, searchText, order);
-        resolve({ data: customerScheduleList, total: customerScheduleCount[0].count });
+        resolve({
+          data: customerScheduleList,
+          total: customerScheduleCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function staffCancelSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -457,35 +472,34 @@ async function staffCancelSchedule(req) {
       let _verifySchedule = await _validCancelTimeForSchedule(customerScheduleId);
       if (_verifySchedule !== true) {
         Logger.error(`_validCancelTimeForSchedule false for appUserId ${_currentUser.appUserId}`);
-        reject("CANCEL_SCHEDULE_TOO_LATE");
+        reject('CANCEL_SCHEDULE_TOO_LATE');
         return;
       }
 
       let customerScheduleData = {
         customerScheduleStatus: SCHEDULE_STATUS.CANCELED,
-        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : "Nhân viên tự hủy"
+        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : 'Nhân viên tự hủy',
       };
 
       let result = await CustomerScheduleResourceAccess.updateById(customerScheduleId, customerScheduleData);
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
+}
 
 //cap nhat so buoi tap con lai
 async function _updateServicePackage(customerScheduleId) {
   //lay thong tin lich hen
   let _schedule = await CustomerScheduleResourceAccess.findById(customerScheduleId);
   if (_schedule === undefined) {
-    Logger.error(`can not reduce servicePackage counter`)
+    Logger.error(`can not reduce servicePackage counter`);
     return undefined;
   }
 
@@ -493,13 +507,13 @@ async function _updateServicePackage(customerScheduleId) {
   const ServicePackageResource = require('../../PaymentServicePackage/resourceAccess/PaymentServicePackageUserResourceAccess');
   let _package = ServicePackageResource.findById(_schedule.scheduleRefId);
   if (_package === undefined || _package.profitClaimed === _package.profitEstimate) {
-    Logger.error(`can not find package to reduce counter`)
+    Logger.error(`can not find package to reduce counter`);
     return undefined;
   }
 
   //cap nhat so buoi da tap
   let updatedResult = ServicePackageResource.updateById(_schedule.scheduleRefId, {
-    profitClaimed: _package.profitClaimed + 1
+    profitClaimed: _package.profitClaimed + 1,
   });
 
   return updatedResult;
@@ -514,9 +528,9 @@ async function staffAcceptSchedule(req) {
       };
 
       //cap nhat so buoi tap
-      let result = await _updateServicePackage(customerScheduleId);;
+      let result = await _updateServicePackage(customerScheduleId);
       if (result === undefined) {
-        reject("OVER_LIMITED_PACKAGE");
+        reject('OVER_LIMITED_PACKAGE');
         return; //make sure everything stop
       }
 
@@ -525,15 +539,14 @@ async function staffAcceptSchedule(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
+}
 
 async function staffGetDetailSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -543,14 +556,14 @@ async function staffGetDetailSchedule(req) {
       if (_scheduleData) {
         resolve(_scheduleData);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function adminCancelSchedule(req) {
   return new Promise(async (resolve, reject) => {
@@ -560,29 +573,27 @@ async function adminCancelSchedule(req) {
       let _verifySchedule = await _validCancelTimeForSchedule(customerScheduleId);
       if (_verifySchedule !== true) {
         Logger.error(`_validCancelTimeForSchedule false for appUserId ${_currentUser.appUserId}`);
-        reject("CANCEL_SCHEDULE_TOO_LATE");
+        reject('CANCEL_SCHEDULE_TOO_LATE');
         return;
       }
 
       let customerScheduleData = {
         customerScheduleStatus: SCHEDULE_STATUS.CANCELED,
-        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : "Nhân viên tự hủy"
+        customerScheduleNote: req.payload.customerScheduleNote ? req.payload.customerScheduleNote : 'Nhân viên tự hủy',
       };
 
       let result = await CustomerScheduleResourceAccess.updateById(customerScheduleId, customerScheduleData);
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("error");
+      reject('error');
     }
   });
-};
-
+}
 
 module.exports = {
   insert,
@@ -600,5 +611,5 @@ module.exports = {
   userInsertSchedule,
   userGetListSchedule,
   userGetDetailSchedule,
-  userCancelSchedule
+  userCancelSchedule,
 };

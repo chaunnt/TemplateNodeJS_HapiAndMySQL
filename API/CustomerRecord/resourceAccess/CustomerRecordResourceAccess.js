@@ -1,13 +1,15 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 const moment = require('moment');
 
 const { CHECKING_STATUS } = require('../CustomerRecordConstants');
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "CustomerRecord";
-const primaryKeyField = "customerRecordId";
+const tableName = 'CustomerRecord';
+const primaryKeyField = 'customerRecordId';
 
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -41,11 +43,11 @@ async function createTable() {
           table.index('customerRecordPhone');
           table.index('customerRecordPlateColor');
           table.index('customerRecordPlatenumber');
-          table.index('returnNumberCount')
+          table.index('returnNumberCount');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -68,7 +70,7 @@ async function updateById(id, data) {
 async function deleteById(customerScheduleId) {
   let dataId = {};
   dataId[primaryKeyField] = customerScheduleId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function findById(id) {
@@ -92,36 +94,36 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
       this.orWhere('customerRecordFullName', 'like', `%${searchText}%`)
         .orWhere('customerRecordEmail', 'like', `%${searchText}%`)
         .orWhere('customerRecordPhone', 'like', `%${searchText}%`)
-        .orWhere('customerRecordPlatenumber', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerRecordPlatenumber', 'like', `%${searchText}%`);
+    });
   } else {
     if (filterData.customerRecordFullName) {
-      queryBuilder.where('customerRecordFullName', 'like', `%${filterData.customerRecordFullName}%`)
+      queryBuilder.where('customerRecordFullName', 'like', `%${filterData.customerRecordFullName}%`);
       delete filterData.customerRecordFullName;
     }
 
     if (filterData.customerRecordEmail) {
-      queryBuilder.where('customerRecordEmail', 'like', `%${filterData.customerRecordEmail}%`)
+      queryBuilder.where('customerRecordEmail', 'like', `%${filterData.customerRecordEmail}%`);
       delete filterData.customerRecordEmail;
     }
 
     if (filterData.customerRecordPhone) {
-      queryBuilder.where('customerRecordPhone', 'like', `%${filterData.customerRecordPhone}%`)
+      queryBuilder.where('customerRecordPhone', 'like', `%${filterData.customerRecordPhone}%`);
       delete filterData.customerRecordPhone;
     }
 
     if (filterData.customerRecordPlatenumber) {
-      queryBuilder.where('customerRecordPlatenumber', 'like', `%${filterData.customerRecordPlatenumber}%`)
+      queryBuilder.where('customerRecordPlatenumber', 'like', `%${filterData.customerRecordPlatenumber}%`);
       delete filterData.customerRecordPlatenumber;
     }
   }
 
   if (startDate) {
-    queryBuilder.where('customerRecordCheckDate', '>=', startDate)
+    queryBuilder.where('customerRecordCheckDate', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('customerRecordCheckDate', '<=', endDate)
+    queryBuilder.where('customerRecordCheckDate', '<=', endDate);
   }
   if (filterData.returnNumberCount) {
     queryBuilder.where('returnNumberCount', '>=', filterData.returnNumberCount);
@@ -141,7 +143,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -155,36 +157,36 @@ function _makeQueryBuilderByFilterByExpiredDate(filter, skip, limit, startDate, 
       this.orWhere('customerRecordFullName', 'like', `%${searchText}%`)
         .orWhere('customerRecordEmail', 'like', `%${searchText}%`)
         .orWhere('customerRecordPhone', 'like', `%${searchText}%`)
-        .orWhere('customerRecordPlatenumber', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerRecordPlatenumber', 'like', `%${searchText}%`);
+    });
   } else {
     if (filterData.customerRecordFullName) {
-      queryBuilder.where('customerRecordFullName', 'like', `%${filterData.customerRecordFullName}%`)
+      queryBuilder.where('customerRecordFullName', 'like', `%${filterData.customerRecordFullName}%`);
       delete filterData.customerRecordFullName;
     }
 
     if (filterData.customerRecordEmail) {
-      queryBuilder.where('customerRecordEmail', 'like', `%${filterData.customerRecordEmail}%`)
+      queryBuilder.where('customerRecordEmail', 'like', `%${filterData.customerRecordEmail}%`);
       delete filterData.customerRecordEmail;
     }
 
     if (filterData.customerRecordPhone) {
-      queryBuilder.where('customerRecordPhone', 'like', `%${filterData.customerRecordPhone}%`)
+      queryBuilder.where('customerRecordPhone', 'like', `%${filterData.customerRecordPhone}%`);
       delete filterData.customerRecordPhone;
     }
 
     if (filterData.customerRecordPlatenumber) {
-      queryBuilder.where('customerRecordPlatenumber', 'like', `%${filterData.customerRecordPlatenumber}%`)
+      queryBuilder.where('customerRecordPlatenumber', 'like', `%${filterData.customerRecordPlatenumber}%`);
       delete filterData.customerRecordPlatenumber;
     }
   }
 
   if (startDate) {
-    queryBuilder.where('customerRecordCheckExpiredDate', '>=', startDate)
+    queryBuilder.where('customerRecordCheckExpiredDate', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('customerRecordCheckExpiredDate', '<=', endDate)
+    queryBuilder.where('customerRecordCheckExpiredDate', '<=', endDate);
   }
   if (filterData.returnNumberCount) {
     queryBuilder.where('returnNumberCount', '>=', filterData.returnNumberCount);
@@ -204,41 +206,40 @@ function _makeQueryBuilderByFilterByExpiredDate(filter, skip, limit, startDate, 
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
 }
 async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
   if (startDate) {
-    startDate = moment(startDate, "DD/MM/YYYY").hours(0).minutes(0).toDate();
+    startDate = moment(startDate, 'DD/MM/YYYY').hours(0).minutes(0).toDate();
   }
   if (endDate) {
-    endDate = moment(endDate, "DD/MM/YYYY").hours(23).minutes(59).toDate();
+    endDate = moment(endDate, 'DD/MM/YYYY').hours(23).minutes(59).toDate();
   }
-  
+
   let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
 async function customCount(filter, startDate, endDate, searchText, order) {
   if (startDate) {
-    startDate = moment(startDate, "DD/MM/YYYY").hours(0).minutes(0).toDate();
+    startDate = moment(startDate, 'DD/MM/YYYY').hours(0).minutes(0).toDate();
   }
   if (endDate) {
-    endDate = moment(endDate, "DD/MM/YYYY").hours(23).minutes(59).toDate();
+    endDate = moment(endDate, 'DD/MM/YYYY').hours(23).minutes(59).toDate();
   }
-  
+
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -246,12 +247,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
 
 async function customSearchByExpiredDate(filter, skip, limit, startDate, endDate, searchText, order) {
   if (startDate) {
-    startDate = moment(startDate, "DD/MM/YYYY").hours(0).minutes(0).toDate();
+    startDate = moment(startDate, 'DD/MM/YYYY').hours(0).minutes(0).toDate();
   }
   if (endDate) {
-    endDate = moment(endDate, "DD/MM/YYYY").hours(23).minutes(59).toDate();
+    endDate = moment(endDate, 'DD/MM/YYYY').hours(23).minutes(59).toDate();
   }
-  
+
   let query = _makeQueryBuilderByFilterByExpiredDate(filter, skip, limit, startDate, endDate, searchText, order);
 
   return await query.select();
@@ -259,22 +260,21 @@ async function customSearchByExpiredDate(filter, skip, limit, startDate, endDate
 
 async function customCountByExpiredDate(filter, startDate, endDate, searchText, order) {
   if (startDate) {
-    startDate = moment(startDate, "DD/MM/YYYY").hours(0).minutes(0).toDate();
+    startDate = moment(startDate, 'DD/MM/YYYY').hours(0).minutes(0).toDate();
   }
   if (endDate) {
-    endDate = moment(endDate, "DD/MM/YYYY").hours(23).minutes(59).toDate();
+    endDate = moment(endDate, 'DD/MM/YYYY').hours(23).minutes(59).toDate();
   }
-  
+
   let query = _makeQueryBuilderByFilterByExpiredDate(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -282,21 +282,21 @@ async function customCountByExpiredDate(filter, startDate, endDate, searchText, 
 
 async function findRecordByProcessCheckDate(filter, startDate, endDate) {
   if (startDate) {
-    startDate = moment(startDate, "DD/MM/YYYY").hours(0).minutes(0).toDate();
+    startDate = moment(startDate, 'DD/MM/YYYY').hours(0).minutes(0).toDate();
   }
   if (endDate) {
-    endDate = moment(endDate, "DD/MM/YYYY").hours(23).minutes(59).toDate();
+    endDate = moment(endDate, 'DD/MM/YYYY').hours(23).minutes(59).toDate();
   }
-  
+
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (startDate) {
-    queryBuilder.where('customerRecordProcessCheckDate', '>=', startDate)
+    queryBuilder.where('customerRecordProcessCheckDate', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('customerRecordProcessCheckDate', '<=', endDate)
+    queryBuilder.where('customerRecordProcessCheckDate', '<=', endDate);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -323,5 +323,5 @@ module.exports = {
   customCountByExpiredDate,
   deleteById,
   findRecordByProcessCheckDate,
-  updateAll
+  updateAll,
 };

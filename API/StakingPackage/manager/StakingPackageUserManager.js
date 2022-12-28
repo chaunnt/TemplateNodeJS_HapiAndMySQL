@@ -16,7 +16,9 @@ async function userRequestStaking(req) {
       let stakingId = req.payload.stakingId;
       let stakingAmount = req.payload.stackingAmount;
 
-      let stakingPackage = await StakingPackageResourceAccess.find({ stakingPackageId: stakingId });
+      let stakingPackage = await StakingPackageResourceAccess.find({
+        stakingPackageId: stakingId,
+      });
       if (stakingPackage && stakingPackage.length > 0) {
         stakingPackage = stakingPackage[0];
       } else {
@@ -34,7 +36,7 @@ async function userRequestStaking(req) {
         return; //make sure everything stop
       }
     } catch (e) {
-      console.error(`error staking package user userRequestStaking:`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -53,26 +55,10 @@ async function getUserStakingHistory(req) {
       let limit = req.payload.limit;
       let order = req.payload.order;
 
-      let stakingList = await StakingPackageUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        undefined,
-        order,
-      );
+      let stakingList = await StakingPackageUserView.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
 
       if (stakingList && stakingList.length > 0) {
-        let stakingCount = await StakingPackageUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+        let stakingCount = await StakingPackageUserView.customCount(filter, undefined, undefined, undefined, order);
         resolve({
           data: stakingList,
           total: stakingCount[0].count,
@@ -84,7 +70,7 @@ async function getUserStakingHistory(req) {
         });
       }
     } catch (e) {
-      console.error(`error staking package user getUserStakingHistory:`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -101,26 +87,10 @@ async function find(req) {
       let limit = req.payload.limit;
       let order = req.payload.order;
       let searchText = req.payload.searchText;
-      let stakingList = await StakingPackageUserView.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let stakingList = await StakingPackageUserView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (stakingList && stakingList.length > 0) {
-        let stakingCount = await StakingPackageUserView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-          order,
-        );
+        let stakingCount = await StakingPackageUserView.customCount(filter, undefined, undefined, searchText, order);
         resolve({
           data: stakingList,
           total: stakingCount[0].count,
@@ -132,7 +102,7 @@ async function find(req) {
         });
       }
     } catch (e) {
-      console.error(`error staking package user find:`, e);
+      console.error(e);
       reject('failed');
     }
   });

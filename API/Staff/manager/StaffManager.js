@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -66,25 +66,19 @@ async function find(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
+      let searchText = req.payload.searchText;
       if (!filter) {
         filter = {};
       }
+
       //only get data of current station
-      if (filter && req.currentUser.stationsId) {
+      if (filter && req.currentUser.stationsId && req.currentUser.stationsId !== null) {
         filter.stationsId = req.currentUser.stationsId;
       }
       let staffs = await RoleStaffView.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
 
       if (staffs && staffs.length > 0) {
-        let staffsCount = await RoleStaffView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+        let staffsCount = await RoleStaffView.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
         resolve({ data: staffs, total: staffsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -157,8 +151,12 @@ async function loginStaff(req) {
         }
         //create new login token
         let token = TokenFunction.createToken(foundStaff);
+
         foundStaff.token = token;
-        await StaffResourceAccess.updateById(foundStaff.staffId, { lastActiveAt: new Date() });
+        await StaffResourceAccess.updateById(foundStaff.staffId, {
+          lastActiveAt: new Date(),
+          staffToken: token,
+        });
         resolve(foundStaff);
         return;
       }
@@ -217,9 +215,7 @@ async function adminChangePasswordStaff(req) {
           return;
         }
       }
-      console.error(
-        `error adminChangePasswordStaff with staffId ${req.payload.id}: change user password failed ${ERROR}`,
-      );
+      console.error(`error adminChangePasswordStaff with staffId ${req.payload.id}: change user password failed ${ERROR}`);
       reject('change user password failed');
     } catch (e) {
       Logger.error(__filename, e);

@@ -4,12 +4,7 @@
 require('dotenv').config();
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const {
-  WITHDRAW_TRX_STATUS,
-  WITHDRAW_TRX_CATEGORY,
-  WITHDRAW_TRX_UNIT,
-  WITHDRAW_TRX_TYPE,
-} = require('../PaymentWithdrawTransactionConstant');
+const { WITHDRAW_TRX_STATUS, WITHDRAW_TRX_CATEGORY, WITHDRAW_TRX_UNIT, WITHDRAW_TRX_TYPE } = require('../PaymentWithdrawTransactionConstant');
 const tableName = 'PaymentWithdrawTransaction';
 const primaryKeyField = 'paymentWithdrawTransactionId';
 async function createTable() {
@@ -114,6 +109,13 @@ async function customSum(sumField, filter, skip, limit, startDate, endDate, sear
 async function sumAmountDistinctByDate(filter, startDate, endDate) {
   return await Common.sumAmountDistinctByDate(tableName, 'paymentAmount', filter, startDate, endDate);
 }
+
+async function findById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.findById(tableName, dataId, id);
+}
+
 module.exports = {
   insert,
   find,
@@ -122,4 +124,5 @@ module.exports = {
   initDB,
   customSum,
   sumAmountDistinctByDate,
+  findById,
 };

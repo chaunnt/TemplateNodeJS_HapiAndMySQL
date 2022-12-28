@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -10,7 +12,7 @@ const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransaction/PaymentDepo
 const { WALLET_TYPE } = require('../Wallet/WalletConstant');
 
 async function createVNPAYPaymentRequest(transactionId, paymentAmount, ipAddr) {
-  return await VNPAYFunctions.makePaymentRequestVNPAY(transactionId, transactionId, paymentAmount, ipAddr)
+  return await VNPAYFunctions.makePaymentRequestVNPAY(transactionId, transactionId, paymentAmount, ipAddr);
 }
 
 async function _failureTransaction(transactionData) {
@@ -36,18 +38,16 @@ async function _succeedTransaction(transactionData) {
     //find POINT wallet to update
     let pointWallet = await WalletResource.find({
       appUserId: transactionData.appUserId,
-      walletType: WALLET_TYPE.POINT
+      walletType: WALLET_TYPE.POINT,
     });
     if (!pointWallet) {
       return FUNC_FAILED;
     }
     pointWallet = pointWallet[0];
     pointWallet.balance = parseInt(pointWallet.balance + (transactionData.paymentAmount + transactionData.paymentRewardAmount) / VND_TO_POINT);
-    
+
     //update wallet balance
-    let updateBalanceResult = await WalletResource.updateBalanceTransaction([
-      pointWallet,
-    ]);
+    let updateBalanceResult = await WalletResource.updateBalanceTransaction([pointWallet]);
     if (updateBalanceResult) {
       return updateBalanceResult;
     }
@@ -64,9 +64,13 @@ async function receiveVNPAYPaymentRequest(vnpayData) {
     return confirmResult;
   }
 
-  let transactionData = await PaymentDepositResource.find({
-    paymentTransactionCode: transactionCode
-  }, 0, 1);
+  let transactionData = await PaymentDepositResource.find(
+    {
+      paymentTransactionCode: transactionCode,
+    },
+    0,
+    1,
+  );
   if (transactionData && transactionData.length > 0) {
     transactionData = transactionData[0];
 
@@ -76,9 +80,7 @@ async function receiveVNPAYPaymentRequest(vnpayData) {
     confirmResult = await VNPAYFunctions.verifyPaymentFromVNPAY(vnpayData, transactionCode, paymentAmount, paymentStatus);
 
     //check payment result
-    if (confirmResult && confirmResult.result
-      && confirmResult.result.RspCode === "00"
-      && confirmResult.paymentStatus === 'Success') {
+    if (confirmResult && confirmResult.result && confirmResult.result.RspCode === '00' && confirmResult.paymentStatus === 'Success') {
       await _succeedTransaction(transactionData);
     } else {
       await _failureTransaction(transactionData);
@@ -88,7 +90,7 @@ async function receiveVNPAYPaymentRequest(vnpayData) {
 }
 
 async function createMOMOPaymentRequest(transactionId, paymentAmount) {
-  return await MOMOFunctions.makePaymentRequestMOMO(transactionId, transactionId, paymentAmount)
+  return await MOMOFunctions.makePaymentRequestMOMO(transactionId, transactionId, paymentAmount);
 }
 
 async function receiveMOMOPaymentRequest(momoData) {
@@ -100,9 +102,13 @@ async function receiveMOMOPaymentRequest(momoData) {
     return confirmResult;
   }
 
-  let transactionData = await PaymentDepositResource.find({
-    paymentTransactionCode: transactionCode
-  }, 0, 1);
+  let transactionData = await PaymentDepositResource.find(
+    {
+      paymentTransactionCode: transactionCode,
+    },
+    0,
+    1,
+  );
 
   if (transactionData && transactionData.length > 0) {
     transactionData = transactionData[0];
@@ -113,9 +119,7 @@ async function receiveMOMOPaymentRequest(momoData) {
     confirmResult = await MOMOFunctions.verifyPaymentFromMOMO(momoData, transactionCode, paymentAmount, paymentStatus);
 
     //check payment result
-    if (confirmResult && confirmResult.result
-      && confirmResult.result.RspCode === "00"
-      && confirmResult.paymentStatus === 'Success') {
+    if (confirmResult && confirmResult.result && confirmResult.result.RspCode === '00' && confirmResult.paymentStatus === 'Success') {
       await _succeedTransaction(transactionData);
     } else {
       await _failureTransaction(transactionData);
@@ -129,4 +133,4 @@ module.exports = {
   receiveVNPAYPaymentRequest,
   createMOMOPaymentRequest,
   receiveMOMOPaymentRequest,
-}
+};

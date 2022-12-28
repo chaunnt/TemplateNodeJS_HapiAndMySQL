@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -40,7 +40,7 @@ async function _cancelAllEmailMessage(station) {
 }
 
 async function sendMessageEmailToCustomer(station) {
-  console.info(`sendMessageEmailToCustomer ${station.stationsId}`);
+  console.log(`sendMessageEmailToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
     //Skip TEST station
     if (station.stationsId === 0) {
@@ -53,11 +53,7 @@ async function sendMessageEmailToCustomer(station) {
     let customEmailClient = undefined;
     if (station.stationUseCustomSMTP === ENABLED) {
       //check if use custom smtp but wrong smtp info
-      if (
-        station.stationCustomSMTPConfig &&
-        station.stationCustomSMTPConfig !== '' &&
-        station.stationCustomSMTPConfig !== null
-      ) {
+      if (station.stationCustomSMTPConfig && station.stationCustomSMTPConfig !== '' && station.stationCustomSMTPConfig !== null) {
         try {
           let _smtpConfig = JSON.parse(stationConfigs.stationCustomSMTPConfig);
           customEmailClient = await EmailClient.createNewClient(
@@ -75,9 +71,7 @@ async function sendMessageEmailToCustomer(station) {
           }
         } catch (error) {
           await _cancelAllEmailMessage(station);
-          Logger.error(
-            `Station ${station.stationsId} enable use Custom SMTP but can not convert stationCustomSMTPConfig`,
-          );
+          Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not convert stationCustomSMTPConfig`);
           resolve('OK');
           return;
         }

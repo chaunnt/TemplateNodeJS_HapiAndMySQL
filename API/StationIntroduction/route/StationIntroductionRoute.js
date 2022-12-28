@@ -1,11 +1,13 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'StationIntroduction';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const updateSchema = {
@@ -23,11 +25,11 @@ const updateSchema = {
   stationTwitterUrl: Joi.string(),
   stationYoutubeUrl: Joi.string(),
   stationInstagramUrl: Joi.string(),
-}
+};
 
 module.exports = {
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -40,22 +42,22 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   stationIntroductionDetail: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `get details ${moduleName}`,
     validate: {
       payload: Joi.object({
-        stationUrl: Joi.string().required()
-      })
+        stationUrl: Joi.string().required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "getStationIntroductionDetail");
-    }
+      Response(req, res, 'getStationIntroductionDetail');
+    },
   },
 };

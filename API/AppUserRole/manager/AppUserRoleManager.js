@@ -1,8 +1,10 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const AppUserRoleResourceAccess = require("../resourceAccess/AppUserRoleResourceAccess");
+'use strict';
+const AppUserRoleResourceAccess = require('../resourceAccess/AppUserRoleResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
@@ -10,16 +12,16 @@ async function insert(req) {
     try {
       let appUserRoleData = req.payload;
       let result = await AppUserRoleResourceAccess.insert(appUserRoleData);
-      if(result){
+      if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -32,16 +34,16 @@ async function find(req) {
       let appUserRoles = await AppUserRoleResourceAccess.find(filter, skip, limit, order);
       let appUserRolesCount = await AppUserRoleResourceAccess.count(filter, order);
       if (appUserRoles && appUserRolesCount) {
-        resolve({data: appUserRoles, total: appUserRolesCount});
-      }else{
-        resolve({data: [], total: 0 });
+        resolve({ data: appUserRoles, total: appUserRolesCount });
+      } else {
+        resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -49,31 +51,31 @@ async function updateById(req) {
       let appUserRoleId = req.payload.id;
       let appUserRoleData = req.payload.data;
       let result = await AppUserRoleResourceAccess.updateById(appUserRoleId, appUserRoleData);
-      if(result){
+      if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      resolve("success");
+      resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,
   find,
   updateById,
-  findById
+  findById,
 };

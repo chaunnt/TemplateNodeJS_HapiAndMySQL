@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -25,11 +27,11 @@ async function logAppDataChanged(dataBefore, dataAfter, picUser, tableName) {
       };
 
       if (picUser.staffId) {
-        changedData.dataPICName = `${picUser.firstName} ${picUser.lastName}`
+        changedData.dataPICName = `${picUser.firstName} ${picUser.lastName}`;
         changedData.dataPICId = picUser.staffId;
         changedData.dataPICTable = StaffResource.modelName;
       } else if (picUser.appUserId) {
-        changedData.dataPICName = `${picUser.firstName} ${picUser.lastName}`
+        changedData.dataPICName = `${picUser.firstName} ${picUser.lastName}`;
         changedData.dataPICId = picUser.appUserId;
         changedData.dataPICTable = AppUserResource.modelName;
       }
@@ -43,10 +45,10 @@ async function logAppDataChanged(dataBefore, dataAfter, picUser, tableName) {
 }
 
 async function logCustomerRecordChanged(dataBefore, dataAfter, picUser) {
-  await logAppDataChanged(dataBefore, dataAfter, picUser, CustomerRecordResource.modelName)
+  await logAppDataChanged(dataBefore, dataAfter, picUser, CustomerRecordResource.modelName);
 }
 
 module.exports = {
   logCustomerRecordChanged,
-  logAppDataChanged
-}
+  logAppDataChanged,
+};

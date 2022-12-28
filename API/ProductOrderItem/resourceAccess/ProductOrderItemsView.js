@@ -2,7 +2,7 @@
 
 'use strict';
 require('dotenv').config();
-const { DB, timestamps } = require('../../../config/database');
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'ProductOrderItemView';
 const rootTableName = 'ProductOrderItem';
@@ -10,9 +10,12 @@ const primaryKeyField = 'productOrderItemId';
 
 async function createProductOrderItemView() {
   const ProductTableName = 'Product';
+  const ProductOrderTableName = 'ProductOrder';
+
   let fields = [
     `${rootTableName}.productOrderItemId`,
     `${rootTableName}.orderItemPrice`,
+    `${rootTableName}.orderItemDeliveredQuantity`,
     `${rootTableName}.orderItemQuantity`,
     `${rootTableName}.productOrderId`,
     `${rootTableName}.productId`,
@@ -21,15 +24,18 @@ async function createProductOrderItemView() {
     `${rootTableName}.createdAt`,
     `${rootTableName}.updatedAt`,
 
-    `${ProductTableName}.producName`,
+    `${ProductOrderTableName}.orderStatus`,
+    `${ProductOrderTableName}.appUserId`,
+    `${ProductOrderTableName}.minOrderItemQuantity`,
+    `${ProductOrderTableName}.maxOrderItemQuantity`,
+
+    `${ProductTableName}.productName`,
     `${ProductTableName}.quantity`,
     `${ProductTableName}.productChannel`,
     `${ProductTableName}.productCategory`,
-    `${ProductTableName}.productType`,
     `${ProductTableName}.stockQuantity`,
     `${ProductTableName}.productStatus`,
-    `${ProductTableName}.price`,
-    `${ProductTableName}.expireDate`,
+    `${ProductTableName}.productCode`,
     `${ProductTableName}.staffId`,
   ];
 
@@ -37,6 +43,9 @@ async function createProductOrderItemView() {
     .from(`${rootTableName}`)
     .leftJoin(`${ProductTableName}`, function () {
       this.on(`${rootTableName}.productId`, '=', `${ProductTableName}.productId`);
+    })
+    .leftJoin(`${ProductOrderTableName}`, function () {
+      this.on(`${rootTableName}.productOrderId`, '=', `${ProductOrderTableName}.productOrderId`);
     });
   Common.createOrReplaceView(tableName, viewDefinition);
 }
@@ -73,7 +82,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('producName', 'like', `%${searchText}%`).orWhere('ticketTitle', 'like', `%${searchText}%`);
+      this.orWhere('productName', 'like', `%${searchText}%`).orWhere('ticketTitle', 'like', `%${searchText}%`);
     });
   }
 
@@ -120,6 +129,13 @@ async function customSum(sumField, filter, skip, limit, startDate, endDate, sear
   let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return queryBuilder.sum(`${sumField} as sumResult`);
 }
+
+async function findById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.findById(tableName, dataId, id);
+}
+
 module.exports = {
   insert,
   find,
@@ -130,4 +146,5 @@ module.exports = {
   customSearch,
   customCount,
   customSum,
+  findById,
 };

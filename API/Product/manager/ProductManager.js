@@ -1,13 +1,10 @@
 /* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
-/**
- * Created by A on 7/18/17.
- */
 'use strict';
 const ProductResourceAccess = require('../resourceAccess/ProductResourceAccess');
 const Logger = require('../../../utils/logging');
-const { PLACE_ORDER_ERROR } = require('../ProductConstant');
 const ProductImageResourceAccess = require('../../ProductImage/resourceAccess/ProductImageResourceAccess');
+// const NFTFunctions = require('../../../ThirdParty/Blockchain/NFT/NFTFunctions');
 
 const { ERROR } = require('../../Common/CommonConstant');
 
@@ -17,9 +14,9 @@ async function insert(req) {
       let productData = req.payload;
       let staffId = req.currentUser.staffId;
       let productImages = productData.productImages ? productData.productImages : undefined;
-      productData.producName = productData.productTitle;
-
       delete productData.productImages;
+      // let nftId = await NFTFunctions.mint(productData.productTxHash);
+      productData.productCode = productData.productCode.toUpperCase();
       let result = await ProductResourceAccess.insert({
         ...productData,
         staffId,
@@ -30,8 +27,7 @@ async function insert(req) {
           for (let imageUrl of productImages) {
             let productId = result[0];
             let productImage = {
-              productImageName: productData.productTitle,
-              productImageUrl: imageUrl,
+              productImage: imageUrl,
               productId: productId,
             };
             await ProductImageResourceAccess.insert(productImage);
@@ -61,25 +57,9 @@ async function find(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let products = await ProductResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
-      if (products) {
-        let productsCount = await ProductResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+      let products = await ProductResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
+      if (products && products.length > 0) {
+        let productsCount = await ProductResourceAccess.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
         resolve({ data: products, total: productsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -113,8 +93,7 @@ async function updateById(req) {
           // insert hinh moi
           for (let imageUrl of productImages) {
             let productImage = {
-              productImageName: productData.productTitle ? productData.productTitle : product.productTitle,
-              productImageUrl: imageUrl,
+              productImage: imageUrl,
               productId: productId,
             };
             await ProductImageResourceAccess.insert(productImage);
@@ -122,12 +101,12 @@ async function updateById(req) {
         }
 
         if (productData.productTitle) {
-          productData.producName = productData.productTitle;
+          productData.productName = productData.productTitle;
         }
-
+        productData.updatedAt = new Date();
         let result = await ProductResourceAccess.updateById(productId, productData);
         if (result) {
-          //update lai imageName neu co cap nhat productTitle
+          // update lai imageName neu co cap nhat productTitle
           if (productData.productTitle) {
             if (listImageProduct && listImageProduct.length > 0) {
               for (let productImage of listImageProduct) {
@@ -137,7 +116,6 @@ async function updateById(req) {
               }
             }
           }
-
           resolve(result);
         } else {
           console.error(`Cannot update Product id ${productId}`);
@@ -179,6 +157,7 @@ async function findById(req) {
     }
   });
 }
+
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -207,26 +186,10 @@ async function getList(req) {
       if (filter === undefined) {
         filter = {};
       }
-      let products = await ProductResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let products = await ProductResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (products && products.length > 0) {
-        let productsCount = await ProductResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          order,
-        );
+        let productsCount = await ProductResourceAccess.customCount(filter, undefined, undefined, undefined, undefined, undefined, order);
 
         products = await Promise.all(
           products.map(async product => {
@@ -235,7 +198,7 @@ async function getList(req) {
               productId: product.productId,
             });
             if (_productImages && _productImages.length > 0) {
-              _productImages.forEach(productImage => listProductImages.push(productImage.productImageUrl));
+              _productImages.forEach(productImage => listProductImages.push(productImage.productImage));
             }
             product.productImages = listProductImages;
             return product;

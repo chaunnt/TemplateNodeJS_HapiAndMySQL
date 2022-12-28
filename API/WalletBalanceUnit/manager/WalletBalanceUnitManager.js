@@ -7,7 +7,6 @@
 const WalletBalanceUnitResourceAccess = require('../resourceAccess/WalletBalanceUnitResourceAccess');
 const WalletBalanceUnitFunction = require('../WalletBalanceUnitFunctions');
 const Logger = require('../../../utils/logging');
-const { ERROR } = require('../../Common/CommonConstant');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -27,7 +26,7 @@ async function insert(req) {
         reject(`failed`);
       }
     } catch (e) {
-      console.error(`error Wallet Balance`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -47,14 +46,7 @@ async function find(req) {
       );
 
       if (result && result.length > 0) {
-        let resultCount = await WalletBalanceUnitResourceAccess.customCount(
-          req.payload.filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-        );
+        let resultCount = await WalletBalanceUnitResourceAccess.customCount(req.payload.filter, undefined, undefined, searchText);
         resolve({
           data: result,
           total: resultCount[0].count,
@@ -64,7 +56,7 @@ async function find(req) {
         reject(`failed`);
       }
     } catch (e) {
-      console.error(`error Wallet Balance find`, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -113,7 +105,6 @@ async function deleteById(req) {
     if (result) {
       resolve(result);
     } else {
-      console.error(`error Wallet Balance deleteById`, e);
       reject('failed');
     }
   });
@@ -126,24 +117,10 @@ async function getList(req) {
       let filter = req.payload.filter;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
-      let result = await WalletBalanceUnitResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-      );
+      let result = await WalletBalanceUnitResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText);
 
       if (result && result.length > 0) {
-        let resultCount = await WalletBalanceUnitResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-        );
+        let resultCount = await WalletBalanceUnitResourceAccess.customCount(filter, undefined, undefined, searchText);
         resolve({
           data: result,
           total: resultCount[0].count,
@@ -155,7 +132,7 @@ async function getList(req) {
         });
       }
     } catch (e) {
-      console.error(`error Wallet Balance getList`, e);
+      console.error(e);
       reject('failed');
     }
   });

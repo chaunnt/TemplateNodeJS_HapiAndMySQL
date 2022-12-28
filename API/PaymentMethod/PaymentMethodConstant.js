@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -9,5 +11,5 @@ module.exports = {
     CREDIT_DEBIT: 1,
     ONLINE: 2,
     CRYPTO: 3,
-  }
-}
+  },
+};

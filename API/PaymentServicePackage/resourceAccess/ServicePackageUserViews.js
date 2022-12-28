@@ -171,16 +171,7 @@ async function countDistinct(distinctFields, filter, startDate, endDate) {
     key: 'username',
     value: 'desc',
   };
-  let queryBuilder = _makeQueryBuilderByFilter(
-    filter,
-    undefined,
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-    undefined,
-    _orderBy,
-  );
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, startDate, endDate, undefined, _orderBy);
 
   return new Promise((resolve, reject) => {
     try {
@@ -271,9 +262,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, startDate, endDate
   if (filter && filter.appUserId) {
     const _appUserId = filter.appUserId;
     queryBuilder.where(function () {
-      this.orWhere('memberReferIdF1', _appUserId)
-        .orWhere('memberReferIdF2', _appUserId)
-        .orWhere('memberReferIdF3', _appUserId);
+      this.orWhere('memberReferIdF1', _appUserId).orWhere('memberReferIdF2', _appUserId).orWhere('memberReferIdF3', _appUserId);
       // .orWhere("memberReferIdF4", _appUserId)
       // .orWhere("memberReferIdF5", _appUserId);
     });

@@ -1,4 +1,6 @@
-const RealEstateUtilitiesResourceAccess = require("../resourceAccess/RealEstateUtilitiesResourceAccess");
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const RealEstateUtilitiesResourceAccess = require('../resourceAccess/RealEstateUtilitiesResourceAccess');
 
 const Logger = require('../../../utils/logging');
 
@@ -10,14 +12,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("Cannot insert data");
+        reject('Cannot insert data');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -31,14 +33,14 @@ async function find(req) {
       if (result && resultCount) {
         resolve({ data: result, total: resultCount[0].count });
       } else {
-        reject("Cannot find data");
+        reject('Cannot find data');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -47,37 +49,39 @@ async function updateById(req) {
       let id = req.payload.realEstateUtilitiesId;
       let result = await RealEstateUtilitiesResourceAccess.updateById(id, data);
       if (result) {
-        resolve("OK");
+        resolve('OK');
       } else {
-        reject("Cannot update data");
+        reject('Cannot update data');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let id = req.payload.realEstateUtilitiesId;
-      let result = await RealEstateUtilitiesResourceAccess.updateById(id, { isDeleted: 1 });
+      let result = await RealEstateUtilitiesResourceAccess.updateById(id, {
+        isDeleted: 1,
+      });
       if (result) {
-        resolve("OK");
+        resolve('OK');
       } else {
-        reject("Cannot update data");
+        reject('Cannot update data');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   find,
   updateById,
   deleteById,
-  insert
-}
+  insert,
+};

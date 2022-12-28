@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by Huu on 11/18/21.
  */
@@ -27,7 +29,7 @@ async function grantMembershipForUsers(membership) {
     let _updatingUserList = await SummaryUserPaymentView.findByMinBalance(
       membership.membershipPointRequired * VND_TO_POINT,
       MAX_USER_PER_BATCH * batchCounter,
-      MAX_USER_PER_BATCH
+      MAX_USER_PER_BATCH,
     );
 
     if (_updatingUserList && _updatingUserList.length > 0) {
@@ -37,13 +39,12 @@ async function grantMembershipForUsers(membership) {
       }
 
       await AppUserResource.updateAllById(_updatingIdList, {
-        memberLevelName: membership.membershipTitle
+        memberLevelName: membership.membershipTitle,
       });
-
     }
   }
 }
 
 module.exports = {
-  grantMembershipForUsers
-}
+  grantMembershipForUsers,
+};

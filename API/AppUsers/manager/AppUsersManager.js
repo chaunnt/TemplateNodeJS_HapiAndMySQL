@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -16,12 +16,8 @@ const UploadFunction = require('../../Upload/UploadFunctions');
 const { ERROR } = require('../../Common/CommonConstant');
 const WalletResourceAccess = require('../../Wallet/resourceAccess/WalletResourceAccess');
 
-const {
-  USER_VERIFY_INFO_STATUS,
-  USER_VERIFY_EMAIL_STATUS,
-  USER_VERIFY_PHONE_NUMBER_STATUS,
-  USER_ERROR,
-} = require('../AppUserConstant');
+const { USER_VERIFY_INFO_STATUS, USER_VERIFY_EMAIL_STATUS, USER_VERIFY_PHONE_NUMBER_STATUS, USER_ERROR } = require('../AppUserConstant');
+const { confirmOTPById } = require('../../OTPMessage/OTPMessageFunction');
 
 async function _storeUserIp(req, appUserId) {
   //store IP & last login
@@ -38,12 +34,10 @@ async function _registerUser(userData) {
   return new Promise(async (resolve, reject) => {
     try {
       let newUser = await AppUsersFunctions.createNewUser(userData);
-
       if (newUser) {
         //tao vi cho user
         const WalletFunction = require('../../Wallet/WalletFunctions');
         await WalletFunction.createWalletForUser(newUser.appUserId);
-
         resolve(newUser);
       } else {
         console.error(`error AppUserManage can not registerUser: ${ERROR}`);
@@ -89,14 +83,13 @@ async function find(req) {
       let searchText = req.payload.searchText;
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
-      let users = await AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
+      let users = await AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
       if (users && users.length > 0) {
         for (let user of users) {
           let wallets = await WalletResourceAccess.find({ appUserId: user.appUserId });
           user.wallets = wallets;
         }
-
         let usersCount = await AppUserView.customCount(filter, skip, limit, startDate, endDate, searchText, order);
         resolve({ data: users, total: usersCount[0].count });
       } else {
@@ -160,6 +153,8 @@ async function updateById(req) {
           if (userData.active === 0) {
             // làm này để cho user thông báo biết đã bị khoá còn trăn trối
             if (process.env.GOOGLE_FIREBASE_PUSH_ENABLE) {
+              const { APPROVE_USER_INFO, REFUSED_USER_INFO, USER_LOCKED, USER_ACTIVE } = require('../../CustomerMessage/CustomerMessageConstant');
+              const { handleSendMessageUser } = require('../../CustomerMessage/CustomerMessageFunctions');
               handleSendMessageUser(USER_LOCKED, { time: moment().format('hh:mm DD/MM/YYYY') }, appUserId, {
                 isForceLogout: true,
               });
@@ -169,6 +164,8 @@ async function updateById(req) {
             });
           } else {
             if (process.env.GOOGLE_FIREBASE_PUSH_ENABLE) {
+              const { APPROVE_USER_INFO, REFUSED_USER_INFO, USER_LOCKED, USER_ACTIVE } = require('../../CustomerMessage/CustomerMessageConstant');
+              const { handleSendMessageUser } = require('../../CustomerMessage/CustomerMessageFunctions');
               handleSendMessageUser(USER_ACTIVE, null, appUserId, null);
             }
           }
@@ -191,7 +188,7 @@ async function findById(req) {
       let foundUser = await AppUsersFunctions.retrieveUserDetail(req.payload.id);
 
       if (foundUser) {
-        //lay thong tin giao dich
+        // lay thong tin giao dich
         await AppUsersFunctions.retrieveUserTransaction(foundUser);
         resolve(foundUser);
       } else {
@@ -205,6 +202,23 @@ async function findById(req) {
   });
 }
 
+async function deleteById(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let appUserId = req.payload.id;
+
+      let result = await AppUsersResourceAccess.deleteById(appUserId);
+      if (result) {
+        resolve(result);
+      } else {
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject('failed');
+    }
+  });
+}
 async function userGetDetailById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -215,7 +229,8 @@ async function userGetDetailById(req) {
 
         //lay so luong giao dich & so tien da rut cua user
         //lay thong tin giao dich
-        await AppUsersFunctions.retrieveUserTransaction(foundUser);
+        // await AppUsersFunctions.retrieveUserTransaction(foundUser);
+
         resolve(foundUser);
       } else {
         console.error(`error get detail by id ${req.currentUser.appUserId} failed`);
@@ -235,13 +250,14 @@ async function registerUser(req) {
 async function registerUserByPhone(req) {
   let userData = req.payload;
   //Lưu họ và tên vào hết firstName
-  userData.firstName = userData.fullName;
-  //loại bỏ field fullName, để ko bị lỗi DUPLICATED_USER
-  delete userData.fullName;
+  if (userData.fullName) {
+    userData.firstName = userData.fullName;
+    //loại bỏ field fullName, để ko bị lỗi DUPLICATED_USER
+    delete userData.fullName;
+  }
   //Coi số điện thoại là username luôn
   userData.username = req.payload.phoneNumber;
-  userData.isVerifiedPhoneNumber = USER_VERIFY_PHONE_NUMBER_STATUS.NOT_VERIFIED;
-  userData.active = 0;
+  userData.isVerifiedPhoneNumber = USER_VERIFY_PHONE_NUMBER_STATUS.IS_VERIFIED;
   return await _registerUser(userData);
 }
 
@@ -250,6 +266,7 @@ async function registerUserByEmail(req) {
 
   //Coi số điện thoại là username luôn
   userData.username = req.payload.email;
+
   return await _registerUser(userData);
 }
 
@@ -261,9 +278,9 @@ async function _login(username, password) {
     if (foundUser.active === 0) {
       throw USER_ERROR.USER_LOCKED;
     }
-    if (foundUser.isVerifiedPhoneNumber !== USER_VERIFY_PHONE_NUMBER_STATUS.IS_VERIFIED) {
-      throw USER_ERROR.NOT_VERIFIED_PHONE;
-    }
+    // if (foundUser.isVerifiedPhoneNumber !== USER_VERIFY_PHONE_NUMBER_STATUS.IS_VERIFIED) {
+    //   throw USER_ERROR.NOT_VERIFIED_PHONE;
+    // }
 
     //lay so luong thong bao chua doc cua user
     await AppUsersFunctions.getUnreadNotificationCount(foundUser);
@@ -315,7 +332,7 @@ async function loginByToken(req) {
         reject('INVALID_TOKEN');
         return;
       }
-      
+
       let foundUser = await AppUsersFunctions.retrieveUserDetail(_userData.appUserId);
 
       if (foundUser) {
@@ -771,11 +788,7 @@ async function uploadBeforeIdentityCard(req) {
         return;
       }
       var originaldata = Buffer.from(imageData, 'base64');
-      let image = await UploadFunction.uploadMediaFile(
-        originaldata,
-        imageFormat,
-        'AppUser/IdentityCard/' + id.toString() + '/',
-      );
+      let image = await UploadFunction.uploadMediaFile(originaldata, imageFormat, 'AppUser/IdentityCard/' + id.toString() + '/');
       if (image) {
         let updateResult = await AppUsersResourceAccess.updateById(id, {
           imageBeforeIdentityCard: image,
@@ -808,11 +821,7 @@ async function uploadAfterIdentityCard(req) {
         return;
       }
       var originaldata = Buffer.from(imageData, 'base64');
-      let image = await UploadFunction.uploadMediaFile(
-        originaldata,
-        imageFormat,
-        'AppUser/IdentityCard/' + id.toString() + '/',
-      );
+      let image = await UploadFunction.uploadMediaFile(originaldata, imageFormat, 'AppUser/IdentityCard/' + id.toString() + '/');
       if (image) {
         let updateResult = await AppUsersResourceAccess.updateById(id, {
           imageAfterIdentityCard: image,
@@ -956,11 +965,7 @@ async function uploadAvatar(req) {
         return;
       }
       var originaldata = Buffer.from(imageData, 'base64');
-      let image = await UploadFunction.uploadMediaFile(
-        originaldata,
-        imageFormat,
-        'AppUser/Avatar/' + id.toString() + '/',
-      );
+      let image = await UploadFunction.uploadMediaFile(originaldata, imageFormat, 'AppUser/Avatar/' + id.toString() + '/');
       if (image) {
         var result = await AppUsersResourceAccess.updateById(id, {
           userAvatar: image,
@@ -993,15 +998,7 @@ async function exportExcel(req) {
         filter.areaDistrictId = staff.areaDistrictId;
         filter.areaWardId = staff.areaWardId;
       }
-      let users = await AppUsersResourceAccess.customSearch(
-        filter,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        order,
-      );
+      let users = await AppUsersResourceAccess.customSearch(filter, undefined, undefined, undefined, undefined, undefined, order);
       if (users && users.length > 0) {
         const fileName = 'users' + (new Date() - 1).toString();
         let filePath = await ExcelFunction.renderExcelFile(fileName, users, 'Users');
@@ -1071,6 +1068,74 @@ async function forgotPasswordOTP(req) {
   });
 }
 
+async function forgotPasswordSMSOTP(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let phoneNumber = req.payload.phoneNumber;
+      let newPassword = req.payload.newPassword;
+      let otp = req.payload.otpCode;
+      let user = await AppUsersResourceAccess.find({ username: phoneNumber });
+      if (user && user.length > 0) {
+        user = user[0];
+        let confirmResult = await confirmOTPById(phoneNumber, otp);
+        if (!confirmResult) {
+          return reject('otp confirm failed');
+        }
+        let result = await AppUsersFunctions.changeUserPassword(user, newPassword);
+        if (result) {
+          resolve('reset password success');
+        } else {
+          console.error(`error AppUserManager forgotPasswordOTP with phoneNumber ${phoneNumber}: ${ERROR}`);
+          reject('failed');
+        }
+      } else {
+        //cho dù email không tồn tại thì cũng không cần cho user biết
+        //nó giúp bảo mật hơn, không dò được trong hệ thống mình có email này hay chưa
+        //chỉ cần ghi log để trace là được
+        console.error(`username ${phoneNumber} do not existed in system`);
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject('failed');
+    }
+  });
+}
+
+// forgotPasswordEmailOTP
+async function forgotPasswordEmailOTP(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let email = req.payload.email;
+      let newPassword = req.payload.newPassword;
+      let otp = req.payload.otpCode;
+      let user = await AppUsersResourceAccess.find({ username: email });
+      if (user && user.length > 0) {
+        user = user[0];
+        let confirmResult = await confirmOTPById(email, otp);
+        if (!confirmResult) {
+          return reject('otp confirm failed');
+        }
+        let result = await AppUsersFunctions.changeUserPassword(user, newPassword);
+        if (result) {
+          resolve('reset password success');
+        } else {
+          console.error(`error AppUserManager forgotPasswordOTP with email ${email}: ${ERROR}`);
+          return reject('failed');
+        }
+      } else {
+        //cho dù email không tồn tại thì cũng không cần cho user biết
+        //nó giúp bảo mật hơn, không dò được trong hệ thống mình có email này hay chưa
+        //chỉ cần ghi log để trace là được
+        console.error(`username ${email} do not existed in system`);
+        return reject('failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject('failed');
+    }
+  });
+}
 async function resetPasswordBaseOnUserToken(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1136,6 +1201,8 @@ async function verifyEmailUser(req) {
           };
 
           if (process.env.GOOGLE_FIREBASE_PUSH_ENABLE) {
+            const { APPROVE_USER_INFO, REFUSED_USER_INFO, USER_LOCKED, USER_ACTIVE } = require('../../CustomerMessage/CustomerMessageConstant');
+            const { handleSendMessageUser } = require('../../CustomerMessage/CustomerMessageFunctions');
             handleSendMessageUser(APPROVE_USER_INFO, messageData, user.appUserId, { validated: true });
           }
 
@@ -1290,7 +1357,6 @@ async function userViewsListMembership(req) {
     }
   });
 }
-
 async function findAllUsersFollowingReferId(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1301,15 +1367,7 @@ async function findAllUsersFollowingReferId(req) {
       let searchText = req.payload.searchText;
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
-      let dataUser = await AppUserView.findAllUsersFollowingReferId(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let dataUser = await AppUserView.findAllUsersFollowingReferId(filter, skip, limit, startDate, endDate, searchText, order);
       if (dataUser && dataUser.length > 0) {
         let count = await AppUserView.countAllUsersByReferId(filter, startDate, endDate, searchText, order);
 
@@ -1329,7 +1387,6 @@ async function findAllUsersFollowingReferId(req) {
     }
   });
 }
-
 async function userCheckExistingAccount(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1373,9 +1430,7 @@ async function userCheckExistingAccount(req) {
           1,
         );
         if (foundUser && foundUser.length > 0) {
-          console.error(
-            `error userCheckExistingAccount: ${USER_ERROR.DUPLICATED_USER_PHONE} with phoneNumber: ${phoneNumber}`,
-          );
+          console.error(`error userCheckExistingAccount: ${USER_ERROR.DUPLICATED_USER_PHONE} with phoneNumber: ${phoneNumber}`);
           reject(USER_ERROR.DUPLICATED_USER);
           return; //to make sure everything stop
         }
@@ -1388,9 +1443,7 @@ async function userCheckExistingAccount(req) {
           1,
         );
         if (foundUser && foundUser.length > 0) {
-          console.error(
-            `error userCheckExistingAccount: ${USER_ERROR.DUPLICATED_USER} with companyName: ${companyName}`,
-          );
+          console.error(`error userCheckExistingAccount: ${USER_ERROR.DUPLICATED_USER} with companyName: ${companyName}`);
           reject(USER_ERROR.DUPLICATED_USER);
           return; //to make sure everything stop
         }
@@ -1422,6 +1475,7 @@ async function _sendOTPToUserEmail(targetUser) {
   } else {
     newOTP = '999999';
   }
+
   await AppUsersResourceAccess.updateById(targetUser.appUserId, {
     activeOTPCode: newOTP,
     activeOTPAt: new Date().toISOString(),
@@ -1432,21 +1486,17 @@ async function sendEmailOTP(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let email = req.payload.email;
-      let foundUsers = await AppUsersResourceAccess.find(
-        {
-          email: email,
-        },
-        0,
-        1,
-      );
-      if (!foundUsers || foundUsers.length < 1) {
-        reject('INVALID EMAIL');
-        return; //make sure everything stop
-      }
 
-      let foundUser = foundUsers[0];
-      _sendOTPToUserEmail(foundUser);
-      resolve('success');
+      let existEmails = await AppUsersResourceAccess.find({
+        email: email,
+      });
+      if (existEmails && existEmails.length > 0) {
+        _sendOTPToUserEmail(existEmails[0]);
+        resolve('success');
+      } else {
+        console.error(`insert OTP data error: ${ERROR}`);
+        reject('failed');
+      }
     } catch (e) {
       Logger.error(__filename, e);
       reject('failed');
@@ -1477,11 +1527,7 @@ async function confirmEmailOTP(req) {
       let _confirmTime = new Date() - 1;
       let _otpTime = new Date(foundUser.activeOTPAt) - 1;
       const MAX_VALID_DURATION = 5 * 60 * 1000; //5 minutes
-      if (
-        foundUser.activeOTPCode === otpCode &&
-        _otpTime < _confirmTime &&
-        _confirmTime - _otpTime <= MAX_VALID_DURATION
-      ) {
+      if (foundUser.activeOTPCode === otpCode && _otpTime < _confirmTime && _confirmTime - _otpTime <= MAX_VALID_DURATION) {
         await AppUsersResourceAccess.updateById(foundUser.appUserId, {
           isVerifiedEmail: USER_VERIFY_EMAIL_STATUS.IS_VERIFIED,
         });
@@ -1521,9 +1567,7 @@ async function changePasswordviaEmailOTP(req) {
         if (result) {
           resolve(result);
         } else {
-          console.error(
-            `error AppUserManager changePasswordviaEmailOTP with email ${email}, otpCode ${otpCode}: ${ERROR}`,
-          );
+          console.error(`error AppUserManager changePasswordviaEmailOTP with email ${email}, otpCode ${otpCode}: ${ERROR}`);
           reject('failed');
         }
       } else {
@@ -1570,10 +1614,10 @@ async function _sendOTPToUserPhoneNumber(targetUser) {
 
   let newOTP = utilitiesFunction.randomInt(999999);
 
-  if (process.env.PHONE_OTP_ENABLE * 1 === 1) {
+  if (process.env.STRINGEE_OTP_ENABLE * 1 === 1) {
     newOTP = utilitiesFunction.padLeadingZeros(newOTP, 6);
-    const otpClinentFunctions = require('../../../ThirdParty/FPTOTPAPI/otpClientFunctions');
-    let sendOtp = await otpClinentFunctions.sendVoiceOTP(phoneNumber, newOTP);
+    const otpClientFunctions = require('../../../ThirdParty/StringeeOTPAPI/StringeeOtpFunctions');
+    let sendOtp = await otpClientFunctions.sendVoiceOTP(phoneNumber, newOTP);
 
     if (sendOtp !== true) {
       console.error(`SEND_OTP_TO_PHONENUMBER_FAILED ${phoneNumber}`);
@@ -1607,20 +1651,14 @@ async function confirmPhoneOTP(req) {
       let _confirmTime = new Date() - 1;
       let _otpTime = new Date(foundUser.activeOTPAt) - 1;
       const MAX_VALID_DURATION = 5 * 60 * 1000; //5 minutes
-      if (
-        foundUser.activeOTPCode === otpCode &&
-        _otpTime < _confirmTime &&
-        _confirmTime - _otpTime <= MAX_VALID_DURATION
-      ) {
+      if (foundUser.activeOTPCode === otpCode && _otpTime < _confirmTime && _confirmTime - _otpTime <= MAX_VALID_DURATION) {
         await AppUsersResourceAccess.updateById(foundUser.appUserId, {
           active: 1,
           isVerifiedPhoneNumber: USER_VERIFY_PHONE_NUMBER_STATUS.IS_VERIFIED,
         });
         resolve(foundUser);
       } else {
-        console.error(
-          `error AppUserManager confirmPhoneOTP with phoneNumber ${phoneNumber}, otpCode ${otpCode}: ${ERROR}`,
-        );
+        console.error(`error AppUserManager confirmPhoneOTP with phoneNumber ${phoneNumber}, otpCode ${otpCode}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -1635,6 +1673,7 @@ module.exports = {
   find,
   updateById,
   findById,
+  deleteById,
   registerUser,
   loginUser,
   changePasswordUser,
@@ -1675,4 +1714,6 @@ module.exports = {
   userChangeSecondaryPassword,
   sendPhoneOTP,
   confirmPhoneOTP,
+  forgotPasswordEmailOTP,
+  forgotPasswordSMSOTP,
 };

@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "StationProductsCategory";
-const primaryKeyField = "stationProductsCategoryId";
+const tableName = 'StationProductsCategory';
+const primaryKeyField = 'stationProductsCategoryId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -30,10 +32,10 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then((result) => {
+          seeding().then(result => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
-          })
+          });
         });
     });
   });
@@ -45,31 +47,34 @@ async function initDB() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    let initialStaff = [{
-      "stationProductsCategoryTitle": "Buổi sáng",
-      "stationProductsCategoryContent": "Buổi sáng",
-      "displayIndex": 0,
-    },
-    {
-      "stationProductsCategoryTitle": "Buổi trưa",
-      "stationProductsCategoryContent": "Buổi trưa",
-      "displayIndex": 1,
-    },
-    {
-      "stationProductsCategoryTitle": "Buổi tối",
-      "stationProductsCategoryContent": "Buổi tối",
-      "displayIndex": 2,
-    },
-    {
-      "stationProductsCategoryTitle": "Đồ uống",
-      "stationProductsCategoryContent": "Đồ uống",
-      "displayIndex": 3,
-    },
-  ]
-    DB(`${tableName}`).insert(initialStaff).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    let initialStaff = [
+      {
+        stationProductsCategoryTitle: 'Buổi sáng',
+        stationProductsCategoryContent: 'Buổi sáng',
+        displayIndex: 0,
+      },
+      {
+        stationProductsCategoryTitle: 'Buổi trưa',
+        stationProductsCategoryContent: 'Buổi trưa',
+        displayIndex: 1,
+      },
+      {
+        stationProductsCategoryTitle: 'Buổi tối',
+        stationProductsCategoryContent: 'Buổi tối',
+        displayIndex: 2,
+      },
+      {
+        stationProductsCategoryTitle: 'Đồ uống',
+        stationProductsCategoryContent: 'Đồ uống',
+        displayIndex: 3,
+      },
+    ];
+    DB(`${tableName}`)
+      .insert(initialStaff)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -101,28 +106,26 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('stationProductsCategoryTitle', 'like', `%${searchText}%`)
-        .orWhere('stationProductsCategoryContent', 'like', `%${searchText}%`)
-    })
-  } 
-  else{
-    if(filterData.stationProductsCategoryTitle){
-      queryBuilder.where('stationProductsCategoryTitle', 'like', `%${filterData.stationProductsCategoryTitle}%`)
+      this.orWhere('stationProductsCategoryTitle', 'like', `%${searchText}%`).orWhere('stationProductsCategoryContent', 'like', `%${searchText}%`);
+    });
+  } else {
+    if (filterData.stationProductsCategoryTitle) {
+      queryBuilder.where('stationProductsCategoryTitle', 'like', `%${filterData.stationProductsCategoryTitle}%`);
       delete filterData.stationProductsCategoryTitle;
     }
-    if(filterData.stationProductsCategoryContent){
-      queryBuilder.where('stationProductsCategoryContent', 'like', `%${filterData.stationProductsCategoryContent}%`)
+    if (filterData.stationProductsCategoryContent) {
+      queryBuilder.where('stationProductsCategoryContent', 'like', `%${filterData.stationProductsCategoryContent}%`);
       delete filterData.stationProductsCategoryContent;
     }
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
-  
+
   queryBuilder.where(filterData);
 
   if (limit) {
@@ -133,12 +136,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.offset(skip);
   }
 
-  queryBuilder.where({isDeleted: 0});
-  
+  queryBuilder.where({ isDeleted: 0 });
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -153,13 +156,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -181,30 +183,30 @@ async function addViewCount(stationProductsCategoryId) {
   let filter = {};
   filter[primaryKeyField] = stationProductsCategoryId;
 
-  await DB(tableName).where(filter).increment('stationProductsCategoryTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('stationProductsCategoryTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
 }
 
 async function resetDayViewedCount() {
-  return await DB(tableName).update({dayViewed: 0});
+  return await DB(tableName).update({ dayViewed: 0 });
 }
 
 async function resetMonthViewedCount() {
-  return await DB(tableName).update({monthViewed: 0});
+  return await DB(tableName).update({ monthViewed: 0 });
 }
 
 async function resetWeekViewedCount() {
-  return await DB(tableName).update({weekViewed: 0});
+  return await DB(tableName).update({ weekViewed: 0 });
 }
 
 async function deleteById(stationProductsCategoryId) {
   let dataId = {};
   dataId[primaryKeyField] = stationProductsCategoryId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 
 async function increaseDisplayIndex(stationProductsCategoryId) {
@@ -230,5 +232,5 @@ module.exports = {
   updateSearchCount,
   addViewCount,
   deleteById,
-  increaseDisplayIndex
+  increaseDisplayIndex,
 };

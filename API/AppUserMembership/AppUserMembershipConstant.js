@@ -8,10 +8,5 @@ module.exports = {
     COMPANY: 3, //cong ty
     ENTERPRISE: 4, //doanh nghiep
     CORPORATION: 5, // tap doan
-    LV6: 6,
-    LV7: 7,
-    LV8: 8,
-    LV9: 9,
-    LV10: 10,
   },
 };

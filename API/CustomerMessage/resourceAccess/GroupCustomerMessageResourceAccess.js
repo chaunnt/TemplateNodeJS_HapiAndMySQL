@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -75,11 +75,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('groupCustomerMessageContent', 'like', `%${searchText}%`).orWhere(
-        'groupCustomerMessageTitle',
-        'like',
-        `%${searchText}%`,
-      );
+      this.orWhere('groupCustomerMessageContent', 'like', `%${searchText}%`).orWhere('groupCustomerMessageTitle', 'like', `%${searchText}%`);
     });
   }
 
@@ -116,7 +112,7 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
@@ -124,10 +120,7 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -149,10 +142,7 @@ async function customCountDistinct(fieldDistinct, filter, startDate, endDate, se
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }

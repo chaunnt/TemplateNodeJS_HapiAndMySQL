@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -10,21 +10,11 @@ const CustomerMessageResourceAccess = require('./resourceAccess/CustomerMessageR
 // const MessageCustomerResourceAccess = require('./resourceAccess/MessageCustomerResourceAccess');
 
 const ApiUtilsFunctions = require('../ApiUtils/utilFunctions');
-const {
-  MESSAGE_STATUS,
-  MESSAGE_TYPE,
-  MESSAGE_TOPIC,
-  MESSAGE_CATEGORY,
-  MESSAGE_RECEIVER,
-} = require('./CustomerMessageConstant');
-const {
-  pushNotificationByTopic,
-  pushNotificationByTokens,
-} = require('../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
+const { MESSAGE_STATUS, MESSAGE_TYPE, MESSAGE_TOPIC, MESSAGE_CATEGORY, MESSAGE_RECEIVER } = require('./CustomerMessageConstant');
+const { pushNotificationByTopic, pushNotificationByTokens } = require('../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
 const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 
 const Logger = require('../../utils/logging');
-const GroupCustomerMessageResourceAccess = require('./resourceAccess/GroupCustomerMessageResourceAccess');
 
 const FUNC_SUCCESS = 1;
 const FUNC_FAILED = undefined;
@@ -32,8 +22,7 @@ const FUNC_FAILED = undefined;
 const messageTemplate = [
   {
     messageTemplateId: 1,
-    messageTemplateContent:
-      'Mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}',
+    messageTemplateContent: 'Mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}',
     messageTemplateName: 'CSKH',
     // messageTemplateScope: [CustomerRecord.modelName]
   },
@@ -115,12 +104,7 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
   return customerMessageContent;
 }
 
-async function _createNewMessage(
-  stationsId,
-  customerMessageContent,
-  customerMessageCategories,
-  templateCustomerMessageId,
-) {
+async function _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId) {
   let _enableUsingTemplate = false;
 
   let templateContent = await checkValidTemplateMessage(templateCustomerMessageId);
@@ -159,24 +143,13 @@ async function _createNewMessage(
 }
 
 //Send message to many customer
-async function sendMessageToManyCustomer(
-  customerList,
-  stationsId,
-  customerMessageContent,
-  customerMessageCategories,
-  templateCustomerMessageId,
-) {
+async function sendMessageToManyCustomer(customerList, stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId) {
   if (customerList.length <= 0) {
     return FUNC_SUCCESS;
   }
 
   //create new MessageCustomer object
-  let messageId = await _createNewMessage(
-    stationsId,
-    customerMessageContent,
-    customerMessageCategories,
-    templateCustomerMessageId,
-  );
+  let messageId = await _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId);
   if (messageId === undefined) {
     console.error(`can not create new message`);
     return FUNC_FAILED;
@@ -222,13 +195,7 @@ async function sendMessageToManyCustomer(
 
   let sendMessageResult;
   if (customerMessageCategories === MESSAGE_TYPE.GENERAL) {
-    sendMessageResult = await pushNotificationByTopic(
-      customerMessageCategories,
-      customerMessageTitle,
-      customerMessageContent,
-      data,
-      messageType,
-    );
+    sendMessageResult = await pushNotificationByTopic(customerMessageCategories, customerMessageTitle, customerMessageContent, data, messageType);
   } else {
     for (let i = 0; i < listTopicUser.length; i++) {
       await pushNotificationByTopic(listTopicUser[i], customerMessageTitle, customerMessageContent, data, messageType);
@@ -280,18 +247,11 @@ async function handleSendMessage(appUserId, POST, data, messageType) {
           }
         }
         const HIDDEN_AFTER_SEND = 1;
-        sendMessageToManyCustomer(
-          customerList,
-          'Hệ thống tự động',
-          insertMessage[0],
-          messageType,
-          data,
-          HIDDEN_AFTER_SEND,
-        );
+        sendMessageToManyCustomer(customerList, 'Hệ thống tự động', insertMessage[0], messageType, data, HIDDEN_AFTER_SEND);
       }
       resolve();
     } catch (e) {
-      console.error('error', e);
+      console.log('error', e);
       resolve();
     }
   });
@@ -308,7 +268,9 @@ async function handleSendMessageUser(messageData, data, receiverId, moreData) {
 
 async function handleSendMessageToFollower(messageData, data, realEstateData) {
   if (realEstateData) {
-    let follwerData = await RealEstateUserSavedResourceAccess.find({ realEstateId: realEstateData.realEstateId });
+    let follwerData = await RealEstateUserSavedResourceAccess.find({
+      realEstateId: realEstateData.realEstateId,
+    });
     if (follwerData && follwerData.length > 0) {
       let arrayUserId = [];
       for (let user of follwerData) {
@@ -358,7 +320,7 @@ async function handleSendMessageNewRealEstate(appUserId, messageData, realEstate
       }
       resolve();
     } catch (e) {
-      console.error('handleSendMessageNewRealEstate error', e);
+      console.log('handleSendMessageNewRealEstate error', e);
       resolve();
     }
   });
@@ -456,10 +418,7 @@ async function _handleSMSMessage(messageData, additionData) {
     } else {
       const SMSClientFunctions = require('../../ThirdParty/SMSAPIClient/SMSAPIClientFunctions');
 
-      let smsResult = await SMSClientFunctions.sendSMS(
-        messageData.customerMessageContent,
-        messageData.customerMessagePhone,
-      );
+      let smsResult = await SMSClientFunctions.sendSMS(messageData.customerMessageContent, messageData.customerMessagePhone);
       if (smsResult === undefined) {
         Logger.error(`can not send sms to ${messageData.customerMessagePhone}`);
       }
@@ -523,41 +482,6 @@ async function sendMessageNewSchedule(scheduleData, stationData) {
   return await _sendMessage(scheduleData, _messageTitle, _messageContent, MESSAGE_TYPE.CUSTOMER_SCHEDULE_NEW);
 }
 
-async function sendNotificationUser(appUserId, notifiTitle, notifiContent, staffId, customerMessageImage) {
-  let customerMessageData = {
-    customerId: appUserId,
-    isRead: 0,
-    customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
-    customerMessageTopic: MESSAGE_TOPIC.USER,
-    receiverType: MESSAGE_RECEIVER.USER,
-    customerMessageContent: notifiContent,
-    customerMessageTitle: notifiTitle,
-  };
-  if (staffId) {
-    customerMessageData.staffId = staffId;
-  }
-  if (customerMessageImage) {
-    customerMessageData.customerMessageImage = customerMessageImage;
-  }
-  return await CustomerMessageResourceAccess.insert(customerMessageData);
-}
-
-async function sendNotificationAllUser(notifiTitle, notifiContent, staffId, groupCustomerMessageImage) {
-  let groupCustomerMessageData = {
-    groupCustomerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
-    groupCustomerMessageType: MESSAGE_TYPE.GENERAL,
-    groupCustomerMessageContent: notifiContent,
-    groupCustomerMessageTitle: notifiTitle,
-  };
-  if (staffId) {
-    groupCustomerMessageData.staffId = staffId;
-  }
-  if (groupCustomerMessageImage) {
-    groupCustomerMessageData.groupCustomerMessageImage = groupCustomerMessageImage;
-  }
-  return await GroupCustomerMessageResourceAccess.insert(groupCustomerMessageData);
-}
-
 module.exports = {
   getTemplateMessages,
   sendMessageToManyCustomer,
@@ -569,6 +493,4 @@ module.exports = {
   handleSendMessageRealEstate,
   sendMessageConfirmSchedule,
   sendMessageNewSchedule,
-  sendNotificationUser,
-  sendNotificationAllUser,
 };

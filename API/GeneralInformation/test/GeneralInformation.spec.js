@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -15,7 +17,7 @@ const modelName = 'GeneralInformation';
 const app = require('../../../server');
 
 describe(`Tests ${modelName}`, function () {
-  let token = "";
+  let token = '';
   before(done => {
     new Promise(async function (resolve, reject) {
       let staffData = await TestFunctions.loginStaff();
@@ -25,11 +27,11 @@ describe(`Tests ${modelName}`, function () {
   });
 
   it('get data', done => {
-    const body = {}
+    const body = {};
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/find`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -43,13 +45,13 @@ describe(`Tests ${modelName}`, function () {
   it('Update information about us', done => {
     const body = {
       data: {
-        "aboutUs": "<h1>Giới thiệu về chúng tôi<h1>"
-      }
-    }
+        aboutUs: '<h1>Giới thiệu về chúng tôi<h1>',
+      },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/updateAboutUs`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -63,13 +65,13 @@ describe(`Tests ${modelName}`, function () {
   it('Update question and anwser', done => {
     const body = {
       data: {
-        "questionAndAnwser": "<h1>Các câu hỏi thường gặp<h1>"
-      }
-    }
+        questionAndAnwser: '<h1>Các câu hỏi thường gặp<h1>',
+      },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/updateQuestionAndAnwser`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -83,13 +85,13 @@ describe(`Tests ${modelName}`, function () {
   it('Update general rule', done => {
     const body = {
       data: {
-        "generalRule": "<h1>Quy định chung<h1>"
-      }
-    }
+        generalRule: '<h1>Quy định chung<h1>',
+      },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/updateGeneralRule`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -103,13 +105,13 @@ describe(`Tests ${modelName}`, function () {
   it('Update app policy', done => {
     const body = {
       data: {
-        "appPolicy": "<h1>Điều khoản sử dụng<h1>"
-      }
-    }
+        appPolicy: '<h1>Điều khoản sử dụng<h1>',
+      },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/GeneralInformation/updateAppPolicy`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {

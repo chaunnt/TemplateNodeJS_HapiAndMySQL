@@ -1,8 +1,10 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const PaymentMethodResourceAccess = require("../resourceAccess/PaymentMethodResourceAccess");
+'use strict';
+const PaymentMethodResourceAccess = require('../resourceAccess/PaymentMethodResourceAccess');
 const Logger = require('../../../utils/logging');
 
 async function insert(req) {
@@ -13,14 +15,14 @@ async function insert(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -31,7 +33,7 @@ async function find(req) {
       let order = req.payload.order;
 
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
       let paymentMethods = await PaymentMethodResourceAccess.find(filter, skip, limit, order);
       let paymentMethodsCount = await PaymentMethodResourceAccess.count(filter, order);
@@ -42,10 +44,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -56,15 +58,14 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
-
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -74,14 +75,14 @@ async function findById(req) {
       if (result && result.length > 0) {
         resolve(result[0]);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -90,13 +91,13 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getList(req) {
   return new Promise(async (resolve, reject) => {
@@ -107,20 +108,20 @@ async function getList(req) {
       let order = req.payload.order;
 
       if (filter === undefined) {
-        filter = {}
+        filter = {};
       }
       let paymentMethods = await PaymentMethodResourceAccess.find(filter, skip, limit, order);
-      
+
       if (paymentMethods && paymentMethods.length > 0) {
         let paymentMethodsCount = await PaymentMethodResourceAccess.count(filter, order);
-        
+
         resolve({ data: paymentMethods, total: paymentMethodsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(e);
-      reject("failed");
+      reject('failed');
     }
   });
 }

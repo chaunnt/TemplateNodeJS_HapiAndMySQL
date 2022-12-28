@@ -1,18 +1,25 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by Huu on 11/18/21.
  */
 
-"use strict";
-const MembershipResourceAccess = require("../resourceAccess/MembershipResourceAccess");
+'use strict';
+const MembershipResourceAccess = require('../resourceAccess/MembershipResourceAccess');
 const MembershipFunctions = require('../MembershipFunction');
 
 async function UpdateAllMembership() {
-  let membershipList = await MembershipResourceAccess.find({
-    isDeleted: 0
-  }, undefined, undefined, {
-    key: "membershipPointRequired",
-    value: "asc"
-  });
+  let membershipList = await MembershipResourceAccess.find(
+    {
+      isDeleted: 0,
+    },
+    undefined,
+    undefined,
+    {
+      key: 'membershipPointRequired',
+      value: 'asc',
+    },
+  );
 
   if (!membershipList || membershipList.length <= 0) {
     return undefined;
@@ -21,7 +28,7 @@ async function UpdateAllMembership() {
     const _membership = membershipList[i];
     await MembershipFunctions.grantMembershipForUsers(_membership);
   }
-};
+}
 
 UpdateAllMembership();
 

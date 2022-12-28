@@ -1,9 +1,11 @@
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+require('dotenv').config();
 
 const EmailClient = require('../../ThirdParty/Email/EmailClient');
-const Handlebars = require("handlebars");
+const Handlebars = require('handlebars');
 
-const templateConfirmSchedule = require("./emailTemplates/confirmSchedule");
+const templateConfirmSchedule = require('./emailTemplates/confirmSchedule');
 
 function convertBodyFromTemplate(template, subjectParams, bodyParams) {
   const subject = Handlebars.compile(template.subject)(subjectParams);
@@ -17,14 +19,10 @@ async function confirmScheduleViaEmail(receiver, customerScheduleData, stationsD
     let subjectParams = {};
     let bodyParams = {
       ...customerScheduleData,
-      ...stationsData
+      ...stationsData,
     };
 
-    let { subject, bodyHtml } = convertBodyFromTemplate(
-      templateConfirmSchedule,
-      subjectParams,
-      bodyParams
-    );
+    let { subject, bodyHtml } = convertBodyFromTemplate(templateConfirmSchedule, subjectParams, bodyParams);
 
     let sendResult = await EmailClient.sendEmail(receiver, subject, undefined, bodyHtml);
     return sendResult;

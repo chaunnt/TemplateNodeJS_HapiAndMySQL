@@ -1,5 +1,7 @@
-const fs = require("fs");
-var mqtt = require('mqtt')
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+const fs = require('fs');
+var mqtt = require('mqtt');
 ////MQTT Client
 // var client  = mqtt.connect('mqtt://vtss-station-server.makefamousapp.com:10555')
 
@@ -17,19 +19,17 @@ var mqtt = require('mqtt')
 // })
 
 client.on('connect', function () {
-  console.log("connected")
+  console.log('connected');
   client.subscribe('RECORD_UPDATE_2', function (err) {
-    console.log("Subcribed success");
-  })
-})
+    console.log('Subcribed success');
+  });
+});
 
 client.on('message', function (topic, message) {
   // message is Buffer
-  console.log(message.toString())
-  console.log(topic)
-  client.end()
-})
+  console.log(message.toString());
+  console.log(topic);
+  client.end();
+});
 
-module.exports = {
-
-};
+module.exports = {};

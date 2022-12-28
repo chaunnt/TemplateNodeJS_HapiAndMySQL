@@ -88,7 +88,7 @@ module.exports = {
   },
   find: {
     tags: ['api', `${moduleName}`],
-    description: `update ${moduleName}`,
+    description: `find ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
@@ -117,7 +117,7 @@ module.exports = {
   findById: {
     tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -199,6 +199,7 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         paymentRef: Joi.string().max(500),
+        paymentNote: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {
@@ -222,6 +223,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
+        paymentNote: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {

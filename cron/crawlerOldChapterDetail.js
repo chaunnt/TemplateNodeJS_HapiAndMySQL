@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 var request = require('request');
 var cheerio = require('cheerio');
 const fs = require('fs');
@@ -12,44 +14,43 @@ const BooksImageResourceAccess = require('../API/BooksImage/resourceAccess/Books
 const CrawlerUtils = require('./crawlerUtils');
 const UploadFunctions = require('../API/Upload/UploadFunctions');
 
-const ERROR_FETCH_FAILED = "Can not fetch data";
+const ERROR_FETCH_FAILED = 'Can not fetch data';
 const ERROR_EXTRACT_FAILED = 'extract failed';
 
 async function _crawlChapterImage() {
-  Logger.info("_crawlChapterImage", "Start");
+  Logger.info('_crawlChapterImage', 'Start');
   let targetChapter = await BooksChapterResourceAccess.find({ booksChapterCrawlingStatus: 0, priority: 1 }, 0, 1);
 
   if (targetChapter === undefined || targetChapter.length < 1) {
-    Logger.error("_crawlChapterImage", "everything was done");
+    Logger.error('_crawlChapterImage', 'everything was done');
     return;
   }
   targetChapter = targetChapter[0];
-  Logger.info("_crawlChapterImage", targetChapter.booksChapterOriginUrl);
+  Logger.info('_crawlChapterImage', targetChapter.booksChapterOriginUrl);
   return new Promise(async (resolve, reject) => {
     var options = {
       url: targetChapter.booksChapterOriginUrl,
       headers: {
         'User-Agent': 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36',
         'Content-Type': '',
-        'Cookie': '',
-        'Referer': ''
-      }
+        Cookie: '',
+        Referer: '',
+      },
     };
 
     request(options, async function (err, response, html) {
       if (err) {
         Logger.info('Error in request ', err);
-      }
-      else {
+      } else {
         try {
           var page = cheerio.load(html);
           let bookImageList = [];
           var imageArrayList = page('.chapter-images').children('img');
           if (imageArrayList.length < 1) {
             Logger.error(ERROR_FETCH_FAILED, targetChapter.booksChapterOriginUrl);
-            return "error";
+            return 'error';
           }
-          Logger.info("_crawlChapterImage", imageArrayList.length);
+          Logger.info('_crawlChapterImage', imageArrayList.length);
 
           //extract book info from book list
           for (let i = 0; i < imageArrayList.length; i++) {
@@ -59,7 +60,7 @@ async function _crawlChapterImage() {
               booksImageUrl: '',
               booksImageOriginUrl: '',
               booksChapterId: targetChapter.booksChapterId,
-              booksImageIndex: i
+              booksImageIndex: i,
             };
 
             let imageUrl = imageSource.prop('data-src');
@@ -77,33 +78,32 @@ async function _crawlChapterImage() {
             fs.unlinkSync(downloadChapterImage);
 
             //upload to image host
-            let newChapterImageUrl = await UploadFunctions.uploadMediaFile(imageData, 'jpg')
+            let newChapterImageUrl = await UploadFunctions.uploadMediaFile(imageData, 'jpg');
             bookImageData.booksImageUrl = newChapterImageUrl;
             bookImageList.push(bookImageData);
-          };
+          }
 
           let updateImageResult = await BooksImageResourceAccess.insert(bookImageList);
           if (updateImageResult) {
-            BooksChapterResourceAccess.updateById(targetChapter.booksChapterId, {booksChapterCrawlingStatus: 1});
+            BooksChapterResourceAccess.updateById(targetChapter.booksChapterId, { booksChapterCrawlingStatus: 1 });
           }
-
         } catch (e) {
           Logger.error(ERROR_EXTRACT_FAILED, e);
-          resolve("done error")
+          resolve('done error');
         }
       }
-      resolve("done");
+      resolve('done');
     });
   });
 }
 
 async function crawlChapterDetail(priority) {
-  Logger.info("crawlChapterDetail");
+  Logger.info('crawlChapterDetail');
   _crawlChapterImage(priority);
 }
 
 crawlChapterDetail();
 
 module.exports = {
-  crawlChapterDetail
+  crawlChapterDetail,
 };

@@ -1,9 +1,11 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
-const StationIntroductionResourceAccess = require("../resourceAccess/StationIntroductionResourceAccess");
-const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess')
+const StationIntroductionResourceAccess = require('../resourceAccess/StationIntroductionResourceAccess');
+const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 
 const FUNC_FAILED = undefined;
 async function createIntroForAllExistingStations() {
@@ -23,7 +25,7 @@ async function createIntroForAllExistingStations() {
     stationTwitterUrl: '',
     stationYoutubeUrl: '',
     stationInstagramUrl: '',
-  }
+  };
 
   let stationCount = await StationsResourceAccess.count({});
   if (stationCount === undefined) {
@@ -46,12 +48,12 @@ async function createIntroForAllExistingStations() {
           //insert new intro if it is not existed
           let newIntroData = newIntro;
           newIntroData.stationsId = stationData.stationsId;
-  
+
           let insertResult = await StationIntroductionResourceAccess.insert(newIntroData);
           if (insertResult === undefined) {
             return FUNC_FAILED;
           } else {
-            console.info(`Init intro for station ${stationData.stationsId} success`)
+            console.info(`Init intro for station ${stationData.stationsId} success`);
           }
         }
       }
@@ -60,10 +62,10 @@ async function createIntroForAllExistingStations() {
     }
   }
 
-  return "ok";
+  return 'ok';
 }
 createIntroForAllExistingStations();
 
 module.exports = {
   createIntroForAllExistingStations,
-}
+};

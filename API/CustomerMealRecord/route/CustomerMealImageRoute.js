@@ -1,11 +1,13 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moduleName = 'CustomerRecord';
 const Manager = require(`../manager/${moduleName}Manager`);
-const Joi = require("joi");
-const Response = require("../../Common/route/response").setup(Manager);
+const Joi = require('joi');
+const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
@@ -34,7 +36,7 @@ const updateSchema = {
   customerRecordCheckExpiredDate: Joi.string(),
   customerRecordCheckDuration: Joi.number().min(1).max(99),
   isDeleted: Joi.number(),
-}
+};
 
 const filterSchema = {
   customerRecordFullName: Joi.string(),
@@ -50,7 +52,7 @@ const filterSchema = {
 
 module.exports = {
   insert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `insert ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -60,14 +62,14 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object(insertSchema)
+      payload: Joi.object(insertSchema),
     },
     handler: function (req, res) {
-      Response(req, res, "insert");
-    }
+      Response(req, res, 'insert');
+    },
   },
   updateById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -80,14 +82,14 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         data: Joi.object(updateSchema),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "updateById");
-    }
+      Response(req, res, 'updateById');
+    },
   },
   find: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -105,21 +107,17 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "find");
-    }
+      Response(req, res, 'find');
+    },
   },
   findToday: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -137,21 +135,17 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findToday");
-    }
+      Response(req, res, 'findToday');
+    },
   },
   findById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -162,15 +156,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().min(0)
-      })
+        id: Joi.number().min(0),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "findById");
-    }
+      Response(req, res, 'findById');
+    },
   },
   deleteById: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `Delete ${moduleName}`,
     validate: {
       headers: Joi.object({
@@ -178,14 +172,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-      })
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "deleteById");
-    }
+      Response(req, res, 'deleteById');
+    },
   },
   exportExcelCustomerRecord: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `exportExcel ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -201,21 +195,17 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         order: Joi.object({
-          key: Joi.string()
-            .default("createdAt")
-            .allow(""),
-          value: Joi.string()
-            .default("desc")
-            .allow("")
-        })
-      })
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "exportCustomerRecord");
-    }
+      Response(req, res, 'exportCustomerRecord');
+    },
   },
   importCustomerRecord: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `${moduleName} import customerRecord`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
@@ -227,16 +217,16 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         file: Joi.binary().encoding('base64'),
-        fileFormat: Joi.string().valid(['xlsx', 'xls', 'csv']).required()
-      })
+        fileFormat: Joi.string().valid(['xlsx', 'xls', 'csv']).required(),
+      }),
     },
     handler: function (req, res) {
-      Response(req, res, "importCustomerRecord");
+      Response(req, res, 'importCustomerRecord');
     },
   },
   //this API is use for robot to insert automatically
   robotInsert: {
-    tags: ["api", `${moduleName}`],
+    tags: ['api', `${moduleName}`],
     description: `robot insert ${moduleName}`,
     payload: {
       output: 'file',
@@ -246,10 +236,9 @@ module.exports = {
       //     output: 'data',
       // }
     },
-    validate: {
-    },
+    validate: {},
     handler: function (req, res) {
-      Response(req, res, "robotInsert");
-    }
+      Response(req, res, 'robotInsert');
+    },
   },
 };

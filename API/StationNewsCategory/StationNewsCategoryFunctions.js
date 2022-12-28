@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -6,13 +8,7 @@
 const NewsCategoryResource = require('./resourceAccess/StationNewsCategoryResourceAccess');
 
 async function initNewCategoriesForStation(station) {
-  let categories = [
-    "Tin nổi bật",
-    "Tin tức trong ngành",
-    "Tin tức xã hội",
-    "Khoa học và kỹ thuật",
-    "Chuyên mục tư vấn",
-  ];
+  let categories = ['Tin nổi bật', 'Tin tức trong ngành', 'Tin tức xã hội', 'Khoa học và kỹ thuật', 'Chuyên mục tư vấn'];
 
   let _arrayData = [];
   const _MAX_VIEW = 1000;
@@ -37,5 +33,5 @@ async function initNewCategoriesForStation(station) {
 }
 
 module.exports = {
-  initNewCategoriesForStation
-}
+  initNewCategoriesForStation,
+};

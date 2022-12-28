@@ -24,6 +24,9 @@ async function InitWalletForAllUser() {
     batchCount = batchCount + 1;
   }
 
+  const WalletResource = require('../resourceAccess/WalletResourceAccess');
+  await WalletResource.initDB();
+
   for (let i = 0; i < batchCount; i++) {
     let userList = await AppUserResource.find({}, i * MAX_PER_BATCH, MAX_PER_BATCH);
     if (userList === undefined || userList.length < 1) {

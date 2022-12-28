@@ -1,16 +1,18 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const CustomerMessageResourceAccess = require("../resourceAccess/CustomerMessageResourceAccess");
-const MessageCustomerResourceAccess =  require('../resourceAccess/MessageCustomerResourceAccess');
+'use strict';
+const CustomerMessageResourceAccess = require('../resourceAccess/CustomerMessageResourceAccess');
+const MessageCustomerResourceAccess = require('../resourceAccess/MessageCustomerResourceAccess');
 const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
 const Logger = require('../../../utils/logging');
 const SMSAPIFunctions = require('../../../ThirdParty/SMSAPIClient/SMSAPIClientFunctions');
-const AppUsersResourceAccess = require("../../AppUsers/resourceAccess/AppUsersResourceAccess");
+const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const SystemAppLogFunctions = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
 const CustomerMessageFunctions = require('../CustomerMessageFunctions');
-const { MESSAGE_TYPE } = require("../CustomerMessageConstant");
+const { MESSAGE_TYPE } = require('../CustomerMessageConstant');
 
 // admin send message => topic "GENERAL", type: "GENERAL"
 
@@ -23,14 +25,14 @@ async function sendsms(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -40,13 +42,13 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -58,27 +60,30 @@ async function find(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
-      if(startDate){
+      if (startDate) {
         // startDate = formatDate.FormatDate(startDate)
       }
-      if(endDate){
+      if (endDate) {
         // endDate = formatDate.FormatDate(endDate)
       }
       //only get data of current station
-      
+
       let customerMessage = await CustomerMessageResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let customerMessageCount = await CustomerMessageResourceAccess.customCount(filter, startDate, endDate, searchText, order);;
+      let customerMessageCount = await CustomerMessageResourceAccess.customCount(filter, startDate, endDate, searchText, order);
       if (customerMessage && customerMessageCount) {
-        resolve({ data: customerMessage, total: customerMessageCount[0].count });
+        resolve({
+          data: customerMessage,
+          total: customerMessageCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getList(req) {
   return new Promise(async (resolve, reject) => {
@@ -91,18 +96,21 @@ async function getList(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
       let customerMessage = await MessageCustomerView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let customerMessageCount = await MessageCustomerView.customCount(filter, startDate, endDate, searchText, order);;
+      let customerMessageCount = await MessageCustomerView.customCount(filter, startDate, endDate, searchText, order);
       if (customerMessage && customerMessageCount) {
-        resolve({ data: customerMessage, total: customerMessageCount[0].count });
+        resolve({
+          data: customerMessage,
+          total: customerMessageCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findMessagesSent(req) {
   return new Promise(async (resolve, reject) => {
@@ -116,35 +124,42 @@ async function findMessagesSent(req) {
       let searchText = req.payload.searchText;
 
       let customerMessage = await MessageCustomerView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let customerMessageCount = await MessageCustomerView.customCount(filter, startDate, endDate, searchText, order);;
+      let customerMessageCount = await MessageCustomerView.customCount(filter, startDate, endDate, searchText, order);
       if (customerMessage && customerMessageCount) {
-        resolve({ data: customerMessage, total: customerMessageCount[0].count });
+        resolve({
+          data: customerMessage,
+          total: customerMessageCount[0].count,
+        });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getDetailById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let messageCustomerId = req.payload.messageCustomerId;
-      await MessageCustomerResourceAccess.updateById(messageCustomerId, { isRead: 1 });
-      let result = await MessageCustomerView.find({messageCustomerId: messageCustomerId});
+      await MessageCustomerResourceAccess.updateById(messageCustomerId, {
+        isRead: 1,
+      });
+      let result = await MessageCustomerView.find({
+        messageCustomerId: messageCustomerId,
+      });
       if (result) {
         resolve(result[0]);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -158,13 +173,13 @@ async function updateById(req) {
         SystemAppLogFunctions.logCustomerRecordChanged(dataBefore, customerMessageData, req.currentUser);
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -174,13 +189,13 @@ async function findById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function sendMessageByFilter(req) {
   return new Promise(async (resolve, reject) => {
@@ -194,17 +209,16 @@ async function sendMessageByFilter(req) {
       // Send message to many customer
       let result = await CustomerMessageFunctions.sendMessageToManyCustomer(customerList, messageNote, customerMessageId, MESSAGE_TYPE.GENERAL);
       if (result) {
-        resolve("success");
+        resolve('success');
       } else {
-        reject("failed");
+        reject('failed');
       }
-      
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function sendMessageByCustomerList(req) {
   return new Promise(async (resolve, reject) => {
@@ -214,7 +228,7 @@ async function sendMessageByCustomerList(req) {
       let messageNote = req.payload.messageNote;
       let customerMessageId = req.payload.customerMessageId;
       let messageType = req.payload.messageType;
-      if(!messageType) {
+      if (!messageType) {
         messageType = MESSAGE_TYPE.GENERAL;
       }
       //retrieve info for customer list
@@ -228,16 +242,16 @@ async function sendMessageByCustomerList(req) {
       //Send message to many customer
       let result = await CustomerMessageFunctions.sendMessageToManyCustomer(customerList, messageNote, customerMessageId, messageType);
       if (result) {
-        resolve("success");
+        resolve('success');
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findMessages(req) {
   return new Promise(async (resolve, reject) => {
@@ -249,9 +263,9 @@ async function findMessages(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let filter = req.payload.filter;
-      
-      let messages = await CustomerMessageResourceAccess.customSearch(filter,skip,limit,startDate,endDate,searchText,order);
-      let messagesCount = await CustomerMessageResourceAccess.customCount(filter,startDate,endDate,searchText,order);
+
+      let messages = await CustomerMessageResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      let messagesCount = await CustomerMessageResourceAccess.customCount(filter, startDate, endDate, searchText, order);
       if (messages) {
         resolve({ data: messages, total: messagesCount[0].count });
       } else {
@@ -259,7 +273,7 @@ async function findMessages(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -271,11 +285,11 @@ async function findDetailMessageById(req) {
       if (message) {
         resolve(message);
       } else {
-        reject("do not have any message");
+        reject('do not have any message');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -289,11 +303,11 @@ async function updateMessageById(req) {
       if (message) {
         resolve(message);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -302,15 +316,17 @@ async function deleteMessageById(req) {
   return new Promise(async (resolve, reject) => {
     try {
       const id = req.payload.customerMessageId;
-      let message = await CustomerMessageResourceAccess.updateById(id, { isDeleted: 1 });
+      let message = await CustomerMessageResourceAccess.updateById(id, {
+        isDeleted: 1,
+      });
       if (message) {
         resolve(message);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -329,5 +345,5 @@ module.exports = {
   updateMessageById,
   findDetailMessageById,
   deleteMessageById,
-  findMessagesSent
+  findMessagesSent,
 };

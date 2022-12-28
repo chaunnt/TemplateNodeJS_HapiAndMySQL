@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -6,7 +6,7 @@
 'use strict';
 const StakingResourceAccess = require('../resourceAccess/StakingPackageResourceAccess');
 const Logger = require('../../../utils/logging');
-const { ERROR } = require('../../Common/CommonConstant');
+
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -15,7 +15,6 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error Staking package can not inser: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -35,26 +34,10 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
 
-      let listStaking = await StakingResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let listStaking = await StakingResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
 
       if (listStaking && listStaking.length > 0) {
-        let listStakingCount = await StakingResourceAccess.customCount(
-          filter,
-          undefined,
-          undefined,
-          startDate,
-          endDate,
-          searchText,
-          order,
-        );
+        let listStakingCount = await StakingResourceAccess.customCount(filter, startDate, endDate, searchText, order);
 
         resolve({ data: listStaking, total: listStakingCount[0].count });
       } else {
@@ -74,7 +57,6 @@ async function findById(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error Staking package findById with id ${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {
@@ -100,7 +82,6 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error Staking package updateById with id ${id}: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -116,7 +97,6 @@ async function deleteById(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error Staking package deleteById with id ${req.payload.id}: ${ERROR}`);
         reject('failed');
       }
     } catch (e) {

@@ -94,14 +94,7 @@ async function sumAmountDistinctByDate(filter, startDate, endDate) {
 }
 
 async function sumAmountDistinctByStatus(filter, startDate, endDate) {
-  return await Common.sumAmountDistinctByCustomField(
-    tableName,
-    'paymentAmount',
-    'paymentStatus',
-    filter,
-    startDate,
-    endDate,
-  );
+  return await Common.sumAmountDistinctByCustomField(tableName, 'paymentAmount', 'paymentStatus', filter, startDate, endDate);
 }
 
 async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {

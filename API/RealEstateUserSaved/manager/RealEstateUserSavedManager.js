@@ -1,37 +1,37 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const RealEstateUserSaved = require("../resourceAccess/RealEstateUserSavedResourceAccess");
+'use strict';
+const RealEstateUserSaved = require('../resourceAccess/RealEstateUserSavedResourceAccess');
 const Logger = require('../../../utils/logging');
 const RealEstateUserSavedViews = require('../resourceAccess/RealEstateUserSavedViews');
-const RealEstateFunctions = require('../../RealEstate/RealEstateFunctions')
+const RealEstateFunctions = require('../../RealEstate/RealEstateFunctions');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let realEstateUserSavedData = {
         realEstateId: req.payload.realEstateId,
         appUserIdSaved: req.currentUser.appUserId,
-      }
-      let resultIsDeleted = await RealEstateUserSaved.updateById(realEstateUserSavedData, { "isDeleted": 0 });
+      };
+      let resultIsDeleted = await RealEstateUserSaved.updateById(realEstateUserSavedData, { isDeleted: 0 });
       if (resultIsDeleted) {
-        resolve("Success")
-      }
-      else{
+        resolve('Success');
+      } else {
         let result = await RealEstateUserSaved.insert(realEstateUserSavedData);
         if (result) {
-          resolve("Success");
-        }
-        else {
-          reject("failed");
+          resolve('Success');
+        } else {
+          reject('failed');
         }
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -49,10 +49,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -63,13 +63,13 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -81,10 +81,10 @@ async function findById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -93,16 +93,15 @@ async function deleteById(req) {
       let result = await RealEstateUserSaved.deleteById(appUserIdSaved, realEstateId);
       if (result) {
         resolve(result);
-      }
-      else {
+      } else {
         resolve({ data: [] });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getList(req) {
   return new Promise(async (resolve, reject) => {
@@ -132,15 +131,15 @@ async function getList(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 module.exports = {
   insert,
   find,
   updateById,
   findById,
   deleteById,
-  getList
+  getList,
 };

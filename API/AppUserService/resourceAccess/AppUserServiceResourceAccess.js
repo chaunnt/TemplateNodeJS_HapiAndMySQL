@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AppUserService";
-const primaryKeyField = "appUserId";
+const tableName = 'AppUserService';
+const primaryKeyField = 'appUserId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -18,14 +20,14 @@ async function createTable() {
           timestamps(table);
           table.primary(['appUserId', 'userServiceId']);
           table.index('userServiceId');
-          table.index("userServiceType");
+          table.index('userServiceType');
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then((result) => {
+          seeding().then(result => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
-          })
+          });
         });
     });
   });
@@ -37,13 +39,15 @@ async function initDB() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    let seedingData = []
+    let seedingData = [];
 
     if (seedingData.length > 0) {
-      DB(`${tableName}`).insert(seedingData).then((result) => {
-        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-        resolve();
-      });
+      DB(`${tableName}`)
+        .insert(seedingData)
+        .then(result => {
+          Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+          resolve();
+        });
     } else {
       Logger.info(`${tableName}`, `seeding ${tableName}`);
       resolve();
@@ -93,42 +97,42 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
         .orWhere('firstName', 'like', `%${searchText}%`)
         .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`)
-    })
+        .orWhere('email', 'like', `%${searchText}%`);
+    });
   } else {
     if (filterData.username) {
-      queryBuilder.where('username', 'like', `%${filterData.username}%`)
+      queryBuilder.where('username', 'like', `%${filterData.username}%`);
       delete filterData.username;
     }
 
     if (filterData.firstName) {
-      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`)
+      queryBuilder.where('firstName', 'like', `%${filterData.firstName}%`);
       delete filterData.firstName;
     }
 
     if (filterData.lastName) {
-      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`)
+      queryBuilder.where('lastName', 'like', `%${filterData.lastName}%`);
       delete filterData.lastName;
     }
 
     if (filterData.phoneNumber) {
-      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`)
+      queryBuilder.where('phoneNumber', 'like', `%${filterData.phoneNumber}%`);
       delete filterData.phoneNumber;
     }
 
     if (filterData.email) {
-    let index = filterData.email.indexOf('@');
-    let email = filterData.email.slice(0, index);
-    queryBuilder.where("email", "like", `%${email}%`);
-    delete filterData.email;
+      let index = filterData.email.indexOf('@');
+      let email = filterData.email.slice(0, index);
+      queryBuilder.where('email', 'like', `%${email}%`);
+      delete filterData.email;
     }
   }
 
   if (startDate) {
-    queryBuilder.where("createdAt", ">=", startDate);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
   if (endDate) {
-    queryBuilder.where("createdAt", "<=", endDate);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -146,7 +150,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -159,13 +163,12 @@ async function customCount(filter, searchText, startDate, endDate, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });

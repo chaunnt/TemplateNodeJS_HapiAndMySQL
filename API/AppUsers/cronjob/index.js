@@ -9,7 +9,7 @@ const weeklyScheduler = () => {
 };
 
 async function startSchedule() {
-  console.info('start UserSchedule');
+  console.log('start UserSchedule');
   weeklyScheduler();
 }
 

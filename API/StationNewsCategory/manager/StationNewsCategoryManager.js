@@ -1,11 +1,13 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const StationNewsCategoryResourceAccess = require("../resourceAccess/StationNewsCategoryResourceAccess");
-const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess')
+'use strict';
+const StationNewsCategoryResourceAccess = require('../resourceAccess/StationNewsCategoryResourceAccess');
+const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 const Logger = require('../../../utils/logging');
-const formatDate = require("../../ApiUtils/utilFunctions")
+const formatDate = require('../../ApiUtils/utilFunctions');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -14,21 +16,21 @@ async function insert(req) {
       if (req.currentUser.stationsId) {
         stationNewsCategoryData.stationsId = req.currentUser.stationsId;
       } else {
-        reject("failed");
+        reject('failed');
         return;
       }
-      
+
       let result = await StationNewsCategoryResourceAccess.insert(stationNewsCategoryData);
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -40,11 +42,11 @@ async function find(req) {
       let searchText = req.payload.searchText;
       let endDate = req.payload.endDate;
       let startDate = req.payload.startDate;
-      if(endDate){
-        endDate = formatDate.FormatDate(endDate)
+      if (endDate) {
+        endDate = formatDate.FormatDate(endDate);
       }
-      if(startDate){
-        startDate = formatDate.FormatDate(startDate)
+      if (startDate) {
+        startDate = formatDate.FormatDate(startDate);
       }
       //only get data of current station
       if (filter && req.currentUser.stationsId) {
@@ -59,10 +61,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -73,13 +75,13 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
@@ -89,13 +91,13 @@ async function findById(req) {
       if (result) {
         resolve(result);
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -105,16 +107,14 @@ async function deleteById(req) {
       let result = await StationNewsCategoryResourceAccess.deleteById(stationNewsCategoryId);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      else {
-        reject("failed");
-      }
-
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
+  });
 }
 
 async function getCategoryListForUser(req) {
@@ -123,36 +123,40 @@ async function getCategoryListForUser(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let stationUrl = req.payload.stationsUrl;
-      let station = await StationsResourceAccess.find({ "stationUrl": stationUrl }, 0, 1);
-      
-      //retry to find config with 
+      let station = await StationsResourceAccess.find({ stationUrl: stationUrl }, 0, 1);
+
+      //retry to find config with
       if (!station || station.length <= 0) {
-        station = await StationsResourceAccess.find({ "stationLandingPageUrl": stationUrl }, 0, 1);
+        station = await StationsResourceAccess.find({ stationLandingPageUrl: stationUrl }, 0, 1);
       }
 
       if (station && station.length > 0) {
         let _categoryOrder = {
-          key: "stationNewsCategoryDisplayIndex",
-          value: "asc"
-        }
+          key: 'stationNewsCategoryDisplayIndex',
+          value: 'asc',
+        };
         let stationNewsCategory = await StationNewsCategoryResourceAccess.find({ stationsId: station[0].stationsId }, skip, limit, _categoryOrder);
-        
-        if (stationNewsCategory) {
-          let stationNewsCategoryCount = await StationNewsCategoryResourceAccess.count({ stationsId: station[0].stationsId });
 
-          resolve({ data: stationNewsCategory, total: stationNewsCategoryCount });
+        if (stationNewsCategory) {
+          let stationNewsCategoryCount = await StationNewsCategoryResourceAccess.count({
+            stationsId: station[0].stationsId,
+          });
+
+          resolve({
+            data: stationNewsCategory,
+            total: stationNewsCategoryCount,
+          });
         } else {
           resolve({ data: [], total: 0 });
         }
       }
-      reject("failed")
-    }
-    catch {
+      reject('failed');
+    } catch {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,

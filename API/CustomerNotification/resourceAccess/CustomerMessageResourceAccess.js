@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { MESSAGE_CATEGORY, MESSAGE_STATUS, MESSAGE_TOPIC } = require('../CustomerMessageConstant');
-const tableName = "CustomerMessage";
-const primaryKeyField = "customerMessageId";
+const tableName = 'CustomerMessage';
+const primaryKeyField = 'customerMessageId';
 
 //admin create message
 
@@ -26,11 +28,10 @@ async function createTable() {
           table.index('customerMessageId');
           table.index('customerMessageCategories');
           table.index('messageSendStatus');
-
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -67,33 +68,33 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
-    queryBuilder.where(function() {
+    queryBuilder.where(function () {
       this.orWhere('customerMessageCategories', 'like', `%${searchText}%`)
-      .orWhere('customerMessageContent', 'like', `%${searchText}%`)
-      .orWhere('customerMessageTitle', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerMessageContent', 'like', `%${searchText}%`)
+        .orWhere('customerMessageTitle', 'like', `%${searchText}%`);
+    });
   } else {
-    if(filterData.customerMessageContent){
-      queryBuilder.where('customerMessageContent', 'like', `%${filterData.customerMessageContent}%`)
+    if (filterData.customerMessageContent) {
+      queryBuilder.where('customerMessageContent', 'like', `%${filterData.customerMessageContent}%`);
       delete filterData.customerMessageContent;
     }
 
-    if(filterData.customerMessageTitle){
-      queryBuilder.where('customerMessageTitle', 'like', `%${filterData.customerMessageTitle}%`)
+    if (filterData.customerMessageTitle) {
+      queryBuilder.where('customerMessageTitle', 'like', `%${filterData.customerMessageTitle}%`);
       delete filterData.customerMessageTitle;
     }
   }
 
-  if(startDate){
-    queryBuilder.where('createdAt', '>=', startDate)
+  if (startDate) {
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
-  if(endDate){
-    queryBuilder.where('createdAt', '<=', endDate)
+  if (endDate) {
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
-  
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -105,7 +106,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -131,5 +132,4 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
- 
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -11,8 +11,8 @@ const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
-  roleName: Joi.string().max(2000),
-  permissions: Joi.string().max(2000),
+  roleName: Joi.string(),
+  permissions: Joi.string(),
 };
 
 const updateSchema = {
@@ -45,7 +45,7 @@ module.exports = {
   updateById: {
     tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },

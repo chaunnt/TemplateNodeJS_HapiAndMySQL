@@ -1,17 +1,19 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 const RealEstateResourceAccess = require('./resourceAccess/RealEstateResourceAccess');
 const Axios = require('axios').default;
 const fs = require('fs');
-const UploadResourceAccess = require('../Upload/resourceAccess/UploadResourceAccess')
-const RealEstateImageResourceAccess = require('../RealEstateImage/resourceAccess/RealEstateImageResourceAccess')
+const UploadResourceAccess = require('../Upload/resourceAccess/UploadResourceAccess');
+const RealEstateImageResourceAccess = require('../RealEstateImage/resourceAccess/RealEstateImageResourceAccess');
 const CommonPlaceResourceAccess = require('../CommonPlace/resourceAccess/CommonPlaceResourceAccess');
 const convertMonth = require('../ApiUtils/utilFunctions');
-const CategoryResource = require("../RealEstateCategory/resourceAccess/RealEstateCategoryResourceAccess");
-const SubCategoryResource = require("../RealEstateSubCategory/resourceAccess/RealEstateSubCategoryResourceAccess");
+const CategoryResource = require('../RealEstateCategory/resourceAccess/RealEstateCategoryResourceAccess');
+const SubCategoryResource = require('../RealEstateSubCategory/resourceAccess/RealEstateSubCategoryResourceAccess');
 const AreaDataResource = require('../AreaData/resourceAccess/AreaDataResourceAccess');
 
 async function viewsRealEstate(realEstateId, data) {
-  let realEstateData = {}
+  let realEstateData = {};
   realEstateData.realEstateViews = data.realEstateViews + 1;
   await RealEstateResourceAccess.updateById(realEstateId, realEstateData);
 }
@@ -22,7 +24,7 @@ async function clickRealEstate(realEstateId, data) {
 }
 async function convertLatLngToAreaData(lat, lng) {
   try {
-    let res = await Axios.get(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&lang=vn&apikey=${process.env.HERE_MAP_API_KEY}`)
+    let res = await Axios.get(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${lat},${lng}&lang=vn&apikey=${process.env.HERE_MAP_API_KEY}`);
     if (res) {
       let data = {};
       data.AreaCountryName = res.data.items[0].address.countryName;
@@ -30,19 +32,17 @@ async function convertLatLngToAreaData(lat, lng) {
       data.AreaDistrictName = res.data.items[0].address.city;
       data.AreaWardName = res.data.items[0].address.district;
       data.AreaStreetName = res.data.items[0].address.street;
-      return data
+      return data;
     }
+  } catch (err) {
+    return undefined;
   }
-  catch (err) {
-    return undefined
-  }
-
 }
 
 //validate image was moved to persistent folder or not
 async function checkRealEstateImagePersistent(link) {
   let filter = {};
-  filter.uploadFileUrl = link
+  filter.uploadFileUrl = link;
   //check if image link is already included persistent folder
   if (link.indexOf('uploads/media/realEstateImage') > -1) {
     return [];
@@ -61,25 +61,24 @@ async function moveFile(filePath, uploadFormatFile) {
     let newfilePath = `uploads/media/realEstateImage/${fileName}`;
     let newLink = `https://${process.env.HOST_NAME}/${newfilePath}`;
     await fs.renameSync(filePath, newfilePath);
-    return newLink
+    return newLink;
   } catch {
-    return false
+    return false;
   }
 }
 async function findImage(id) {
-  let filter = { "realEstateId": id }
+  let filter = { realEstateId: id };
   return await RealEstateImageResourceAccess.find(filter);
 }
-
 
 //5km
 const NEAREST_LAT_LNG = 0.045045045;
 async function handleFindCommonPlace(realEstateData) {
   let commonPlace = await CommonPlaceResourceAccess.find({
     areaProvinceId: realEstateData.areaProvinceId,
-    areaDistrictId: realEstateData.areaDistrictId
+    areaDistrictId: realEstateData.areaDistrictId,
   });
-  let newRealEstateCommonPlace = ''
+  let newRealEstateCommonPlace = '';
   if (commonPlace && commonPlace.length > 0) {
     for (let i = 0; i < commonPlace.length; i++) {
       let commonPlaceLat = commonPlace[i].lat;
@@ -97,11 +96,11 @@ async function handleFindCommonPlace(realEstateData) {
       realEstateData.areaDistrictId,
       realEstateData.lat,
       realEstateData.lng,
-      NEAREST_LAT_LNG
+      NEAREST_LAT_LNG,
     );
     if (otherCommonPlace && otherCommonPlace.length > 0) {
       for (let place of otherCommonPlace) {
-        newRealEstateCommonPlace += `${place.commonPlaceId};`
+        newRealEstateCommonPlace += `${place.commonPlaceId};`;
       }
     }
   }
@@ -109,12 +108,14 @@ async function handleFindCommonPlace(realEstateData) {
 }
 
 // 1 lat = 1 lng = 111 km
-const LAT_LNG_TO_KM = 111
+const LAT_LNG_TO_KM = 111;
 
 async function handleJoinCommonPlace(arrayCommonPlace, realEstateData) {
   let arrayDetailCommonPlace = [];
   for (let commonPlaceId of arrayCommonPlace) {
-    let item = await CommonPlaceResourceAccess.find({ commonPlaceId: commonPlaceId });
+    let item = await CommonPlaceResourceAccess.find({
+      commonPlaceId: commonPlaceId,
+    });
     arrayDetailCommonPlace = arrayDetailCommonPlace.concat(item);
   }
 
@@ -137,7 +138,7 @@ async function handleJoinCommonPlace(arrayCommonPlace, realEstateData) {
 }
 
 function parseIntArray(array) {
-  let newArray = array.split(";")
+  let newArray = array.split(';');
   let result = [];
   for (let element of newArray) {
     if (element) {
@@ -153,12 +154,12 @@ async function viewCategory(categoryId, subCategoryId) {
     await SubCategoryResource.incrementView(subCategoryId);
   }
   //function success
-  return "ok";
+  return 'ok';
 }
 async function viewAreaData(areaDataId) {
   await AreaDataResource.incrementView(areaDataId);
   //function success
-  return "ok";
+  return 'ok';
 }
 
 function removePhoneNumberInDescription(description = '') {
@@ -177,7 +178,7 @@ function removePhoneNumberInDescription(description = '') {
   return '';
 }
 async function selectField() {
-  const tableName = 'RealEstateViews'
+  const tableName = 'RealEstateViews';
   return [
     `${tableName}.realEstateId`,
     `${tableName}.realEstateTitle`,
@@ -210,7 +211,7 @@ async function selectField() {
     `${tableName}.activedDate`,
     `${tableName}.isHidden`,
     `${tableName}.realEstateSubCategoryId`,
-    `${tableName}.realEstateLandUseSquare`
+    `${tableName}.realEstateLandUseSquare`,
   ];
 }
 
@@ -228,5 +229,5 @@ module.exports = {
   viewCategory,
   viewAreaData,
   removePhoneNumberInDescription,
-  selectField
-}
+  selectField,
+};

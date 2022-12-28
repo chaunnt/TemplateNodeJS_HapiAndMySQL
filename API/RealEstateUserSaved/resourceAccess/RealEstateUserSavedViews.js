@@ -1,13 +1,15 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database")
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "RealEstateUserSavedViews";
+const tableName = 'RealEstateUserSavedViews';
 const rootTableName = 'RealEstateViews';
-const primaryKeyField = "realEstateId";
+const primaryKeyField = 'realEstateId';
 
 async function createRoleStaffView() {
-  const RealEstateUserSaved = 'RealEstateUserSaved'
+  const RealEstateUserSaved = 'RealEstateUserSaved';
   let fields = [
     `${rootTableName}.realEstateId`,
     `${rootTableName}.realEstateTitle`,
@@ -87,11 +89,12 @@ async function createRoleStaffView() {
     `${RealEstateUserSaved}.appUserIdSaved`,
     `${RealEstateUserSaved}.isDeleted`,
   ];
-  var viewDefinition = DB.select(fields).from(rootTableName)
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
     .leftJoin(RealEstateUserSaved, function () {
       this.on(`${rootTableName}.realEstateId`, '=', `${RealEstateUserSaved}.realEstateId`);
-    })
-  Common.createOrReplaceView(tableName, viewDefinition)
+    });
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 async function initViews() {
   createRoleStaffView();
@@ -125,45 +128,44 @@ function _makeQueryBuilderByFilter(filter, filterClause, skip, limit, startDate,
     queryBuilder.where(function () {
       this.orWhere('realEstateTitle', 'like', `%${searchText}%`)
         .orWhere('realEstateDescription', 'like', `%${searchText}%`)
-        .orWhere('realEstateJuridicalName', 'like', `%${searchText}%`)
-    })
-  }
-  else {
+        .orWhere('realEstateJuridicalName', 'like', `%${searchText}%`);
+    });
+  } else {
     if (filterData.realEstateTitle) {
-      queryBuilder.where('realEstateTitle', 'like', `%${filterData.realEstateTitle}%`)
+      queryBuilder.where('realEstateTitle', 'like', `%${filterData.realEstateTitle}%`);
       delete filterData.realEstateTitle;
     }
 
     if (filterData.realEstateDescription) {
-      queryBuilder.where('realEstateDescription', 'like', `%${filterData.realEstateDescription}%`)
+      queryBuilder.where('realEstateDescription', 'like', `%${filterData.realEstateDescription}%`);
       delete filterData.realEstateDescription;
     }
 
     if (filterData.realEstateJuridicalName) {
-      queryBuilder.where('realEstateJuridicalName', 'like', `%${filterData.realEstatePapersLegal}%`)
+      queryBuilder.where('realEstateJuridicalName', 'like', `%${filterData.realEstatePapersLegal}%`);
       delete filterData.realEstatePapersLegal;
     }
   }
   if (filterDataClause.startLandRealitySquare) {
-    queryBuilder.where('realEstateLandRealitySquare', '>=', filterDataClause.startLandRealitySquare)
+    queryBuilder.where('realEstateLandRealitySquare', '>=', filterDataClause.startLandRealitySquare);
   }
 
   if (filterDataClause.endLandRealitySquare) {
-    queryBuilder.where('realEstateLandRealitySquare', '<=', filterDataClause.endLandRealitySquare)
+    queryBuilder.where('realEstateLandRealitySquare', '<=', filterDataClause.endLandRealitySquare);
   }
   if (filterDataClause.startValueSalePrice) {
-    queryBuilder.where('realEstateValueSalePrice', '>=', filterDataClause.startValueSalePrice)
+    queryBuilder.where('realEstateValueSalePrice', '>=', filterDataClause.startValueSalePrice);
   }
 
   if (filterDataClause.endValueSalePrice) {
-    queryBuilder.where('realEstateValueSalePrice', '<=', filterDataClause.endValueSalePrice)
+    queryBuilder.where('realEstateValueSalePrice', '<=', filterDataClause.endValueSalePrice);
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });
@@ -178,7 +180,7 @@ function _makeQueryBuilderByFilter(filter, filterClause, skip, limit, startDate,
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -202,5 +204,5 @@ module.exports = {
   updateAll,
   customSearch,
   customCount,
-  findById
+  findById,
 };

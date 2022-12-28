@@ -63,11 +63,11 @@ async function createView() {
       this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`);
     });
 
-  Common.createOrReplaceView(tableName, viewDefinition);
+  await Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
-  createView();
+  await createView();
 }
 
 async function insert(data) {
@@ -96,6 +96,32 @@ async function sumAmountDistinctByDate(filter, startDate, endDate) {
   return await Common.sumAmountDistinctByDate(tableName, 'paymentAmount', filter, startDate, endDate);
 }
 
+async function customSumDistinct(sumField, distinctFields, filter, skip, limit, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder
+        .sum(`${sumField} as totalSum`)
+        .count(`${sumField} as totalCount`)
+        .select(`${distinctFields}`)
+        .groupBy(`${distinctFields}`)
+        // .paginate({ perPage: 2, currentPage: 1 })
+        .then(records => {
+          if (records && (records.length < 1 || records[0].totalCount === null)) {
+            resolve(undefined);
+          } else {
+            resolve(records);
+          }
+        });
+    } catch (e) {
+      console.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
+      console.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
 function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
@@ -103,6 +129,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
         .orWhere('companyName', 'like', `%${searchText}%`);
@@ -141,9 +168,28 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
+}
+
+async function customSum(sumField, filter, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder.sum(`${sumField} as sumResult`).then(records => {
+        if (records && records[0].sumResult === null) {
+          resolve(undefined);
+        } else {
+          resolve(records);
+        }
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
+      resolve(undefined);
+    }
+  });
 }
 
 function _makeQueryBuilderForReferedUser(
@@ -245,4 +291,6 @@ module.exports = {
   customCount,
   sumAmountDistinctByDate,
   sumReferedUserByUserId,
+  customSum,
+  customSumDistinct,
 };

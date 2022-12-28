@@ -1,7 +1,9 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 //This model is use to display info of Stations in public.
-//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL 
-const Joi = require("joi");
+//BEWARE !! DO NOT SEND INFO THAT RELATED TO SYSTEM INSIDE MODEL
+const Joi = require('joi');
 
 const rawRealEstateSchema = Joi.object({
   AreaCountryName: Joi.string(),
@@ -164,10 +166,10 @@ const rawRealEstateSchema = Joi.object({
 function fromData(data) {
   let modelData = {
     ...data,
-  }
+  };
 
   let outputModel = rawRealEstateSchema.validate(modelData);
-  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === "") {
+  if (outputModel.error === undefined || outputModel.error === null || outputModel.error === '') {
     return outputModel.value;
   } else {
     console.error(outputModel.error);
@@ -177,5 +179,5 @@ function fromData(data) {
 
 module.exports = {
   fromData,
-  schema: rawRealEstateSchema
+  schema: rawRealEstateSchema,
 };

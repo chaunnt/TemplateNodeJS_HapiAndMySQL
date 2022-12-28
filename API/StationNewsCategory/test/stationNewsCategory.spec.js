@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -8,16 +10,15 @@ const TestFunctions = require('../../Common/test/CommonTestFunctions');
 
 const app = require('../../../server');
 
-
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
 
 describe(`Tests StationNewsCategory`, function () {
   let stationNewsCategoryId;
-  let token = "";
+  let token = '';
   let fakeUserName = faker.name.firstName() + faker.name.lastName();
-  fakeUserName = fakeUserName.replace("'", "");
+  fakeUserName = fakeUserName.replace("'", '');
   before(done => {
     new Promise(async function (resolve, reject) {
       let staffData = await TestFunctions.loginUser();
@@ -27,14 +28,14 @@ describe(`Tests StationNewsCategory`, function () {
   });
   it('insert stationNewsCategory', done => {
     const body = {
-      "stationNewsCategoryTitle": fakeUserName,
-      "stationNewsCategoryContent": fakeUserName,
-      "stationNewsCategoryAvatar": fakeUserName
+      stationNewsCategoryTitle: fakeUserName,
+      stationNewsCategoryContent: fakeUserName,
+      stationNewsCategoryAvatar: fakeUserName,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/insert`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -48,12 +49,12 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('find stationNewsCategory', done => {
     const body = {
-      "filter": {}
+      filter: {},
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/find`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -66,15 +67,15 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('update by Id stationNewsCategory', done => {
     const body = {
-      "id": stationNewsCategoryId,
+      id: stationNewsCategoryId,
       data: {
-        stationNewsCategoryDisplayIndex: 0
-      }
+        stationNewsCategoryDisplayIndex: 0,
+      },
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/updateById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -87,12 +88,12 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('find by Id stationNewsCategory', done => {
     const body = {
-      "id": stationNewsCategoryId,
+      id: stationNewsCategoryId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/findById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -105,12 +106,12 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('delete by id stationNewsCategory', done => {
     const body = {
-      "id": stationNewsCategoryId
+      id: stationNewsCategoryId,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/deleteById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -123,12 +124,12 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('delete by id failse format stationNewsCategory', done => {
     const body = {
-      "id": "a"
+      id: 'a',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/StationNewsCategory/deleteById`)
-      .set("Authorization", `Bearer ${token}`)
+      .set('Authorization', `Bearer ${token}`)
       .send(body)
       .end((err, res) => {
         if (err) {
@@ -140,9 +141,9 @@ describe(`Tests StationNewsCategory`, function () {
 
   it('get news category list', done => {
     const body = {
-      "skip": 0,
-      "limit": 20,
-      "stationsUrl": "station-dev.kiemdinhoto.vn"
+      skip: 0,
+      limit: 20,
+      stationsUrl: 'station-dev.kiemdinhoto.vn',
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -158,9 +159,9 @@ describe(`Tests StationNewsCategory`, function () {
   });
   it('get news category List failse stationUrl', done => {
     const body = {
-      "skip": 0,
-      "limit": 20,
-      "stationsUrl": 12
+      skip: 0,
+      limit: 20,
+      stationsUrl: 12,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)

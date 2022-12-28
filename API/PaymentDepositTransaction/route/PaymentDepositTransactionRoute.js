@@ -20,6 +20,7 @@ const updateSchema = {
   id: Joi.number().required(),
   paymentStatus: Joi.string().max(255),
   paymentRef: Joi.string(),
+  paymentSecondaryRef: Joi.string(),
 };
 
 const filterSchema = {
@@ -72,7 +73,7 @@ module.exports = {
   },
   find: {
     tags: ['api', `${moduleName}`],
-    description: `update ${moduleName}`,
+    description: `find ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
@@ -101,7 +102,7 @@ module.exports = {
   findById: {
     tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -130,11 +131,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          paymentStatus: Joi.string().allow([
-            DEPOSIT_TRX_STATUS.NEW,
-            DEPOSIT_TRX_STATUS.COMPLETED,
-            DEPOSIT_TRX_STATUS.CANCELED,
-          ]),
+          paymentStatus: Joi.string().allow([DEPOSIT_TRX_STATUS.NEW, DEPOSIT_TRX_STATUS.COMPLETED, DEPOSIT_TRX_STATUS.CANCELED]),
           paymentMethodId: Joi.number().min(0),
         }),
         skip: Joi.number().default(0).min(0),
@@ -169,7 +166,9 @@ module.exports = {
         paymentOriginName: Joi.string(), //so tai khoan, dia chi vi
         // //<< Cho nay la dia chi transaction, khong phai dia chi vi.
         //paymentRef = ma hoa don / ma giao dich ben ngoai he thong
+        paymentMethodId: Joi.number().min(0),
         paymentRef: Joi.string(),
+        paymentSecondaryRef: Joi.string(),
       }),
     },
     handler: function (req, res) {

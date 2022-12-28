@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const moment = require('moment');
 
 const RecordResource = require('../resourceAccess/CustomerRecordResourceAccess');
@@ -24,17 +26,17 @@ async function updateProcessForAllRecord(station) {
     }
 
     let lastStepIndex = 0;
-    //get latest index of step 
+    //get latest index of step
     //-> if car already gone to end of sequence, we will skip it
     for (let i = 0; i < processes.length; i++) {
       const processConfig = processes[i];
       if (processConfig.stepIndex > lastStepIndex) {
         lastStepIndex = processConfig.stepIndex;
       }
-    };
+    }
 
-    let startDate = moment().format("DD/MM/YYYY");
-    let endDate = moment().format("DD/MM/YYYY");
+    let startDate = moment().format('DD/MM/YYYY');
+    let endDate = moment().format('DD/MM/YYYY');
 
     //go to largest index to smallest, to prevent duplicate checking for records
     for (let i = processes.length - 1; i >= 0; i--) {
@@ -42,10 +44,16 @@ async function updateProcessForAllRecord(station) {
       //we skip last step
       if (processConfig.stepIndex < lastStepIndex) {
         //find all processing records of today
-        let recordList = await RecordResource.findRecordByProcessCheckDate({
-          customerRecordState: processConfig.stepIndex,
-          customerStationId: station.stationsId,
-        }, undefined, undefined, startDate, endDate);
+        let recordList = await RecordResource.findRecordByProcessCheckDate(
+          {
+            customerRecordState: processConfig.stepIndex,
+            customerStationId: station.stationsId,
+          },
+          undefined,
+          undefined,
+          startDate,
+          endDate,
+        );
 
         //check time different (time passed) for each record
         for (let recordCounter = 0; recordCounter < recordList.length; recordCounter++) {
@@ -66,8 +74,8 @@ async function updateProcessForAllRecord(station) {
           //compare time diff to process duration
           if (timeDiff >= processConfig.stepDuration) {
             let customerRecordData = {
-              customerRecordState: processConfig.stepIndex + 1
-            }
+              customerRecordState: processConfig.stepIndex + 1,
+            };
 
             //update state and notify it
             let result = await CustomerRecordFunctions.updateCustomerRecordById(customerRecordId, customerRecordData);
@@ -80,9 +88,9 @@ async function updateProcessForAllRecord(station) {
         }
       }
     }
-    resolve("done");
+    resolve('done');
   });
-};
+}
 
 module.exports = {
   updateProcessForAllRecord,

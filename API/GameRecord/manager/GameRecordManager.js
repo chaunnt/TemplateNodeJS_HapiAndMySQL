@@ -29,12 +29,7 @@ async function insert(req) {
         gameRecordTypeEven: gameData.gameRecordTypeEven,
       };
 
-      let result = await GameFunction.addNewGameRecord(
-        newGameSection,
-        gameData.gameRecordPrice,
-        gameData.gameRecordUnit,
-        gameRecordType,
-      );
+      let result = await GameFunction.addNewGameRecord(newGameSection, gameData.gameRecordPrice, gameData.gameRecordUnit, gameRecordType);
       if (result) {
         resolve(result);
       } else {
@@ -241,30 +236,22 @@ async function userGetCurrentGameRecord(req) {
           case GAME_RECORD_TYPE.GAMEWINGO1:
           case GAME_RECORD_TYPE.GAME5D1:
           case GAME_RECORD_TYPE.GAMEK31:
-            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format(
-              'YYYYMMDDHHmm',
-            );
+            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format('YYYYMMDDHHmm');
             break;
           case GAME_RECORD_TYPE.GAMEWINGO3:
           case GAME_RECORD_TYPE.GAME5D3:
           case GAME_RECORD_TYPE.GAMEK33:
-            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format(
-              'YYYYMMDDHHmm',
-            );
+            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format('YYYYMMDDHHmm');
             break;
           case GAME_RECORD_TYPE.GAMEWINGO5:
           case GAME_RECORD_TYPE.GAME5D5:
           case GAME_RECORD_TYPE.GAMEK35:
-            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format(
-              'YYYYMMDDHHmm',
-            );
+            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format('YYYYMMDDHHmm');
             break;
           case GAME_RECORD_TYPE.GAMEWINGO10:
           case GAME_RECORD_TYPE.GAMEWINGO10:
           case GAME_RECORD_TYPE.GAMEK310:
-            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format(
-              'YYYYMMDDHHmm',
-            );
+            finishTime = moment(_finishSection.substring(0, _finishSection.length - 2), 'YYYYMMDDHHmm').format('YYYYMMDDHHmm');
             break;
           default:
             break;

@@ -41,26 +41,10 @@ async function find(req) {
       let order = req.payload.order;
       let searchText = req.payload.searchText;
 
-      let paymentServices = await UserBonusPackageView.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let paymentServices = await UserBonusPackageView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await UserBonusPackageView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-          order,
-        );
+        let paymentServiceCount = await UserBonusPackageView.customCount(filter, undefined, undefined, undefined, undefined, searchText, order);
         resolve({ data: paymentServices, total: paymentServiceCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -107,26 +91,10 @@ async function userGetListPaymentBonusPackage(req) {
         filter.packageCategory = PACKAGE_CATEGORY.BONUS_NORMAL;
       }
 
-      let paymentServices = await PackageUnitView.customSearch(
-        filter,
-        skip,
-        limit,
-        undefined,
-        undefined,
-        searchText,
-        order,
-      );
+      let paymentServices = await PackageUnitView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
 
       if (paymentServices && paymentServices.length > 0) {
-        let paymentServiceCount = await PackageUnitView.customCount(
-          filter,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          searchText,
-          order,
-        );
+        let paymentServiceCount = await PackageUnitView.customCount(filter, undefined, undefined, undefined, undefined, searchText, order);
 
         //set all bonus package to DISABLE first
         for (let i = 0; i < paymentServices.length; i++) {

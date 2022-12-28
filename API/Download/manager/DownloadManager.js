@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 // const ExcelFunctions = require('../../../ThirdParty/Excel/ExcelFunction');
 // const BooksResource = require('../../Books/resourceAccess/BooksResourceAccess');
 const Logger = require('../../../utils/logging');
@@ -32,15 +34,15 @@ async function downloadBookReport(req, res) {
       }
     }
 
-    let reportName = `BookReport_${new Date() -1}`;
+    let reportName = `BookReport_${new Date() - 1}`;
     let excelFileName = await ExcelFunctions.renderExcelFile(reportName, reportData);
     let downloadUrl = process.env.HOST_NAME + '/downloads/' + excelFileName;
     return downloadUrl;
   } catch (e) {
     Logger.error(__filename, e);
-    return("failed");
+    return 'failed';
   }
-};
+}
 
 module.exports = {
   downloadBookReport,

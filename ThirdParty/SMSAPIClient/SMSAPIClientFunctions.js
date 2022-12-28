@@ -1,3 +1,4 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const moment = require('moment');
 const chai = require('chai');
@@ -12,38 +13,15 @@ const SMS_API_USERNAME = process.env.SMS_API_USERNAME || 'smsuser';
 const SMS_API_PASSWORD = process.env.SMS_API_PASSWORD || 'smspassword';
 const SMS_API_BRAND = process.env.SMS_API_BRAND || 'smsbrand';
 
-function _nonAccentVietnamese(str) {
-  str = str.toLowerCase();
-  //     We can also use this instead of from line 11 to line 17
-  //     str = str.replace(/\u00E0|\u00E1|\u1EA1|\u1EA3|\u00E3|\u00E2|\u1EA7|\u1EA5|\u1EAD|\u1EA9|\u1EAB|\u0103|\u1EB1|\u1EAF|\u1EB7|\u1EB3|\u1EB5/g, "a");
-  //     str = str.replace(/\u00E8|\u00E9|\u1EB9|\u1EBB|\u1EBD|\u00EA|\u1EC1|\u1EBF|\u1EC7|\u1EC3|\u1EC5/g, "e");
-  //     str = str.replace(/\u00EC|\u00ED|\u1ECB|\u1EC9|\u0129/g, "i");
-  //     str = str.replace(/\u00F2|\u00F3|\u1ECD|\u1ECF|\u00F5|\u00F4|\u1ED3|\u1ED1|\u1ED9|\u1ED5|\u1ED7|\u01A1|\u1EDD|\u1EDB|\u1EE3|\u1EDF|\u1EE1/g, "o");
-  //     str = str.replace(/\u00F9|\u00FA|\u1EE5|\u1EE7|\u0169|\u01B0|\u1EEB|\u1EE9|\u1EF1|\u1EED|\u1EEF/g, "u");
-  //     str = str.replace(/\u1EF3|\u00FD|\u1EF5|\u1EF7|\u1EF9/g, "y");
-  //     str = str.replace(/\u0111/g, "d");
-  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-  str = str.replace(/đ/g, "d");
-  // Some system encode vietnamese combining accent as individual utf-8 characters
-  str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ""); // Huyền sắc hỏi ngã nặng 
-  str = str.replace(/\u02C6|\u0306|\u031B/g, ""); // Â, Ê, Ă, Ơ, Ư
-  return str;
-}
-
 async function checkSMS(smsId) {
   let body = {
-    "username": SMS_API_USERNAME,
-    "password": SMS_API_PASSWORD,
-    "brandname": SMS_API_BRAND,
-    "textmsg": "Hello",
-    "sendtime": "20190219105500",
-    "isunicode": 0,
-    "listmsisdn": "84391222xxx;84351222xxx"
+    username: SMS_API_USERNAME,
+    password: SMS_API_PASSWORD,
+    brandname: SMS_API_BRAND,
+    textmsg: 'Hello',
+    sendtime: '20190219105500',
+    isunicode: 0,
+    listmsisdn: '84391222xxx;84351222xxx',
   };
   return new Promise((resolve, reject) => {
     chai
@@ -75,27 +53,28 @@ async function sendSMS(message, phoneNumberList, customClient) {
 
   let _smsApiUrl = SMS_API_URL;
   let _smsAuth = {
-    "username": SMS_API_USERNAME,
-    "password": SMS_API_PASSWORD,
-    "brandname": SMS_API_BRAND,
+    username: SMS_API_USERNAME,
+    password: SMS_API_PASSWORD,
+    brandname: SMS_API_BRAND,
   };
 
   if (customClient) {
     _smsAuth = {
-      "username": customClient.smsApiUsername,
-      "password": customClient.smsApiPassword,
-      "brandname": customClient.smsAPIBrand,
-    }
+      username: customClient.smsApiUsername,
+      password: customClient.smsApiPassword,
+      brandname: customClient.smsAPIBrand,
+    };
     _smsApiUrl = customClient.smsApiUrl;
   }
 
   let body = {
     ..._smsAuth,
-    "textmsg": _nonAccentVietnamese(message),
-    "sendtime": sendTime,
-    "isunicode": 0,
-    "listmsisdn": phoneNumberList.join(';')
+    textmsg: message,
+    sendtime: sendTime,
+    isunicode: 0,
+    listmsisdn: phoneNumberList.join(';'),
   };
+  console.log(body);
   return new Promise((resolve, reject) => {
     chai
       .request(_smsApiUrl)
@@ -106,15 +85,24 @@ async function sendSMS(message, phoneNumberList, customClient) {
           console.error(err);
         }
         if (res) {
-          let result = JSON.parse(res.text);
-          console.log(result);
-          if (result.code !== 0) {
-            resolve(undefined)
-          } else {
-            resolve(result.transactionid);
+          try {
+            let result = JSON.parse(res.text);
+            console.info(`sendSMS ${phoneNumberList.join(';')}`);
+            console.info(`${res.text}`);
+            if (result.code !== 0) {
+              console.info(`sendSMS error code !== 0`);
+              resolve(undefined);
+            } else {
+              resolve(result.transactionid);
+            }
+          } catch (error) {
+            console.error('============ERROR==========');
+            console.error(res.text);
+            resolve(undefined);
           }
         } else {
-          resolve(undefined)
+          console.info(`request sendSMS error`);
+          resolve(undefined);
         }
       });
   });
@@ -122,31 +110,35 @@ async function sendSMS(message, phoneNumberList, customClient) {
 
 async function createClient(smsApiUrl, smsApiUsername, smsApiPassword, smsAPIBrand) {
   const invalidClient = undefined;
-  if (smsApiUrl === undefined || smsApiUrl === null || smsApiUrl.trim() === "") {
+  if (smsApiUrl === undefined || smsApiUrl === null || smsApiUrl.trim() === '') {
+    console.error(`invalid smsApiUrl ${smsApiUrl}`);
     return invalidClient;
   }
 
-  if (smsApiUsername === undefined || smsApiUsername === null || smsApiUsername.trim() === "") {
+  if (smsApiUsername === undefined || smsApiUsername === null || smsApiUsername.trim() === '') {
+    console.error(`invalid smsApiUsername ${smsApiUsername}`);
     return invalidClient;
   }
 
-  if (smsApiPassword === undefined || smsApiPassword === null || smsApiPassword.trim() === "") {
+  if (smsApiPassword === undefined || smsApiPassword === null || smsApiPassword.trim() === '') {
+    console.error(`invalid smsApiPassword ${smsApiPassword}`);
     return invalidClient;
   }
 
-  if (smsAPIBrand === undefined || smsAPIBrand === null || smsAPIBrand.trim() === "") {
+  if (smsAPIBrand === undefined || smsAPIBrand === null || smsAPIBrand.trim() === '') {
+    console.error(`invalid smsAPIBrand ${smsAPIBrand}`);
     return invalidClient;
   }
-  
+
   const newClient = {
     smsApiUrl: smsApiUrl,
     smsApiUsername: smsApiUsername,
     smsApiPassword: smsApiPassword,
-    smsAPIBrand: smsAPIBrand
-  }
+    smsAPIBrand: smsAPIBrand,
+  };
   return newClient;
 }
 module.exports = {
   sendSMS,
-  createClient
+  createClient,
 };

@@ -1,3 +1,5 @@
+/* Copyright (c) 2020-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 
 const Winston = require('winston');
@@ -8,11 +10,11 @@ const loggingTransports = [
     level: AppConfig.logging.console.level,
     handleExceptions: true,
     humanReadableUnhandledException: true,
-    colorize: true
-  })
+    colorize: true,
+  }),
 ];
 Winston.Logger({
   transports: loggingTransports,
-  exitOnError: false
+  exitOnError: false,
 });
 module.exports = Winston;

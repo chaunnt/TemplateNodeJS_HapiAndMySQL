@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -12,8 +12,8 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 const { STAKING_PAYMENT_TYPE } = require('../StakingPackageConstant');
 
 const insertSchema = {
-  stakingPackageName: Joi.string().max(255),
-  stakingPackageDescription: Joi.string().required().max(500),
+  stakingPackageName: Joi.string(),
+  stakingPackageDescription: Joi.string().required(),
   stakingPackagePrice: Joi.number().required().min(0),
   stakingPeriod: Joi.number().min(0).required(),
   stakingInterestRate: Joi.number().min(0.1).required(),
@@ -26,8 +26,8 @@ const filterSchema = {
 };
 
 const updateSchema = {
-  stakingPackageName: Joi.string().max(255),
-  stakingPackageDescription: Joi.string().max(500),
+  stakingPackageName: Joi.string(),
+  stakingPackageDescription: Joi.string(),
   stakingPackagePrice: Joi.number().min(0),
   stakingPeriod: Joi.number().min(0),
   stakingInterestRate: Joi.number().min(0.1),

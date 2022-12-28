@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -40,7 +40,7 @@ async function _cancelAllSMSMessage(station) {
 }
 
 async function sendMessageSMSToCustomer(station) {
-  console.info(`sendMessageSMSToCustomer ${station.stationsId}`);
+  console.log(`sendMessageSMSToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
     //Skip TEST station
     if (station.stationsId === 0) {
@@ -60,11 +60,7 @@ async function sendMessageSMSToCustomer(station) {
     const ENABLED = 1;
     //Get sms client info if station use custom sms client
     if (station.stationUseCustomSMSBrand === ENABLED) {
-      if (
-        station.stationCustomSMSBrandConfig &&
-        station.stationCustomSMSBrandConfig !== null &&
-        station.stationCustomSMSBrandConfig.trim() !== ''
-      ) {
+      if (station.stationCustomSMSBrandConfig && station.stationCustomSMSBrandConfig !== null && station.stationCustomSMSBrandConfig.trim() !== '') {
         try {
           _customSMSClient = await SMSAPIClientFunctions.createClient(
             station.stationCustomSMSBrandConfig.smsUrl,
@@ -123,11 +119,7 @@ async function sendMessageSMSToCustomer(station) {
           //if we disable SMS
           if (process.env.SMS_ENABLE) {
             let sendResult = undefined;
-            sendResult = await SMSAPIClientFunctions.sendSMS(
-              messageContent,
-              [_customerMessage.customerMessagePhone],
-              _customSMSClient,
-            );
+            sendResult = await SMSAPIClientFunctions.sendSMS(messageContent, [_customerMessage.customerMessagePhone], _customSMSClient);
 
             //if send success
             if (sendResult !== undefined) {

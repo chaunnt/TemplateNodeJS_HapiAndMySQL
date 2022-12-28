@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const UtilFunction = require('../../ApiUtils/utilFunctions');
-const tableName = "RealEstateUserSaved";
+const tableName = 'RealEstateUserSaved';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -14,7 +16,7 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.integer('appUserIdSaved');
           table.integer('realEstateId');
-          table.primary(['appUserIdSaved', 'realEstateId'])
+          table.primary(['appUserIdSaved', 'realEstateId']);
           timestamps(table);
           table.index('appUserIdSaved');
           table.index('realEstateId');
@@ -48,8 +50,8 @@ async function count(filter, order) {
 async function deleteById(appUserIdSaved, realEstateId) {
   let dataId = {};
   dataId['appUserIdSaved'] = appUserIdSaved;
-  dataId['realEstateId'] = realEstateId
-  return await Common.deleteById(tableName, dataId)
+  dataId['realEstateId'] = realEstateId;
+  return await Common.deleteById(tableName, dataId);
 }
 async function findAllDelete(filter, skip, limit, order) {
   return await Common.findAllDelete(tableName, filter, skip, limit, order);
@@ -66,5 +68,5 @@ module.exports = {
   deleteById,
   modelName: tableName,
   findAllDelete,
-  findById
+  findById,
 };

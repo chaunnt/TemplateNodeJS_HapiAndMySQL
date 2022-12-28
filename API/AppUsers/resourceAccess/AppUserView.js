@@ -9,6 +9,7 @@ const rootTableName = 'AppUser';
 const primaryKeyField = 'appUserId';
 const tableMemberShip = 'AppUserMembership';
 async function createViews() {
+  // const AreaDataTable = 'AreaData';
   let fields = [
     `${rootTableName}.appUserId`,
     `${rootTableName}.sotaikhoan`,
@@ -49,6 +50,7 @@ async function createViews() {
     `${rootTableName}.facebookId`, //luu facebook id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.appleId`, //luu apple id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.createdAt`,
+    `${rootTableName}.isDeleted`,
     `${rootTableName}.appUserNote`,
     `${rootTableName}.activeOTPCode`,
     `${rootTableName}.activeOTPAt`,
@@ -119,6 +121,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
         .orWhere('companyName', 'like', `%${searchText}%`);

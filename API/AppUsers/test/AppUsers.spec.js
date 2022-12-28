@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const faker = require('faker');
 const chai = require('chai');
@@ -127,8 +127,7 @@ describe(`Tests ${Model.modelName}`, function () {
   it('Login facebook', done => {
     const body = {
       facebook_id: faker.finance.creditCardNumber(),
-      facebook_avatar:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Facebook-icon-1.png/600px-Facebook-icon-1.png',
+      facebook_avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Facebook-icon-1.png/600px-Facebook-icon-1.png',
       facebook_name: faker.name.firstName(),
       facebook_email: faker.internet.email(),
     };
@@ -148,8 +147,7 @@ describe(`Tests ${Model.modelName}`, function () {
   it('Login Google', done => {
     const body = {
       google_id: faker.finance.creditCardNumber(),
-      google_avatar:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/368px-Google_2015_logo.svg.png',
+      google_avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/368px-Google_2015_logo.svg.png',
       google_name: faker.name.firstName(),
       google_email: faker.internet.email() + crypto.randomBytes(5).toString('hex'),
     };
@@ -189,8 +187,7 @@ describe(`Tests ${Model.modelName}`, function () {
   it('Login Apple', done => {
     const body = {
       apple_id: faker.finance.creditCardNumber(),
-      apple_avatar:
-        'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/505px-Apple_logo_black.svg.png',
+      apple_avatar: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/505px-Apple_logo_black.svg.png',
       apple_name: faker.name.firstName(),
       apple_email: faker.internet.email() + crypto.randomBytes(5).toString('hex'),
     };
@@ -223,7 +220,12 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
   it('Get list users (with filter)', done => {
-    const body = { filter: { active: 1 }, skip: 0, limit: 20, order: { key: 'createdAt', value: 'desc' } };
+    const body = {
+      filter: { active: 1 },
+      skip: 0,
+      limit: 20,
+      order: { key: 'createdAt', value: 'desc' },
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/AppUsers/find`)
@@ -238,7 +240,12 @@ describe(`Tests ${Model.modelName}`, function () {
       });
   });
   it('Get list users (with searchText)', done => {
-    const body = { filter: { active: 1 }, skip: 0, limit: 20, searchText: 'aaa' };
+    const body = {
+      filter: { active: 1 },
+      skip: 0,
+      limit: 20,
+      searchText: 'aaa',
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
       .post(`/AppUsers/find`)
@@ -316,30 +323,6 @@ describe(`Tests ${Model.modelName}`, function () {
       data: {
         firstName: faker.name.firstName(),
         phoneNumber: faker.phone.phoneNumber() + crypto.randomBytes(5).toString('hex'),
-        birthDay: '01/03/1999',
-        sex: USER_SEX.MALE,
-      },
-    };
-    chai
-      .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/AppUsers/updateUserById`)
-      .set('Authorization', `Bearer ${adminToken}`)
-      .send(body)
-      .end((err, res) => {
-        if (err) {
-          console.error(err);
-        }
-        checkResponseStatus(res, 200);
-        done();
-      });
-  });
-
-  it('staff change user password', done => {
-    const body = {
-      id: userId,
-      data: {
-        firstName: faker.name.firstName(),
-        phoneNumber: faker.phone.phoneNumber(),
         birthDay: '01/03/1999',
         sex: USER_SEX.MALE,
       },
@@ -495,10 +478,12 @@ describe(`Tests ${Model.modelName}`, function () {
   // });
 
   it('submit request to admin verify identity card', done => {
-    const body = {};
+    const body = {
+      id: userId,
+    };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
-      .post(`/AppUsers/user/submitIdentity`)
+      .post(`/AppUsers/submitImageIdentityCard`)
       .set('Authorization', `Bearer ${userToken}`)
       .send(body)
       .end((err, res) => {

@@ -1,6 +1,8 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 'use strict';
 
-const Joi = require("joi");
+const Joi = require('joi');
 
 //this is output for client
 const schema = Joi.object({
@@ -13,8 +15,8 @@ const schema = Joi.object({
     booksChapterName: Joi.string().required().allow(''),
     booksChapterNumber: Joi.number().required(),
     booksChapterUrl: Joi.string(),
-  })
-})
+  }),
+});
 
 function fromData(data) {
   let modelData = {
@@ -23,7 +25,7 @@ function fromData(data) {
     booksAvatar: data.booksAvatar,
     booksId: data.booksId,
     booksUrl: data.booksUrl,
-  }
+  };
 
   modelData.booksChapter = [];
   if (data.booksChapter && data.booksChapter.length > 0) {
@@ -32,8 +34,8 @@ function fromData(data) {
       modelData.booksChapter.push({
         booksChapterName: chapter.booksChapterName,
         booksChapterNumber: chapter.booksChapterNumber,
-        booksChapterUrl: chapter.booksChapterUrl
-      })
+        booksChapterUrl: chapter.booksChapterUrl,
+      });
     }
   }
 
@@ -41,5 +43,5 @@ function fromData(data) {
 }
 
 module.exports = {
-  fromData
+  fromData,
 };

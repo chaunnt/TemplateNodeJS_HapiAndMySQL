@@ -1,7 +1,6 @@
 /* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const Logger = require('../../utils/logging');
-const moment = require('moment');
 
 async function countTotalUser() {
   const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
@@ -35,7 +34,6 @@ async function sumTotalAmountCompletedUserServicePackage(startDate, endDate) {
       packageActivityStatus: ACTIVITY_STATUS.COMPLETED,
     },
     undefined,
-    undefined,
     startDate,
     endDate,
   );
@@ -57,7 +55,6 @@ async function countTotalCompletedUserServicePackage(startDate, endDate) {
       packageActivityStatus: ACTIVITY_STATUS.COMPLETED,
     },
     undefined,
-    undefined,
     startDate,
     endDate,
   );
@@ -70,7 +67,6 @@ async function countTotalCompletedUserServicePackage(startDate, endDate) {
       packageCategory: PACKAGE_CATEGORY.NORMAL,
       packageActivityStatus: ACTIVITY_STATUS.CANCELED,
     },
-    undefined,
     undefined,
     startDate,
     endDate,
@@ -90,7 +86,6 @@ async function countTotalUserServicePackage(startDate, endDate) {
     {
       packageCategory: PACKAGE_CATEGORY.NORMAL,
     },
-    undefined,
     undefined,
     startDate,
     endDate,
@@ -112,7 +107,6 @@ async function countTotalUserBonusServicePackage(startDate, endDate) {
       packageCategory: PACKAGE_CATEGORY.BONUS_RANK,
     },
     undefined,
-    undefined,
     startDate,
     endDate,
   );
@@ -126,7 +120,6 @@ async function countTotalUserBonusServicePackage(startDate, endDate) {
       packageCategory: PACKAGE_CATEGORY.BONUS_NORMAL,
     },
     undefined,
-    undefined,
     startDate,
     endDate,
   );
@@ -139,7 +132,6 @@ async function countTotalUserBonusServicePackage(startDate, endDate) {
     {
       packageCategory: PACKAGE_CATEGORY.BONUS_KYC,
     },
-    undefined,
     undefined,
     startDate,
     endDate,
@@ -162,16 +154,9 @@ async function countTotalBalanceUnit() {
   return 0;
 }
 
-async function sumTotalUserPaymentDeposit(filter = {}, startDate, endDate) {
+async function sumTotalUserPaymentDeposit(startDate, endDate) {
   const PaymentDepositResource = require('../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionResourceAccess');
-  let sumAll = await PaymentDepositResource.customSum(
-    'paymentAmount',
-    filter,
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
+  let sumAll = await PaymentDepositResource.customSum({}, startDate, endDate);
   if (sumAll) {
     return sumAll[0].sumResult;
   }
@@ -179,13 +164,15 @@ async function sumTotalUserPaymentDeposit(filter = {}, startDate, endDate) {
   return 0;
 }
 
-async function sumTotalUserPaymentWithdraw(filter = {}, startDate, endDate) {
-  const PaymentWithdrawResource = require('../PaymentWithdrawTransaction/resourceAccess/PaymentWithdrawTransactionResourceAccess');
-  let sumAll = await PaymentWithdrawResource.customSum(
+async function sumTotalUserPaymentWithdraw(startDate, endDate) {
+  const WithdrawTransactionUserView = require('../PaymentWithdrawTransaction/resourceAccess/WithdrawTransactionUserView');
+  const { WALLET_TYPE } = require('../Wallet/WalletConstant');
+
+  let sumAll = await WithdrawTransactionUserView.customSum(
     'paymentAmount',
-    filter,
-    undefined,
-    undefined,
+    {
+      walletType: WALLET_TYPE.USDT,
+    },
     startDate,
     endDate,
   );
@@ -203,14 +190,7 @@ async function sumTotalUserPaymentExchange(startDate, endDate) {
   filter.walletTypeBefore = WALLET_TYPE.FAC;
   filter.walletTypeAfter = WALLET_TYPE.USDT;
 
-  let sumAll = await PaymentExchangeResource.customSum(
-    'paymentAmount',
-    filter,
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
+  let sumAll = await PaymentExchangeResource.customSum(filter, startDate, endDate);
   if (sumAll) {
     return sumAll[0].sumResult;
   }
@@ -220,14 +200,7 @@ async function sumTotalUserPaymentExchange(startDate, endDate) {
 
 async function sumTotalUserPaymentService(startDate, endDate) {
   const ServicePackageUserViews = require('../PaymentServicePackage/resourceAccess/ServicePackageUserViews');
-  let sumAll = await ServicePackageUserViews.customSum(
-    'packagePaymentAmount',
-    {},
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
+  let sumAll = await ServicePackageUserViews.customSum('packagePaymentAmount', {}, undefined, startDate, endDate);
   if (sumAll) {
     return sumAll[0].sumResult;
   }
@@ -249,6 +222,7 @@ async function summaryWalletBalanceUnit(startDate, endDate) {
   let distinctFields = ['walletBalanceUnitDisplayName', 'walletBalanceUnitCode', 'walletBalanceUnitAvatar'];
 
   let sumAll = await ServicePackageUserViews.customSumCountDistinct(distinctFields, {}, startDate, endDate);
+  console.log(sumAll);
   if (sumAll) {
     return sumAll;
   }
@@ -271,7 +245,7 @@ async function summaryUserPaymentServicePackage(startDate, endDate) {
 
 async function countTotalNewUsers(startDate, endDate) {
   const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
-  let countAll = await AppUserResource.customCount({}, undefined, undefined, startDate, endDate);
+  let countAll = await AppUserResource.customCount({}, undefined, startDate, endDate);
   if (countAll) {
     return countAll[0].count;
   }
@@ -326,31 +300,15 @@ function _extractSummaryResult(createdDate, summaryResultList) {
 
 async function summaryUserPayment(appUserId, startDate, endDate) {
   const DepositTransactionUserView = require('../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionUserView');
-  let summaryDeposit = await DepositTransactionUserView.sumAmountDistinctByDate(
-    { appUserId: appUserId },
-    startDate,
-    endDate,
-  );
+  let summaryDeposit = await DepositTransactionUserView.sumAmountDistinctByDate({ appUserId: appUserId }, startDate, endDate);
 
   const WithdrawTransactionUserView = require('../PaymentWithdrawTransaction/resourceAccess/WithdrawTransactionUserView');
-  let summaryWithdraw = await WithdrawTransactionUserView.sumAmountDistinctByDate(
-    { appUserId: appUserId },
-    startDate,
-    endDate,
-  );
+  let summaryWithdraw = await WithdrawTransactionUserView.sumAmountDistinctByDate({ appUserId: appUserId }, startDate, endDate);
 
   const ExchangeTransactionUserView = require('../PaymentExchangeTransaction/resourceAccess/ExchangeTransactionUserView');
-  let summaryBuy = await ExchangeTransactionUserView.sumAmountDistinctByDate(
-    { appUserId: appUserId },
-    startDate,
-    endDate,
-  );
+  let summaryBuy = await ExchangeTransactionUserView.sumAmountDistinctByDate({ appUserId: appUserId }, startDate, endDate);
 
-  let summarySell = await ExchangeTransactionUserView.sumAmountDistinctByDate(
-    { referId: appUserId },
-    startDate,
-    endDate,
-  );
+  let summarySell = await ExchangeTransactionUserView.sumAmountDistinctByDate({ referId: appUserId }, startDate, endDate);
 
   let createdDateList = [];
   createdDateList = _extractCreatedDate(createdDateList, summaryDeposit);
@@ -375,147 +333,6 @@ async function summaryUserPayment(appUserId, startDate, endDate) {
   return summaryResultList;
 }
 
-async function summaryReferUserBonus(appUserId) {
-  const WalletRecordView = require('../WalletRecord/resourceAccess/WalletRecordView');
-  const { WALLET_RECORD_TYPE } = require('../WalletRecord/WalletRecordConstant');
-
-  let summaryResult = {
-    bonusYesterdayTotal: 0, //hoa hồng ngày hôm  qua
-    bonusYesterdayF1: 0, //hoa hồng cấp dưới trực tiếp
-    bonusYesterdaySystem: 0, //hoa hồng đội
-    bonusThisWeekTotal: 0, //tổng hoa hồng tuần này
-    bonusTotal: 0, //tổng hoa hồng
-    totalSystemBuy: 0, //Tổng doanh thu
-  };
-
-  const now = moment();
-  const startToDay = now.startOf('day').format();
-  const endToDay = now.endOf('day').format();
-  const startToYesterday = now.startOf('day').subtract(1, 'days').format();
-  const startWeek = now.startOf('week').format();
-
-  const promises = [];
-  let promiseBonusYesterdayTotal = WalletRecordView.sumReferedUserByUserId(
-    {
-      WalletRecordType: WALLET_RECORD_TYPE.REFER_BONUS,
-    },
-    appUserId,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    startToYesterday,
-    startToDay,
-  );
-  promises.push(promiseBonusYesterdayTotal);
-
-  let promiseBonusYesterdayF1 = WalletRecordView.sumReferedUserByUserId(
-    {
-      WalletRecordType: WALLET_RECORD_TYPE.REFER_BONUS,
-    },
-    undefined,
-    appUserId,
-  );
-  promises.push(promiseBonusYesterdayF1);
-
-  let promiseBonusYesterdaySystem = WalletRecordView.sumReferedUserByUserId(
-    {
-      WalletRecordType: WALLET_RECORD_TYPE.REFER_BONUS,
-    },
-    appUserId,
-  );
-  promises.push(promiseBonusYesterdaySystem);
-
-  let promiseBonusThisWeekTotal = WalletRecordView.sumReferedUserByUserId(
-    {
-      WalletRecordType: WALLET_RECORD_TYPE.REFER_BONUS,
-    },
-    appUserId,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    startWeek,
-    endToDay,
-  );
-  promises.push(promiseBonusThisWeekTotal);
-
-  let promiseBonusTotal = WalletRecordView.sumReferedUserByUserId(
-    {
-      WalletRecordType: WALLET_RECORD_TYPE.REFER_BONUS,
-    },
-    appUserId,
-  );
-  promises.push(promiseBonusTotal);
-
-  const result = await Promise.all(promises);
-
-  summaryResult.bonusYesterdayTotal = (result[0] && result[0][0] && result[0][0].sumResult) || 0;
-  summaryResult.bonusYesterdayF1 = (result[1] && result[1][0] && result[1][0].sumResult) || 0;
-  summaryResult.bonusYesterdaySystem = (result[2] && result[2][0] && result[2][0].sumResult) || 0;
-  summaryResult.bonusThisWeekTotal = (result[3] && result[3][0] && result[3][0].sumResult) || 0;
-  summaryResult.bonusTotal = (result[4] && result[4][0] && result[4][0].sumResult) || 0;
-
-  return summaryResult;
-}
-
-async function summaryReferUserTotal(appUserId) {
-  const summaryResult = {
-    totalF1: 0, //cấp dưới trực tiếp (Số lượng)
-    totalSystem: 0, //Tổng thành viên (Số lượng)
-    totalNewF1: 0, //F1 mới hôm nay
-    totalNewF: 0, //F mới hôm nay
-  };
-  const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
-  const AppUserView = require('../AppUsers/resourceAccess/AppUserView');
-  const now = moment();
-  const startToDay = now.startOf('day').format();
-  const endToDay = now.endOf('day').format();
-
-  const promises = [];
-  let totalF1 = AppUserView.customCount({
-    memberReferIdF1: appUserId,
-  });
-  promises.push(totalF1);
-
-  let totalSystem = AppUsersResourceAccess.countReferedUserByUserId(appUserId);
-  promises.push(totalSystem);
-
-  let totalNewF1 = AppUserView.customCount(
-    {
-      memberReferIdF1: appUserId,
-    },
-    undefined,
-    undefined,
-    startToDay,
-    endToDay,
-  );
-  promises.push(totalNewF1);
-
-  let totalNewF = AppUsersResourceAccess.countReferedUserByUserId(
-    appUserId,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    startToDay,
-    endToDay,
-  );
-  promises.push(totalNewF);
-
-  const result = await Promise.all(promises);
-
-  summaryResult.totalF1 = (result[0] && result[0][0] && result[0][0].count) || 0;
-  summaryResult.totalSystem = (result[1] && result[1][0] && result[1][0].count) || 0;
-  summaryResult.totalNewF1 = (result[2] && result[2][0] && result[2][0].count) || 0;
-  summaryResult.totalNewF = (result[3] && result[3][0] && result[3][0].count) || 0;
-
-  return summaryResult;
-}
-
 async function summaryReferUser(appUserId, skip = 0, limit = 5) {
   const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 
@@ -523,12 +340,10 @@ async function summaryReferUser(appUserId, skip = 0, limit = 5) {
   const SummaryDepositUserViews = require('../PaymentDepositTransaction/resourceAccess/SummaryUserPaymentDepositTransactionView');
   const SummaryWithdrawUserViews = require('../PaymentWithdrawTransaction/resourceAccess/SummaryUserWithdrawTransactionView');
   const SummaryExchangeUserViews = require('../PaymentExchangeTransaction/resourceAccess/SummaryUserExchangeTransactionView');
-  const DEPOSIT_TRX_STATUS =
-    require('../PaymentDepositTransaction/PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
-  const WITHDRAW_TRX_STATUS =
-    require('../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant').WITHDRAW_TRX_STATUS;
-  const EXCHANGE_TRX_STATUS =
-    require('../PaymentExchangeTransaction/PaymentExchangeTransactionConstant').EXCHANGE_TRX_STATUS;
+
+  const DEPOSIT_TRX_STATUS = require('../PaymentDepositTransaction/PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
+  const WITHDRAW_TRX_STATUS = require('../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant').WITHDRAW_TRX_STATUS;
+  const EXCHANGE_TRX_STATUS = require('../PaymentExchangeTransaction/PaymentExchangeTransactionConstant').EXCHANGE_TRX_STATUS;
 
   let summaryResult = {
     summaryData: [],
@@ -657,8 +472,8 @@ async function summaryReferUser(appUserId, skip = 0, limit = 5) {
   }
 
   //summaryTotalBuy
-  let _summaryTotalBuy = await SummaryServicePackageUserViews.sum('totalpackagePaymentAmount', {
-    appUserId,
+  let _summaryTotalBuy = await SummaryServicePackageUserViews.sum('totalSum', {
+    referUserId: appUserId,
   });
 
   if (_summaryTotalBuy && _summaryTotalBuy.length > 0) {
@@ -678,14 +493,8 @@ async function summaryReferUser(appUserId, skip = 0, limit = 5) {
   summaryResult.summaryData = userSummaryRecords;
   summaryResult.summaryCountTotal = totalCountReferUser[0].count;
 
-  const [totalBonus, totalMember] = await Promise.all([
-    summaryReferUserBonus(appUserId),
-    summaryReferUserTotal(appUserId),
-  ]);
-
-  return { ...summaryResult, totalBonus, totalMember };
+  return summaryResult;
 }
-
 async function countTotalMiningUser(startDate, endDate, distinctFields) {
   const UserServicePackage = require('../PaymentServicePackage/resourceAccess/PaymentServicePackageUserResourceAccess');
   let countResult = await UserServicePackage.customCountDistinct({}, distinctFields, startDate, endDate);
@@ -696,8 +505,8 @@ async function countTotalMiningUser(startDate, endDate, distinctFields) {
 }
 async function sumTotal(firstFields, secondFields, startDate, endDate) {
   const UserServicePackage = require('../PaymentServicePackage/resourceAccess/PaymentServicePackageUserResourceAccess');
-  let sumFirstFields = await UserServicePackage.customSum({}, firstFields, undefined, undefined, startDate, endDate);
-  let sumSecondFields = await UserServicePackage.customSum({}, secondFields, undefined, undefined, startDate, endDate);
+  let sumFirstFields = await UserServicePackage.customSum({}, firstFields, startDate, endDate);
+  let sumSecondFields = await UserServicePackage.customSum({}, secondFields, startDate, endDate);
   let sumAll = 0;
   let sumFirstFieldsResult;
   let sumSecondFieldsResult;
@@ -715,8 +524,8 @@ async function sumTotal(firstFields, secondFields, startDate, endDate) {
 }
 
 async function countTotalPaymentServicePackageUser(filter, startDate, endDate) {
-  const UserServicePackage = require('../PaymentServicePackage/resourceAccess/PaymentServicePackageUserResourceAccess');
-  let countResult = await UserServicePackage.customCount(filter, undefined, undefined, startDate, endDate);
+  const UserServicePackage = require('../PaymentServicePackage/resourceAccess/ServicePackageUserViews');
+  let countResult = await UserServicePackage.customCount(filter, undefined, startDate, endDate);
   if (countResult) {
     return countResult[0].count;
   }
@@ -725,7 +534,7 @@ async function countTotalPaymentServicePackageUser(filter, startDate, endDate) {
 
 async function countTotalPaymentServicePackageUserView(filter, startDate, endDate) {
   const ServicePackageUserViews = require('../PaymentServicePackage/resourceAccess/ServicePackageUserViews');
-  let countResult = await ServicePackageUserViews.customCount(filter, undefined, undefined, startDate, endDate);
+  let countResult = await ServicePackageUserViews.customCount(filter, startDate, endDate);
   if (countResult) {
     return countResult[0].count;
   }
@@ -740,109 +549,6 @@ async function sumTotalProfitServicePackageUser(filter, startDate, endDate) {
   }
 
   return undefined;
-}
-
-async function sumaryWinLoseAmount(filter = {}, startDate, endDate) {
-  const ServiceBetRecordsResourceAccess = require('../BetRecords/resourceAccess/BetRecordsResourceAccess');
-  let sumAll = await ServiceBetRecordsResourceAccess.sumaryWinLoseAmount(startDate, endDate, filter);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-
-  return 0;
-}
-
-async function sumaryPointAmount(filter = {}, startDate, endDate) {
-  const ServiceBetRecordsResourceAccess = require('../BetRecords/resourceAccess/BetRecordsResourceAccess');
-  let sumAll = await ServiceBetRecordsResourceAccess.sumaryPointAmount(startDate, endDate, filter);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-
-  return 0;
-}
-
-async function countTotalPaymentDeposit(filter, startDate, endDate) {
-  const PaymentDepositTransactionUserView = require('../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionUserView');
-  let countResult = await PaymentDepositTransactionUserView.customCount(
-    filter,
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
-  if (countResult) {
-    return countResult[0].count;
-  }
-  return 0;
-}
-
-async function countTotalWithdrawDeposit(filter, startDate, endDate) {
-  const WithdrawTransactionUserView = require('../PaymentWithdrawTransaction/resourceAccess/WithdrawTransactionUserView');
-  let countResult = await WithdrawTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate);
-  if (countResult) {
-    return countResult[0].count;
-  }
-  return 0;
-}
-
-async function countTotalPaymentBonus(filter, startDate, endDate) {
-  const PaymentBonusTransactionUserView = require('../PaymentBonusTransaction/resourceAccess/PaymentBonusTransactionUserView');
-  let countResult = await PaymentBonusTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate);
-  if (countResult) {
-    return countResult[0].count;
-  }
-  return 0;
-}
-
-async function sumTotalProductOrderItemQuantity(filter = {}, startDate, endDate) {
-  const ProductOrderItemView = require('../ProductOrderItem/resourceAccess/ProductOrderItemsView');
-  let sumField = 'orderItemQuantity';
-  let sumAll = await ProductOrderItemView.customSum(sumField, filter, undefined, undefined, startDate, endDate);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-  return 0;
-}
-
-async function sumTotalProductOrder(filter = {}, startDate, endDate) {
-  const ProductOrderResourceAccess = require('../ProductOrder/resourceAccess/ProductOrderResourceAccess');
-  let sumField = 'total';
-  let sumAll = await ProductOrderResourceAccess.customSum(sumField, filter, undefined, undefined, startDate, endDate);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-  return 0;
-}
-
-async function summaryTotalProductOrderByChannel(productChannel, startDate, endDate) {
-  const ProductOrderResourceAccess = require('../ProductOrder/resourceAccess/ProductOrderResourceAccess');
-  let sumAll = await ProductOrderResourceAccess.summaryTotalProductOrderByChannel(productChannel, startDate, endDate);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-  return 0;
-}
-
-async function sumTotalUserPlaceOrder(filter, startDate, endDate) {
-  const ProductOrderResourceAccess = require('../ProductOrder/resourceAccess/ProductOrderResourceAccess');
-  let sumField = 'total';
-  let sumAll = await ProductOrderResourceAccess.customSum(sumField, filter, undefined, undefined, startDate, endDate);
-  if (sumAll) {
-    return sumAll[0].sumResult;
-  }
-  return 0;
-}
-
-async function totalRewardBalanceByUserId(appUserId) {
-  const WalletResourceAccess = require('../Wallet/resourceAccess/WalletResourceAccess');
-  const { WALLET_TYPE } = require('../Wallet/WalletConstant');
-  const walletReward = await WalletResourceAccess.findWalletByUserId(appUserId, WALLET_TYPE.REWARD);
-  if (walletReward.length > 0) {
-    return walletReward[0].balance;
-  } else {
-    return 0;
-  }
 }
 
 module.exports = {
@@ -869,16 +575,5 @@ module.exports = {
   countTotalUserServicePackage,
   countTotalUserBonusServicePackage,
   countTotalCompletedUserServicePackage,
-  summaryReferUserBonus,
-  summaryReferUserTotal,
-  sumaryWinLoseAmount,
-  sumaryPointAmount,
-  countTotalPaymentBonus,
-  countTotalWithdrawDeposit,
-  countTotalPaymentDeposit,
-  sumTotalProductOrderItemQuantity,
-  sumTotalProductOrder,
-  summaryTotalProductOrderByChannel,
-  sumTotalUserPlaceOrder,
-  totalRewardBalanceByUserId,
+  sumTotalAmountCompletedUserServicePackage,
 };

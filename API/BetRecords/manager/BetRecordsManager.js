@@ -28,15 +28,7 @@ async function find(req) {
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
 
-      let betRecordList = await UserBetRecordsView.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+      let betRecordList = await UserBetRecordsView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
       if (betRecordList && betRecordList.length > 0) {
         let betRecordCount = await UserBetRecordsView.customCount(filter, skip, limit, startDate, endDate, searchText);
         let betRecordSum = await UserBetRecordsView.sum('betRecordAmountIn', filter, order);
@@ -98,15 +90,7 @@ async function getList(req) {
       //only get record of current user
       filter.appUserId = req.currentUser.appUserId;
 
-      let betRecordList = await BetRecordsResourceAccess.find(
-        filter,
-        skip,
-        limit,
-        undefined,
-        startDate,
-        endDate,
-        order,
-      );
+      let betRecordList = await BetRecordsResourceAccess.find(filter, skip, limit, undefined, startDate, endDate, order);
       if (betRecordList && betRecordList.length > 0) {
         // for (let i = 0; i < betRecordList.length; i++) {
         //   let _packageTypeTemp = betRecordList[i].packageType.split('');

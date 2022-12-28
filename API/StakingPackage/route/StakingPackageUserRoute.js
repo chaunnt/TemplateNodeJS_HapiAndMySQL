@@ -31,7 +31,7 @@ module.exports = {
         stakingId: Joi.number(),
         secondaryPassword: Joi.string().min(6).allow([null, '']),
         stackingAmount: Joi.number(),
-        stakingName: Joi.string().max(500),
+        stakingName: Joi.string(),
       }),
     },
     handler: function (req, res) {

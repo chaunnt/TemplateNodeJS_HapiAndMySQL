@@ -1,3 +1,5 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 async function createDatabase() {
   //*************CREATE TABLES******************
   //User Modules
@@ -11,7 +13,7 @@ async function createDatabase() {
   // //User Wallet Modules
   // const Wallet = require('../API/Wallet/resourceAccess/WalletResourceAccess');
   // const WalletBalanceView = require('../API/Wallet/resourceAccess/WalletBalanceUnitView');
-  // const WalletBalanceUnit = require('../API/WalletBalanceUnit/resourceAccess/WalletBalanceUnitResourceAccess'); 
+  // const WalletBalanceUnit = require('../API/WalletBalanceUnit/resourceAccess/WalletBalanceUnitResourceAccess');
   // const WalletRecordResourceAccess = require('../API/WalletRecord/resourceAccess/WalletRecordResoureAccess');
   // const WalletRecordView = require('../API/WalletRecord/resourceAccess/WalletRecordView');
 
@@ -50,7 +52,6 @@ async function createDatabase() {
   // const PaymentRecord = require('../API/PaymentRecord/resourceAccess/PaymentRecordResourceAccess');
   // await PaymentMethod.initDB();
   // await PaymentRecord.initDB();
-
 
   // //Payment Deposit modules
   // const PaymentDepositResource = require('../API/PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionResourceAccess');
@@ -126,14 +127,11 @@ async function createDatabase() {
   // await UserStakingResourceAccess.initDB();
   // await StakingPackageUserView.initViews();
 
-
   // //Message modules
   // const CustomerMessageResourceAccess = require('../API/CustomerMessage/resourceAccess/CustomerMessageResourceAccess');
   // const GroupCustomerMessageResourceAccess = require('../API/CustomerMessage/resourceAccess/GroupCustomerMessageResourceAccess');
 
   // await CustomerMessageResourceAccess.initDB();
   // await GroupCustomerMessageResourceAccess.initDB();
-
 }
 createDatabase();
-

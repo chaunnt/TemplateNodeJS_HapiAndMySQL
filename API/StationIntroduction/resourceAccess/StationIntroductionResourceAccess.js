@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "StationIntroduction";
-const primaryKeyField = "stationsId";
+const tableName = 'StationIntroduction';
+const primaryKeyField = 'stationsId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -20,13 +22,13 @@ async function createTable() {
           table.string('slideBanners', 3000).defaultTo('');
           table.text('stationIntroductionSlogan').defaultTo('');
           table.text('stationIntroductionTitle').defaultTo('');
-          table.text('stationIntroductionContent','longtext').defaultTo('');
-          table.string('stationIntroductionMedia',1000).defaultTo('');
-          table.text('stationIntroSection1Content','longtext').defaultTo('');
-          table.string('stationIntroSection1Media',1000).defaultTo('');
-          table.text('stationIntroSection2Content','longtext').defaultTo('');
-          table.string('stationIntroSection2Media',1000).defaultTo('');
-          table.string('stationIntroServices',3000).defaultTo('');
+          table.text('stationIntroductionContent', 'longtext').defaultTo('');
+          table.string('stationIntroductionMedia', 1000).defaultTo('');
+          table.text('stationIntroSection1Content', 'longtext').defaultTo('');
+          table.string('stationIntroSection1Media', 1000).defaultTo('');
+          table.text('stationIntroSection2Content', 'longtext').defaultTo('');
+          table.string('stationIntroSection2Media', 1000).defaultTo('');
+          table.string('stationIntroServices', 3000).defaultTo('');
           table.string('stationFacebookUrl').defaultTo('');
           table.string('stationTwitterUrl').defaultTo('');
           table.string('stationYoutubeUrl').defaultTo('');
@@ -40,7 +42,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -76,30 +78,30 @@ async function addViewCount(stationId) {
   let filter = {};
   filter[primaryKeyField] = stationId;
 
-  await DB(tableName).where(filter).increment('totalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('totalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
 }
 
 async function resetDayViewedCount() {
-  return await DB(tableName).update({dayViewed: 0});
+  return await DB(tableName).update({ dayViewed: 0 });
 }
 
 async function resetMonthViewedCount() {
-  return await DB(tableName).update({monthViewed: 0});
+  return await DB(tableName).update({ monthViewed: 0 });
 }
 
 async function resetWeekViewedCount() {
-  return await DB(tableName).update({weekViewed: 0});
+  return await DB(tableName).update({ weekViewed: 0 });
 }
 
 async function deleteById(stationsId) {
   let dataId = {};
   dataId[primaryKeyField] = stationsId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 module.exports = {
   insert,
@@ -113,5 +115,5 @@ module.exports = {
   resetMonthViewedCount,
   resetDayViewedCount,
   addViewCount,
-  deleteById
+  deleteById,
 };

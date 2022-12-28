@@ -1,7 +1,9 @@
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
+'use strict';
 const CustomerMessageEmailProcess = require('./CustomerMessageEmailJob');
 const CustomerMessageSMSProcess = require('./CustomerMessageSMSJob');
 
@@ -9,7 +11,6 @@ async function autoSendMessageForCustomer() {
   // console.log(`autoSendMessageForCustomer`);
   // let stationsList = await StationsResource.find({
   // }, undefined, undefined);
-
   // if (stationsList && stationsList.length > 0) {
   //   let promiseList = [];
   //   for (let i = 0; i < stationsList.length; i++) {
@@ -25,12 +26,11 @@ async function autoSendMessageForCustomer() {
   //     promiseList.push(promiseEmail);
   //     promiseList.push(promiseSMS);
   //   }
-
   //   Promise.all(promiseList).then((values) => {
   //     console.log(`autoSendMessageForCustomer response ${values}`);
   //   });
   // }
-};
+}
 
 module.exports = {
   autoSendMessageForCustomer,

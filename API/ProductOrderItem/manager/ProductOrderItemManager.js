@@ -7,6 +7,7 @@
 const ProductOrderItemResourceAccess = require('../resourceAccess/ProductOrderItemResourceAccess');
 const Logger = require('../../../utils/logging');
 const { ERROR } = require('../../Common/CommonConstant');
+const ProductOrderResourceAccess = require('../../ProductOrder/resourceAccess/ProductOrderResourceAccess');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -55,12 +56,35 @@ async function updateById(req) {
     try {
       let productOrderItemId = req.payload.id;
       let productOrderItemData = req.payload.data;
-      let result = await ProductOrderItemResourceAccess.updateById(productOrderItemId, productOrderItemData);
-      if (result) {
-        resolve(result);
+
+      if (productOrderItemData.minOrderItemQuantity) {
+        let _orderItem = await ProductOrderItemResourceAccess.findById(productOrderItemId);
+        let _order = await ProductOrderResourceAccess.findById(_orderItem.productOrderId);
+        await ProductOrderResourceAccess.updateById(_order.productOrderId, {
+          minOrderItemQuantity: productOrderItemData.minOrderItemQuantity,
+        });
+        delete productOrderItemData.minOrderItemQuantity;
+      }
+
+      if (productOrderItemData.maxOrderItemQuantity) {
+        let _orderItem = await ProductOrderItemResourceAccess.findById(productOrderItemId);
+        let _order = await ProductOrderResourceAccess.findById(_orderItem.productOrderId);
+        await ProductOrderResourceAccess.updateById(_order.productOrderId, {
+          maxOrderItemQuantity: productOrderItemData.maxOrderItemQuantity,
+        });
+        delete productOrderItemData.maxOrderItemQuantity;
+      }
+
+      if (Object.keys(productOrderItemData).length > 0) {
+        let result = await ProductOrderItemResourceAccess.updateById(productOrderItemId, productOrderItemData);
+        if (result !== undefined) {
+          resolve(result);
+        } else {
+          console.error(`error product Order Item updateById with productOrderItemId ${productOrderItemId}: ${ERROR}`);
+          reject('failed');
+        }
       } else {
-        console.error(`error product Order Item updateById with productOrderItemId ${productOrderItemId}: ${ERROR}`);
-        reject('failed');
+        resolve('success');
       }
     } catch (e) {
       Logger.error(e);

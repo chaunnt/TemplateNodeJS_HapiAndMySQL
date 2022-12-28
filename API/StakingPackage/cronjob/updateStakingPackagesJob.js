@@ -120,6 +120,7 @@ async function calculateProfit() {
       let today = new Date();
 
       //today = moment().add(361,'days').toDate();
+      //console.log(today);
 
       //tinh so ngay da thuc hien staking
       let _actualDuration = moment(today).diff(new Date(_package.packageLastActiveDate), 'days');
@@ -183,14 +184,9 @@ async function calculateProfit() {
 
       _updateData.profitActual = _shouldBeMoreProfit;
 
-      let updateProfitResult = await StakingPackageUserResourceAccess.updateById(
-        _package.userStakingPackageId,
-        _updateData,
-      );
+      let updateProfitResult = await StakingPackageUserResourceAccess.updateById(_package.userStakingPackageId, _updateData);
       if (!updateProfitResult) {
-        Logger.error(
-          `can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`,
-        );
+        Logger.error(`can not updateProfitResult package ${userPackage.paymentServicePackageId} for user ${userPackage.appUserId}`);
       }
 
       await collectStakingPackage(_package.userStakingPackageId);

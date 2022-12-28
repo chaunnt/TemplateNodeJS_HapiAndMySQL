@@ -1,12 +1,14 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { PRODUCT_VIEW_STATUS } = require('../StationProductsConstants');
-const tableName = "StationProducts";
-const primaryKeyField = "stationProductsId";
+const tableName = 'StationProducts';
+const primaryKeyField = 'stationProductsId';
 
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -17,7 +19,7 @@ async function createTable() {
           table.increments('stationProductsId').primary();
           table.integer('stationsId');
           table.string('stationProductsTitle', 1000);
-          table.text('stationProductsContent','longtext');
+          table.text('stationProductsContent', 'longtext');
           table.integer('stationProductsRating').defaultTo(5);
           table.string('stationProductsCreators');
           table.integer('stationProductsViewStatus').defaultTo(PRODUCT_VIEW_STATUS.NORMAL);
@@ -42,10 +44,10 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          seeding().then((result) => {
+          seeding().then(result => {
             Logger.info(`${tableName}`, `init ${tableName}` + result);
             resolve();
-          })
+          });
         });
     });
   });
@@ -59,24 +61,26 @@ async function seeding() {
   return new Promise(async (resolve, reject) => {
     let initialData = [];
 
-    for (let i = 0; i < 30; i++) { 
+    for (let i = 0; i < 30; i++) {
       initialData.push({
-        "stationProductsTitle": `${i} Sốt salad từ chanh, dầu olive, mật ong`,
-        "stationProductsContent": `${i} Công thức cơ bản này vốn thay thế cho những loại dầu dấm chua ngọt làm sẵn trên thị trường. Khi trộn đều nước cốt chanh, mật ong và dầu olive ta thu được hỗn hợp có mùi thơm dịu nhẹ, chua chua ăn với salad rất ngon.
+        stationProductsTitle: `${i} Sốt salad từ chanh, dầu olive, mật ong`,
+        stationProductsContent: `${i} Công thức cơ bản này vốn thay thế cho những loại dầu dấm chua ngọt làm sẵn trên thị trường. Khi trộn đều nước cốt chanh, mật ong và dầu olive ta thu được hỗn hợp có mùi thơm dịu nhẹ, chua chua ăn với salad rất ngon.
         \r\nCách làm: Khuấy đều 1 thìa canh dầu olive + 2 thìa nước cốt chanh + 1 thìa cà phê mật ong với nhau rồi rưới đều lên salad.
         \r\nVới thực đơn giảm cân 2000 calo/ngày, mỗi phần salad trung bình chỉ có 500 – 600 calo (đã bao gồm rau củ, protein và một ít chất béo tốt cho cơ thể). Thế nên ăn salad nhiều bữa trong ngày cũng không lo vượt quá chỉ tiêu của kế hoạch giảm cân.
         \r\nKhuyên dùng: Buổi sáng hằng ngày.`,
-        "productAttribute1" : "15",
-        "productAttribute2" : "1",
-        "productAttribute3" : "365",
-        "stationProductsCategory": `${parseInt(i % 4)}`
+        productAttribute1: '15',
+        productAttribute2: '1',
+        productAttribute3: '365',
+        stationProductsCategory: `${parseInt(i % 4)}`,
       });
     }
 
-    DB(`${tableName}`).insert(initialData).then((result) => {
-      Logger.info(`${tableName}`, `seeding ${tableName}` + result);
-      resolve();
-    });
+    DB(`${tableName}`)
+      .insert(initialData)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -107,28 +111,26 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
     queryBuilder.where(function () {
-      this.orWhere('stationProductsTitle', 'like', `%${searchText}%`)
-        .orWhere('stationProductsContent', 'like', `%${searchText}%`)
-    })
-  } 
-  else{
-    if(filterData.stationProductsTitle){
-      queryBuilder.where('stationProductsTitle', 'like', `%${filterData.stationProductsTitle}%`)
+      this.orWhere('stationProductsTitle', 'like', `%${searchText}%`).orWhere('stationProductsContent', 'like', `%${searchText}%`);
+    });
+  } else {
+    if (filterData.stationProductsTitle) {
+      queryBuilder.where('stationProductsTitle', 'like', `%${filterData.stationProductsTitle}%`);
       delete filterData.stationProductsTitle;
     }
-    if(filterData.stationProductsContent){
-      queryBuilder.where('stationProductsContent', 'like', `%${filterData.stationProductsContent}%`)
+    if (filterData.stationProductsContent) {
+      queryBuilder.where('stationProductsContent', 'like', `%${filterData.stationProductsContent}%`);
       delete filterData.stationProductsContent;
     }
   }
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
-  
+
   queryBuilder.where(filterData);
 
   if (limit) {
@@ -139,12 +141,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.offset(skip);
   }
 
-  queryBuilder.where({isDeleted: 0});
-  
+  queryBuilder.where({ isDeleted: 0 });
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -159,13 +161,12 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -187,29 +188,29 @@ async function addViewCount(stationProductsId) {
   let filter = {};
   filter[primaryKeyField] = stationProductsId;
 
-  await DB(tableName).where(filter).increment('stationProductsTotalViewed', 1)
-  await DB(tableName).where(filter).increment('dayViewed', 1)
-  await DB(tableName).where(filter).increment('monthViewed', 1)
+  await DB(tableName).where(filter).increment('stationProductsTotalViewed', 1);
+  await DB(tableName).where(filter).increment('dayViewed', 1);
+  await DB(tableName).where(filter).increment('monthViewed', 1);
   await DB(tableName).where(filter).increment('weekViewed', 1);
 
   return 1;
 }
 
 async function resetDayViewedCount() {
-  return await DB(tableName).update({dayViewed: 0});
+  return await DB(tableName).update({ dayViewed: 0 });
 }
 
 async function resetMonthViewedCount() {
-  return await DB(tableName).update({monthViewed: 0});
+  return await DB(tableName).update({ monthViewed: 0 });
 }
 
 async function resetWeekViewedCount() {
-  return await DB(tableName).update({weekViewed: 0});
+  return await DB(tableName).update({ weekViewed: 0 });
 }
 async function deleteById(stationProductsId) {
   let dataId = {};
   dataId[primaryKeyField] = stationProductsId;
-  return await Common.deleteById(tableName, dataId)
+  return await Common.deleteById(tableName, dataId);
 }
 module.exports = {
   insert,
@@ -227,5 +228,5 @@ module.exports = {
   updateFollowCount,
   updateSearchCount,
   addViewCount,
-  deleteById
+  deleteById,
 };

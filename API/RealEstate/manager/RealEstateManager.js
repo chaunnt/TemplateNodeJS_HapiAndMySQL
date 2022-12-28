@@ -1,37 +1,48 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
-"use strict";
-const RealEstateResourceAccess = require("../resourceAccess/RealEstateResourceAccess");
-const RealEstateImageResourceAccess = require('../../RealEstateImage/resourceAccess/RealEstateImageResourceAccess')
-const RealEstateViews = require("../resourceAccess/RealEstateViews")
+'use strict';
+const RealEstateResourceAccess = require('../resourceAccess/RealEstateResourceAccess');
+const RealEstateImageResourceAccess = require('../../RealEstateImage/resourceAccess/RealEstateImageResourceAccess');
+const RealEstateViews = require('../resourceAccess/RealEstateViews');
 const Logger = require('../../../utils/logging');
-const RealEstateFunctions = require('../RealEstateFunctions')
+const RealEstateFunctions = require('../RealEstateFunctions');
 const UploadFunction = require('../../Upload/UploadFunctions');
 const RealEstateViewsReport = require('../resourceAccess/RealEstateViewsReport');
 const convertMonth = require('../../ApiUtils/utilFunctions');
 const fs = require('fs');
-const { REFUSE_POST, APPROVED_POST, NEW_POST, USER_POST_NEW, REFUSE_POST_FOR_FOLLOWER, RESTORE_POST, RESTORE_POST_FOR_FOLLOWER, UPDATE_POST_FOR_FOLLOWER, } = require("../../CustomerMessage/CustomerMessageConstant");
+const {
+  REFUSE_POST,
+  APPROVED_POST,
+  NEW_POST,
+  USER_POST_NEW,
+  REFUSE_POST_FOR_FOLLOWER,
+  RESTORE_POST,
+  RESTORE_POST_FOR_FOLLOWER,
+  UPDATE_POST_FOR_FOLLOWER,
+} = require('../../CustomerMessage/CustomerMessageConstant');
 const moment = require('moment');
-const RealEstateUtilitiesResourceAccess = require("../../RealEstateUtilities/resourceAccess/RealEstateUtilitiesResourceAccess");
-const { initialPermissions } = require("../../Permission/resourceAccess/PermissionResourceAccess");
-const PaymentRecordFunction = require("../../PaymentRecord/PaymentRecordFunctions")
-const WalletResourAccess = require("../../Wallet/resourceAccess/WalletResourceAccess")
+const RealEstateUtilitiesResourceAccess = require('../../RealEstateUtilities/resourceAccess/RealEstateUtilitiesResourceAccess');
+const { initialPermissions } = require('../../Permission/resourceAccess/PermissionResourceAccess');
+const PaymentRecordFunction = require('../../PaymentRecord/PaymentRecordFunctions');
+const WalletResourAccess = require('../../Wallet/resourceAccess/WalletResourceAccess');
 const ExcelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
-const PaymentRecordResourAccess = require('../../PaymentRecord/resourceAccess/PaymentRecordResourceAccess')
-const { verifyAreaPermission } = require("../../AreaData/AreaDataFunctions");
+const PaymentRecordResourAccess = require('../../PaymentRecord/resourceAccess/PaymentRecordResourceAccess');
+const { verifyAreaPermission } = require('../../AreaData/AreaDataFunctions');
 const SystemChangeLog = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
 const RealEstateSavedFunction = require('../../RealEstateUserSaved/RealEstateUserSaveFunction');
 const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const {
   handleSendMessageToFollower,
   handleSendMessageNewRealEstate,
-  handleSendMessageRealEstate
+  handleSendMessageRealEstate,
 } = require('../../CustomerMessage/CustomerMessageFunctions');
-const tableName = "RealEstate";
+const tableName = 'RealEstate';
 
 async function _updateImagesForRealEstate(realEstateId, imagesArray) {
-  let realEstateImage = "";
+  let realEstateImage = '';
 
   if (imagesArray && imagesArray.length > 0) {
     let arrayLinkUpdate = [];
@@ -42,12 +53,12 @@ async function _updateImagesForRealEstate(realEstateId, imagesArray) {
         if (_linkExisted.length > 0) {
           let uploadFileName = _linkExisted[0].uploadFileName;
           let uploadFormatFile = _linkExisted[0].uploadFileExtension;
-          let linkUdate = await RealEstateFunctions.moveFile(uploadFileName, uploadFormatFile)
+          let linkUdate = await RealEstateFunctions.moveFile(uploadFileName, uploadFormatFile);
           if (linkUdate !== false) {
             arrayLinkUpdate.push(linkUdate);
           }
         } else {
-          arrayLinkUpdate.push(imagesArray[i])
+          arrayLinkUpdate.push(imagesArray[i]);
         }
       } else {
         arrayLinkUpdate.push(linkUdate);
@@ -56,24 +67,24 @@ async function _updateImagesForRealEstate(realEstateId, imagesArray) {
 
     if (arrayLinkUpdate.length > 0) {
       let _updatedData = {
-        isDeleted: 1
+        isDeleted: 1,
       };
       await RealEstateImageResourceAccess.updateAll(_updatedData, {
-        "realEstateId": realEstateId
-      })
+        realEstateId: realEstateId,
+      });
       for (var i = 0; i < arrayLinkUpdate.length; i++) {
         await RealEstateFunctions.insertImage({
-          "realEstateImageUrl": arrayLinkUpdate[i],
-          "realEstateId": realEstateId
-        })
+          realEstateImageUrl: arrayLinkUpdate[i],
+          realEstateId: realEstateId,
+        });
       }
       realEstateImage = arrayLinkUpdate[0];
     }
   }
 
   await RealEstateResourceAccess.updateById(realEstateId, {
-    realEstateImage: realEstateImage
-  })
+    realEstateImage: realEstateImage,
+  });
 }
 
 async function _insertNewRealEstate(realEstateData, currentUser) {
@@ -85,10 +96,10 @@ async function _insertNewRealEstate(realEstateData, currentUser) {
 
   //if there is valid user, then check email from post and store to user data
   if (currentUser) {
-    if (currentUser.email === "" || currentUser.email === null) {
-      if (realEstateData.realEstateEmail && realEstateData.realEstateEmail !== "") {
+    if (currentUser.email === '' || currentUser.email === null) {
+      if (realEstateData.realEstateEmail && realEstateData.realEstateEmail !== '') {
         await AppUserResource.updateById(currentUser.appUserId, {
-          email: realEstateData.realEstateEmail
+          email: realEstateData.realEstateEmail,
         });
       }
     }
@@ -115,26 +126,24 @@ async function insert(req) {
           resultfindId.realEstateId = idRealEstate;
           handleSendMessageNewRealEstate(realEstateData.appUserId, NEW_POST, realEstateData, {
             areaProvinceId: realEstateData.areaProvinceId,
-            areaDistrictId: realEstateData.areaDistrictId
+            areaDistrictId: realEstateData.areaDistrictId,
           });
 
           // send message back to user
           const messageData = { id: idRealEstate };
           handleSendMessageRealEstate(USER_POST_NEW, messageData, resultfindId);
-          resolve(resultfindId)
+          resolve(resultfindId);
+        } else {
+          resolve(result);
         }
-        else {
-          resolve(result)
-        }
-
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -166,10 +175,10 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
@@ -185,10 +194,10 @@ async function updateById(req) {
         const newRealEstateData = await RealEstateResourceAccess.findById(realEstateId);
         console.log(newRealEstateData);
         if (newRealEstateData) {
-          const TIME_SEND = moment().format("hh:mm DD/MM/YYYY");
+          const TIME_SEND = moment().format('hh:mm DD/MM/YYYY');
           const messageData = {
-            "postId": realEstateId,
-            "timeUpdate": TIME_SEND
+            postId: realEstateId,
+            timeUpdate: TIME_SEND,
           };
           // send message to followers
           handleSendMessageToFollower(UPDATE_POST_FOR_FOLLOWER, messageData, newRealEstateData);
@@ -198,10 +207,10 @@ async function updateById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -212,20 +221,20 @@ async function findById(req) {
         let image = await RealEstateFunctions.findImage(realEstateId);
         if (image) {
           for (var i = 0; i < image.length; i++) {
-            arrayImage.push(image[i].realEstateImageUrl)
+            arrayImage.push(image[i].realEstateImageUrl);
           }
           result.arrayImage = arrayImage;
-          resolve(result)
+          resolve(result);
         }
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
@@ -235,10 +244,10 @@ async function deleteById(req) {
       let realEstateData = await RealEstateResourceAccess.findById(realEstateId);
       let result = await RealEstateResourceAccess.deleteById(realEstateId);
       if (result && realEstateData) {
-        const TIME_SEND = moment().format("hh:mm DD/MM/YYYY");
+        const TIME_SEND = moment().format('hh:mm DD/MM/YYYY');
         const messageData = {
-          "postId": realEstateId,
-          "timeRefused": TIME_SEND
+          postId: realEstateId,
+          timeRefused: TIME_SEND,
         };
         // send message to user who was posted
         handleSendMessageRealEstate(REFUSE_POST, messageData, realEstateData);
@@ -248,10 +257,10 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getList(req) {
   return new Promise(async (resolve, reject) => {
@@ -267,68 +276,68 @@ async function getList(req) {
       let fieldGetList = await RealEstateFunctions.selectField();
       if (filter) {
         if (filter.realEstateContactTypeId === 0) {
-          delete filter.realEstateContactTypeId
+          delete filter.realEstateContactTypeId;
         }
         if (filter.realEstateProjectId === 0) {
-          delete filter.realEstateProjectId
+          delete filter.realEstateProjectId;
         }
         if (filter.realEstatePostTypeId === 0) {
-          delete filter.realEstatePostTypeId
+          delete filter.realEstatePostTypeId;
         }
         if (filter.areaStreetId === 0) {
-          delete filter.AreaStreetId
+          delete filter.AreaStreetId;
         }
         if (filter.realEstateJuridicalId === 0) {
-          delete filter.realEstateJuridicalId
+          delete filter.realEstateJuridicalId;
         }
         if (filter.realEstateFurnitureId === 0) {
-          delete filter.realEstateFurnitureId
+          delete filter.realEstateFurnitureId;
         }
         if (filter.derectionHouseKey === 0) {
-          delete filter.derectionHouseKey
+          delete filter.derectionHouseKey;
         }
         if (filter.areaCountryId === 0) {
-          delete filter.areaCountryId
+          delete filter.areaCountryId;
         }
         if (filter.areaCountryId && filter.areaCountryId !== 0) {
           let areaCountryId = filter.areaCountryId;
-          await RealEstateFunctions.viewAreaData(areaCountryId)
+          await RealEstateFunctions.viewAreaData(areaCountryId);
         }
         if (filter.areaProvinceId === 0) {
-          delete filter.areaProvinceId
+          delete filter.areaProvinceId;
         }
         if (filter.areaProvinceId && filter.areaProvinceId !== 0) {
           let areaProvinceId = filter.areaProvinceId;
-          await RealEstateFunctions.viewAreaData(areaProvinceId)
+          await RealEstateFunctions.viewAreaData(areaProvinceId);
         }
         if (filter.areaDistrictId === 0) {
-          delete filter.areaDistrictId
+          delete filter.areaDistrictId;
         }
         if (filter.areaDistrictId && filter.areaDistrictId !== 0) {
           let areaDistrictId = filter.areaDistrictId;
-          await RealEstateFunctions.viewAreaData(areaDistrictId)
+          await RealEstateFunctions.viewAreaData(areaDistrictId);
         }
         if (filter.areaWardId === 0) {
-          delete filter.areaWardId
+          delete filter.areaWardId;
         }
         if (filter.areaWardId && filter.areaWardId !== 0) {
           let areaWardId = filter.areaWardId;
-          await RealEstateFunctions.viewAreaData(areaWardId)
+          await RealEstateFunctions.viewAreaData(areaWardId);
         }
         if (filter.realEstateCategoryId === 0) {
-          delete filter.realEstateCategoryId
+          delete filter.realEstateCategoryId;
         }
         if (filter.realEstateSubCategoryId === 0) {
-          delete filter.realEstateSubCategoryId
+          delete filter.realEstateSubCategoryId;
         }
         if (filter.realEstateCategoryId !== 0 && filter.realEstateCategoryId) {
           let idCategory = filter.realEstateCategoryId;
           //increase view for both sub & main category if available
           if (filter.realEstateSubCategoryId !== 0 && filter.realEstateSubCategoryId) {
             let _realEstateSubCategoryId = filter.realEstateSubCategoryId;
-            await RealEstateFunctions.viewCategory(idCategory, _realEstateSubCategoryId)
+            await RealEstateFunctions.viewCategory(idCategory, _realEstateSubCategoryId);
           } else {
-            await RealEstateFunctions.viewCategory(idCategory)
+            await RealEstateFunctions.viewCategory(idCategory);
           }
         }
       }
@@ -343,16 +352,15 @@ async function getList(req) {
           // function tăng lượt xem,
           await RealEstateFunctions.viewsRealEstate(result[i].realEstateId, result[i]);
         }
-
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function hiddenById(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -360,7 +368,7 @@ async function hiddenById(req) {
       if (req.currentUser.roleId !== 1) {
         let realEstateData = await RealEstateResourceAccess.findById(realEstateId);
         if (!realEstateData) {
-          reject("error");
+          reject('error');
         }
         const isValidRole = verifyAreaPermission(req.currentUser, realEstateData);
         if (!isValidRole) {
@@ -374,32 +382,30 @@ async function hiddenById(req) {
       if (result && realEstateData) {
         const TIME_SEND = moment().format('hh:mm DD/MM/YYYY');
         const messageData = {
-          "postId": realEstateId,
-          "timeRefused": TIME_SEND
+          postId: realEstateId,
+          timeRefused: TIME_SEND,
         };
         if (req.payload.isHidden === 1) {
           // send message to user who was posted
           handleSendMessageRealEstate(REFUSE_POST, messageData, realEstateData);
-          //send message to user who are following  
+          //send message to user who are following
           handleSendMessageToFollower(REFUSE_POST_FOR_FOLLOWER, messageData, realEstateData);
         } else {
           // send message to user who was posted
           handleSendMessageRealEstate(RESTORE_POST, messageData, realEstateData);
-          //send message to user who are following  
+          //send message to user who are following
           handleSendMessageToFollower(RESTORE_POST_FOR_FOLLOWER, messageData, realEstateData);
-
         }
         resolve(result);
-      }
-      else {
-        resolve({ data: "null" });
+      } else {
+        resolve({ data: 'null' });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function userHiddenById(req) {
   return new Promise(async (resolve, reject) => {
@@ -409,7 +415,7 @@ async function userHiddenById(req) {
       let appUserId = req.currentUser.appUserId;
       realEstateData.isHidden = req.payload.isHidden;
       if (appUserId === undefined) {
-        reject("failed");
+        reject('failed');
       }
       let resultRealEstate = await RealEstateResourceAccess.findById(realEstateId);
       if (resultRealEstate) {
@@ -417,20 +423,19 @@ async function userHiddenById(req) {
           let result = await RealEstateResourceAccess.updateById(realEstateId, realEstateData);
           if (result) {
             resolve(result);
-          }
-          else {
-            reject("failed");
+          } else {
+            reject('failed');
           }
         }
-        reject("failed");
+        reject('failed');
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getDetail(req) {
   return new Promise(async (resolve, reject) => {
@@ -440,15 +445,22 @@ async function getDetail(req) {
       if (req.currentUser !== undefined) {
         paymentUserId = req.currentUser.appUserId;
       }
-      let result = await RealEstateViews.find({
-        realEstateId: realEstateId,
-        isDeleted: 0
-      }, 0, 1);
+      let result = await RealEstateViews.find(
+        {
+          realEstateId: realEstateId,
+          isDeleted: 0,
+        },
+        0,
+        1,
+      );
       if (result && result.length > 0) {
         result = result[0];
         result.paymentRecords = [];
         if (paymentUserId !== undefined) {
-          let resultPayment = await PaymentRecordResourAccess.find({ "paymentUserId": paymentUserId, "paymentTargetId": realEstateId });
+          let resultPayment = await PaymentRecordResourAccess.find({
+            paymentUserId: paymentUserId,
+            paymentTargetId: realEstateId,
+          });
           if (resultPayment && resultPayment.length > 0) {
             result.paymentRecords = resultPayment;
           }
@@ -458,8 +470,7 @@ async function getDetail(req) {
               delete result.realEstateEmail;
             }
           }
-        }
-        else {
+        } else {
           if (req.currentUser === undefined || req.currentUser.appUserId !== result.appUserId) {
             delete result.realEstatePhone;
             delete result.realEstateEmail;
@@ -469,7 +480,7 @@ async function getDetail(req) {
         let image = await RealEstateFunctions.findImage(realEstateId);
         if (image) {
           for (var i = 0; i < image.length; i++) {
-            arrayImage.push(image[i].realEstateImageUrl)
+            arrayImage.push(image[i].realEstateImageUrl);
           }
         }
         result.arrayImage = arrayImage;
@@ -485,12 +496,14 @@ async function getDetail(req) {
         }
         let realEstateUtilData = [];
         if (result.realEstateCategoryId) {
-          realEstateUtilData = await RealEstateUtilitiesResourceAccess.find({ realEstateCategoryId: result.realEstateCategoryId });
+          realEstateUtilData = await RealEstateUtilitiesResourceAccess.find({
+            realEstateCategoryId: result.realEstateCategoryId,
+          });
         }
 
         resolve({
           realEstateData: result,
-          realEstateUtilData: realEstateUtilData
+          realEstateUtilData: realEstateUtilData,
         });
         // function tăng lượt click
         await RealEstateFunctions.clickRealEstate(realEstateId, result);
@@ -499,10 +512,10 @@ async function getDetail(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function getListByLocation(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -526,7 +539,7 @@ async function getListByLocation(req) {
         }
 
         if (dataUser.areaWardId !== undefined) {
-          filter.areaWardId = dataUser.areaWardId
+          filter.areaWardId = dataUser.areaWardId;
         }
         let result = await RealEstateViews.find(filter, skip, limit, order);
         if (result && result.length > 0) {
@@ -536,7 +549,7 @@ async function getListByLocation(req) {
           let resultCount = await RealEstateViews.count(filter, order);
           resolve({
             data: result,
-            total: resultCount[0].count
+            total: resultCount[0].count,
           });
           //thêm return để đảm bảo các dòng code phía sau sẽ không chạy nữa
           return;
@@ -552,21 +565,21 @@ async function getListByLocation(req) {
         let resultCount = await RealEstateViews.count({}, order);
         resolve({
           data: defaultList,
-          total: resultCount[0].count
-        })
+          total: resultCount[0].count,
+        });
       } else {
         //không có dữ liệu thì cũng ko báo lỗi
         resolve({
           data: [],
           total: 0,
-        })
+        });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function getListByPrice(req) {
   return new Promise(async (resolve, reject) => {
@@ -587,13 +600,12 @@ async function getListByPrice(req) {
           // function tăng lượt xem,
           await RealEstateFunctions.viewsRealEstate(result[i].realEstateId, result[i]);
         }
-
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -617,13 +629,12 @@ async function getListByRating(req) {
           // function tăng lượt xem,
           await RealEstateFunctions.viewsRealEstate(result[i].realEstateId, result[i]);
         }
-
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
 }
@@ -632,7 +643,7 @@ async function _checkUserSavedRealEstate(result, userId) {
   let realEstateSaved = await RealEstateSavedFunction.getRealEstateSavedByUserId(userId);
   for (let i = 0; i < result.length; i++) {
     let count = 0;
-    realEstateSaved.forEach((element) => {
+    realEstateSaved.forEach(element => {
       if (result[i].realEstateId === element.realEstateId) {
         result[i].isSaved = true;
         count++;
@@ -650,7 +661,7 @@ async function getListByUser(req) {
     try {
       let filter = {};
       if (req.payload.filter !== undefined) {
-        filter = req.payload.filter
+        filter = req.payload.filter;
       }
       let skip = req.payload.skip;
       let limit = req.payload.limit;
@@ -658,8 +669,7 @@ async function getListByUser(req) {
       let searchText = req.payload.searchText;
       if (req.currentUser.appUserId === undefined) {
         resolve({ data: [], total: 0 });
-      }
-      else {
+      } else {
         filter.appUserId = req.currentUser.appUserId;
         let result = await RealEstateViews.customSearch(filter, undefined, undefined, skip, limit, undefined, undefined, searchText, order);
         let resultCount = await RealEstateViews.customCount(filter, undefined, undefined, undefined, searchText, order);
@@ -672,17 +682,16 @@ async function getListByUser(req) {
             // function tăng lượt xem,
             await RealEstateFunctions.viewsRealEstate(result[i].realEstateId, result[i]);
           }
-
         } else {
           resolve({ data: [], total: 0 });
         }
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function reviewRealEstate(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -693,7 +702,7 @@ async function reviewRealEstate(req) {
       if (staff.roleId !== 1) {
         let realEstateData = await RealEstateResourceAccess.findById(realEstateId);
         if (!realEstateData) {
-          reject("error");
+          reject('error');
         }
         const isValidRole = verifyAreaPermission(req.currentUser, realEstateData);
         if (!isValidRole) {
@@ -705,7 +714,7 @@ async function reviewRealEstate(req) {
       dataUpdate.approveStatus = approveStatus;
       if (approveStatus === 1) {
         let todayDate = new Date().toISOString();
-        dataUpdate.approveDate = todayDate
+        dataUpdate.approveDate = todayDate;
       }
       let result = await RealEstateResourceAccess.updateById(realEstateId, dataUpdate);
       let realEstateData = await RealEstateResourceAccess.findById(realEstateId);
@@ -713,29 +722,28 @@ async function reviewRealEstate(req) {
         const TIME_SEND = moment().format('hh:mm DD/MM/YYYY');
         if (approveStatus === -1) {
           const messageData = {
-            "postId": realEstateId,
-            "timeRefused": TIME_SEND
+            postId: realEstateId,
+            timeRefused: TIME_SEND,
           };
           handleSendMessageRealEstate(REFUSE_POST, messageData, realEstateData);
         }
         if (approveStatus === 1) {
           const messageData = {
-            "postId": realEstateId,
-            "timeApprove": TIME_SEND
+            postId: realEstateId,
+            timeApprove: TIME_SEND,
           };
           handleSendMessageRealEstate(APPROVED_POST, messageData, realEstateData);
         }
         resolve(result);
-      }
-      else {
-        reject("failed");
+      } else {
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function uploadImage(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -749,16 +757,15 @@ async function uploadImage(req) {
       let result = await UploadFunction.uploadMediaFile(originaldata, imageFormat, 'image_temp' + '/');
       if (result) {
         resolve(result);
-      }
-      else {
-        reject('failed to upload')
+      } else {
+        reject('failed to upload');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function uploadVideo(req) {
   return new Promise(async (resolve, reject) => {
@@ -770,67 +777,64 @@ async function uploadVideo(req) {
         return;
       }
       var originaldata = Buffer.from(videoData, 'base64');
-      let result = await UploadFunction.uploadMediaFile(originaldata, videoFormat, "Video_temp" + '/');
+      let result = await UploadFunction.uploadMediaFile(originaldata, videoFormat, 'Video_temp' + '/');
       if (result) {
         resolve(result);
-      }
-      else {
-        reject('failed to upload')
+      } else {
+        reject('failed to upload');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 async function pushNewRealEstate(req) {
   return new Promise(async (resolve, reject) => {
     try {
       if (!req.currentUser.appUserId) {
         Logger.info(`user undefined`);
-        reject("failed");
+        reject('failed');
       }
       let dataUpdate = {};
       let todayDate = new Date();
-      dataUpdate.activedDate = todayDate
+      dataUpdate.activedDate = todayDate;
       let appUserId = req.currentUser.appUserId;
       let realEstateId = req.payload.id;
       let resultFunction = await PaymentRecordFunction.userPaytoPushNewRealEstate(appUserId, realEstateId);
       if (resultFunction !== undefined) {
-        if (resultFunction === "NOTENOUGHBALANCE") {
-          reject("NOTENOUGHBALANCE");
-        }
-        else {
+        if (resultFunction === 'NOTENOUGHBALANCE') {
+          reject('NOTENOUGHBALANCE');
+        } else {
           let result = await RealEstateResourceAccess.updateById(realEstateId, dataUpdate);
           if (result) {
-            resolve(result)
-          }
-          else {
+            resolve(result);
+          } else {
             Logger.error(`update actived Date failed`);
-            reject('failed to update')
+            reject('failed to update');
           }
         }
       }
       Logger.error(`userPaytoPushNewRealEstate failed`);
-      reject("failse");
+      reject('failse');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
-  })
-};
+  });
+}
 
 async function statisticalRealEstateByMonth(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let startMonth = req.payload.startDate;
       if (startMonth) {
-        startMonth = convertMonth.FormatDate(startMonth, "MM")
+        startMonth = convertMonth.FormatDate(startMonth, 'MM');
       }
       let endMonth = req.payload.endDate;
       if (endMonth) {
-        endMonth = convertMonth.FormatDate(endMonth, "MM")
+        endMonth = convertMonth.FormatDate(endMonth, 'MM');
       }
       let resultCount = await RealEstateViewsReport.customCount(startMonth, endMonth);
       if (resultCount && resultCount.length > 0) {
@@ -840,10 +844,10 @@ async function statisticalRealEstateByMonth(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 //TODO: IMplement later
 async function callToRealEstateContact(req) {
@@ -851,48 +855,49 @@ async function callToRealEstateContact(req) {
     try {
       if (!req.currentUser.appUserId) {
         Logger.error(`user undefined`);
-        reject("failed");
+        reject('failed');
       }
       let appUserId = req.currentUser.appUserId;
       let realEstateId = req.payload.id;
       let result = await RealEstateResourceAccess.findById(realEstateId);
       if (result) {
-        let resultPayment = await PaymentRecordResourAccess.find({ "paymentUserId": appUserId, "paymentTargetId": realEstateId });
+        let resultPayment = await PaymentRecordResourAccess.find({
+          paymentUserId: appUserId,
+          paymentTargetId: realEstateId,
+        });
         if (resultPayment && resultPayment.length > 0) {
           resolve({
             realEstatePhone: result.realEstatePhone,
             realEstateEmail: result.realEstateEmail,
-            realEstateContacAddress: result.realEstateContacAddress
+            realEstateContacAddress: result.realEstateContacAddress,
           });
-        }
-        else {
+        } else {
           let resultFunction = await PaymentRecordFunction.userPaytoGetRealEstateContact(appUserId, realEstateId);
           if (resultFunction !== undefined) {
-            if (resultFunction !== "NOTENOUGHBALANCE") {
+            if (resultFunction !== 'NOTENOUGHBALANCE') {
               resolve({
                 realEstatePhone: result.realEstatePhone,
                 realEstateEmail: result.realEstateEmail,
-                realEstateContacAddress: result.realEstateContacAddress
-              })
+                realEstateContacAddress: result.realEstateContacAddress,
+              });
             }
-            if (resultFunction === "NOTENOUGHBALANCE") {
-              reject("NOTENOUGHBALANCE");
+            if (resultFunction === 'NOTENOUGHBALANCE') {
+              reject('NOTENOUGHBALANCE');
             }
-          }
-          else {
+          } else {
             Logger.error(`userPaytoGetRealEstateContact failed`);
-            reject("failed");
+            reject('failed');
           }
           resolve({ data: 0 });
         }
       }
-      reject("failed");
+      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 //TODO: IMplement later
 async function requestViewDetailProject(req) {
   return new Promise(async (resolve, reject) => {
@@ -902,14 +907,14 @@ async function requestViewDetailProject(req) {
       if (result) {
         resolve(result);
       } else {
-        reject("failed");
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 async function exportExcel(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -931,11 +936,10 @@ async function exportExcel(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
-
+}
 
 async function importRealEstateData(req) {
   return new Promise(async (resolve, reject) => {
@@ -953,14 +957,14 @@ async function importRealEstateData(req) {
       let newExcel = await UploadFunction.uploadMediaFile(originaldata, fileFormat, 'realestateimport/');
 
       if (newExcel) {
-        let path = newExcel.replace(`https://${process.env.HOST_NAME}/`,'');
+        let path = newExcel.replace(`https://${process.env.HOST_NAME}/`, '');
 
         const { importExcel } = require('../../../ThirdParty/Excel/ImportExcelFunction');
         let excelData = await importExcel(path);
 
         if (excelData === undefined) {
           Logger.error('failed to read data to import');
-          reject('FAILED_TO_UPLOAD')
+          reject('FAILED_TO_UPLOAD');
         } else {
           const MAX_IMPORT_PER_BATCH = 100;
           //notify to front-end
@@ -969,7 +973,7 @@ async function importRealEstateData(req) {
             //!! IMPORTANT: do not return function here
             //if there are more than MAX_IMPORT_PER_BATCH record, we will response before function done
             resolve({
-              importTotalWaiting: excelData.length
+              importTotalWaiting: excelData.length,
             });
           }
 
@@ -987,7 +991,7 @@ async function importRealEstateData(req) {
 
             let insertResult = await _insertNewRealEstate(_newRealEstateData);
             if (insertResult) {
-              importSuccessCount++
+              importSuccessCount++;
             }
           }
 
@@ -995,19 +999,19 @@ async function importRealEstateData(req) {
           //then no need to respon here
           resolve({
             importSuccess: importSuccessCount,
-            importTotal: excelData.length
-          })
+            importTotal: excelData.length,
+          });
         }
       } else {
         Logger.error('failed to upload file');
-        reject('FAILED_TO_UPLOAD')
+        reject('FAILED_TO_UPLOAD');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject("failed");
+      reject('failed');
     }
   });
-};
+}
 
 module.exports = {
   insert,
@@ -1031,5 +1035,5 @@ module.exports = {
   requestViewDetailProject,
   exportExcel,
   userHiddenById,
-  importRealEstateData
+  importRealEstateData,
 };

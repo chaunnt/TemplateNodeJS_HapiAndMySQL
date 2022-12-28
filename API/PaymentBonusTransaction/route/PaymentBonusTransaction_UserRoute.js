@@ -25,11 +25,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({
-          paymentStatus: Joi.string().allow([
-            BONUS_TRX_STATUS.NEW,
-            BONUS_TRX_STATUS.COMPLETED,
-            BONUS_TRX_STATUS.CANCELED,
-          ]),
+          paymentStatus: Joi.string().allow([BONUS_TRX_STATUS.NEW, BONUS_TRX_STATUS.COMPLETED, BONUS_TRX_STATUS.CANCELED]),
           paymentMethodId: Joi.number().min(0),
         }),
         skip: Joi.number().default(0).min(0),

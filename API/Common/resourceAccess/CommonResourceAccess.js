@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -6,9 +6,10 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB } = require('../../../config/database');
 
+const redisCache = undefined;
 if (process.env.REDIS_ENABLE) {
-  const cache = require('../../../ThirdParty/Redis/RedisInstance');
-  cache.initRedis();
+  const redisCache = require('../../../ThirdParty/Redis/RedisInstance');
+  redisCache.initRedis();
 }
 
 function createOrReplaceView(viewName, viewDefinition) {
@@ -23,14 +24,12 @@ async function insert(tableName, data) {
   let result = undefined;
   try {
     result = await DB(tableName).insert(data);
-
-    //enable redis cache
-    if (process.env.REDIS_ENABLE) {
-      if (result) {
-        let id = result[0];
-        let dataTable = await find(tableName, undefined, 0, 1);
-        let dataCache = dataTable[0];
-        await cache.setWithExpire(`${tableName}_${id.toString()}`, JSON.stringify(dataCache));
+    if (result) {
+      let id = result[0];
+      let dataTable = await find(tableName, undefined, 0, 1);
+      let dataCache = dataTable[0];
+      if (process.env.REDIS_ENABLE) {
+        await redisCache.setWithExpire(`${tableName}_${id.toString()}`, JSON.stringify(dataCache));
       }
     }
   } catch (e) {
@@ -53,10 +52,7 @@ async function sum(tableName, field, filter, order) {
         }
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB SUM ERROR: ${tableName} ${field}: ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -90,10 +86,7 @@ async function sumAmountDistinctByDate(tableName, sumField, filter, startDate, e
           }
         });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB sumAmountDistinctByDate ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`,
-      );
+      Logger.error('ResourceAccess', `DB sumAmountDistinctByDate ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -128,10 +121,7 @@ async function sumAmountDistinctByCustomField(tableName, sumField, customField, 
           }
         });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB sumAmountDistinctByDate ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`,
-      );
+      Logger.error('ResourceAccess', `DB sumAmountDistinctByDate ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -141,14 +131,13 @@ async function updateById(tableName, id, data) {
   let result = undefined;
   try {
     result = await DB(tableName).where(id).update(data);
-    //enable redis cache
-    if (process.env.REDIS_ENABLE) {
-      if (result) {
+    if (result) {
+      if (process.env.REDIS_ENABLE) {
         var keys = Object.keys(id);
         let idValue = id[keys[0]];
         let dataUpdate = await DB(tableName).select().where(id);
-        await cache.deleteByKey(`${tableName}_${idValue.toString()}`);
-        await cache.setWithExpire(`${tableName}_${idValue.toString()}`, JSON.stringify(dataUpdate[0]));
+        await redisCache.deleteByKey(`${tableName}_${idValue.toString()}`);
+        await redisCache.setWithExpire(`${tableName}_${idValue.toString()}`, JSON.stringify(dataUpdate[0]));
       }
     }
   } catch (e) {
@@ -236,18 +225,15 @@ function _makeQueryBuilderByFilterAllDelete(tableName, filter, skip, limit, orde
 
   return queryBuilder;
 }
-async function find(tableName, filter, skip, limit, order, startDate, endDate, fields) {
-  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, skip, limit, order, startDate, endDate);
+async function find(tableName, filter, skip, limit, order, fields) {
+  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, skip, limit, order);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.select(fields).then(records => {
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB FIND ERROR: ${tableName} : ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB FIND ERROR: ${tableName} : ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -262,10 +248,7 @@ async function findAllDelete(tableName, filter, skip, limit, order) {
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB FIND ERROR: ${tableName} : ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB FIND ERROR: ${tableName} : ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -275,7 +258,7 @@ async function findById(tableName, key, id) {
   let result = undefined;
   //enable redis cache
   if (process.env.REDIS_ENABLE) {
-    result = await cache.getJson(`${tableName}_${id}`);
+    result = await redisCache.getJson(`${tableName}_${id}`);
   }
   return new Promise((resolve, reject) => {
     try {
@@ -310,10 +293,7 @@ async function count(tableName, field, filter, order) {
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -330,6 +310,33 @@ async function deleteById(tableName, id) {
   }
   return result;
 }
+
+async function permanentlyDeleteById(tableName, id) {
+  let result = undefined;
+  try {
+    result = await DB(tableName).where(id).del();
+  } catch (e) {
+    Logger.error('ResourceAccess', `DB DELETEBYID ERROR: ${tableName} : ${id}`);
+    Logger.error('ResourceAccess', e);
+  }
+  return result;
+}
+
+function filterHandler(filterData, queryBuilder) {
+  for (const key in filterData) {
+    const filterValue = filterData[key];
+    if (Array.isArray(filterValue)) {
+      queryBuilder.where(function () {
+        for (let value of filterValue) {
+          this.orWhere(key, value);
+        }
+      });
+      delete filterData[key];
+    }
+  }
+  queryBuilder.where(filterData);
+}
+
 async function incrementInt(tableName, key, id, field, amount) {
   let result = undefined;
   try {
@@ -340,6 +347,7 @@ async function incrementInt(tableName, key, id, field, amount) {
   }
   return result;
 }
+
 async function decrementInt(tableName, id, amount, field) {
   let result = undefined;
   try {
@@ -397,6 +405,8 @@ module.exports = {
   updateAll,
   sum,
   deleteById,
+  permanentlyDeleteById,
+  filterHandler,
   incrementInt,
   decrementInt,
   incrementFloat,

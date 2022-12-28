@@ -212,10 +212,7 @@ async function customCount(filter, startDate, endDate, searchText, order) {
         resolve(records);
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -233,10 +230,7 @@ async function customSum(sumField, filter, startDate, endDate, searchText, order
         }
       });
     } catch (e) {
-      Logger.error(
-        'ResourceAccess',
-        `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`,
-      );
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
       Logger.error('ResourceAccess', e);
       reject(undefined);
     }
@@ -249,9 +243,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, startDate, endDate
   if (filter && filter.appUserId) {
     const _appUserId = filter.appUserId;
     queryBuilder.where(function () {
-      this.orWhere('memberReferIdF1', _appUserId)
-        .orWhere('memberReferIdF2', _appUserId)
-        .orWhere('memberReferIdF3', _appUserId);
+      this.orWhere('memberReferIdF1', _appUserId).orWhere('memberReferIdF2', _appUserId).orWhere('memberReferIdF3', _appUserId);
       // .orWhere("memberReferIdF4", _appUserId)
       // .orWhere("memberReferIdF5", _appUserId);
     });

@@ -32,7 +32,7 @@ module.exports = [
     method: 'POST',
     path: '/PaymentDepositTransaction/denyDepositTransaction',
     config: PaymentDepositTransaction.denyDepositTransaction,
-  }
+  },
   // { method: 'POST', path: '/PaymentDepositTransaction/exportExcelHistory', config: PaymentDepositTransaction.exportExcelHistory },
   // { method: 'POST', path: '/PaymentDepositTransaction/exportSalesToExcel', config: PaymentDepositTransaction.exportSalesToExcel },
 ];

@@ -7,8 +7,7 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'ProductOrder';
 const primaryKeyField = 'productOrderId';
 const Logger = require('../../../utils/logging');
-const { ERROR } = require('../../Common/CommonConstant');
-const { PRODUCT_ORDER_STATUS } = require('../ProductOrderConstant');
+const { PRODUCT_ORDER_STATUS, PRODUCT_ORDER_TYPE } = require('../ProductOrderConstant');
 
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -22,16 +21,19 @@ async function createTable() {
           table.float('total', 48).defaultTo(0); //tổng tiền đơn hàng
           table.float('fee', 48).defaultTo(0); //Phí dịch vụ
           table.integer('staffId'); //Nhân viên xử lý đơn hàng
-          table.string('orderStatus').defaultTo(PRODUCT_ORDER_STATUS.NEW); //trạng thái (Đang chờ, Đang xử lý, Đã huỷ, Đã hoàn thành)
-          table.string('customerName'); //tên người mua
-          table.string('customerPhone'); //số điện thoại
-          table.string('customerIdentity'); //số cmnd hoặc căn cước công dân
-          table.string('customerAddress'); //dia chi nguoi mua
+          table.string('orderStatus').defaultTo(PRODUCT_ORDER_STATUS.NEW); // trạng thái (Đang chờ, Đang xử lý, Đã huỷ, Đã hoàn thành)
+          table.float('minOrderItemQuantity', 48).defaultTo(0); // Số lượng toi thieu
+          table.float('maxOrderItemQuantity', 48).defaultTo(0); // Số lượng toi da
+          table.string('orderType').defaultTo(PRODUCT_ORDER_TYPE.BUY); // Đơn bán ra/ mua vào
+          table.string('customerName'); // tên người mua
+          table.string('customerPhone'); // số điện thoại
+          table.string('customerIdentity'); // số cmnd hoặc căn cước công dân
+          table.string('customerAddress'); // địa chỉ người mua
           table.string('shippingAddress'); //dia chi ship
           table.string('shippingMethod'); //cach giao hang
-          table.integer('appUserId'); //người mua
+          table.integer('appUserId'); // người mua
           timestamps(table);
-          table.index('appUserId'); // Nhân viên nhập
+          table.index('appUserId');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -167,6 +169,7 @@ async function summaryTotalProductOrderByChannel(productChannel, startDate, endD
 }
 
 module.exports = {
+  modelName: tableName,
   insert,
   find,
   count,

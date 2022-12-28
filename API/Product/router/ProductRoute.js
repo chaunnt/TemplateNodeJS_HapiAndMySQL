@@ -11,42 +11,43 @@ const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
-  productTitle: Joi.string(),
+  productName: Joi.string(),
   productDescription: Joi.string().max(10000),
   productShortDescription: Joi.string().max(10000),
-  quantity: Joi.number(),
+  productCreator: Joi.string().max(255),
   productChannel: Joi.string().max(255),
   productCategory: Joi.string().max(255),
-  productType: Joi.string().max(255),
-  stockQuantity: Joi.number(),
-  productStatus: Joi.string().max(255),
-  price: Joi.number(),
-  expireDate: Joi.date().example(new Date()).required(),
+  productPrice: Joi.number(),
   productImages: Joi.array().items(Joi.string().max(255)),
+  productTokenType: Joi.string().max(255),
+  productOwner: Joi.string().max(255),
+  productThumbnail: Joi.string().max(500),
+  productUrl: Joi.string().max(500),
+  productCode: Joi.string().required().max(255),
 };
 
 const updateSchema = {
-  productTitle: Joi.string(),
+  productName: Joi.string(),
   productDescription: Joi.string().max(10000),
   productShortDescription: Joi.string().max(10000),
-  quantity: Joi.number(),
-  productChannel: Joi.string(),
-  productCategory: Joi.string(),
-  productType: Joi.string(),
-  stockQuantity: Joi.number(),
-  productStatus: Joi.string(),
-  price: Joi.number(),
-  expireDate: Joi.date().example(new Date()),
+  productCreator: Joi.string().max(255),
+  productChannel: Joi.string().max(255),
+  productCategory: Joi.string().max(255),
+  productPrice: Joi.number(),
   productImages: Joi.array().items(Joi.string().max(255)),
+  productTokenType: Joi.string().max(255),
+  productOwner: Joi.string().max(255),
   isDeleted: Joi.bool(),
 };
 
 const filterSchema = {
+  productName: Joi.string(),
+  productCreator: Joi.string().max(255),
   productChannel: Joi.string().max(255),
   productCategory: Joi.string().max(255),
-  productType: Joi.string().max(255),
-  productStatus: Joi.string().max(255),
-  expireDate: Joi.string().max(255),
+  productTokenType: Joi.string().max(255),
+  productOwner: Joi.string().max(255),
+  productCode: Joi.string().max(255),
 };
 
 module.exports = {

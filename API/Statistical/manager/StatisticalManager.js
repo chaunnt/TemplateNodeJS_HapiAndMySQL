@@ -9,10 +9,8 @@ const WithdrawTransactionUserView = require('../../PaymentWithdrawTransaction/re
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const PaymentExchangeTransactionResourceAccess = require('../../PaymentExchangeTransaction/resourceAccess/PaymentExchangeTransactionResourceAccess');
 const ServicePackageWalletViews = require('../../PaymentServicePackage/resourceAccess/ServicePackageWalletViews');
-const { PACKAGE_TYPE } = require('../../PaymentServicePackage/PaymentServicePackageConstant');
+const { PACKAGE_TYPE, PACKAGE_CATEGORY } = require('../../PaymentServicePackage/PaymentServicePackageConstant');
 const moment = require('moment');
-const { DEPOSIT_TRX_STATUS } = require('../../PaymentDepositTransaction/PaymentDepositTransactionConstant');
-const { WITHDRAW_TRX_STATUS } = require('../../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant');
 async function generalReport(req) {
   let endDate = req.payload.endDate;
   let startDate = req.payload.startDate;
@@ -21,11 +19,17 @@ async function generalReport(req) {
     let reportData = {
       totalUsers: 0, //<< tong so luong user
       totalNewUsers: 0, //<< tong so luong new user
+      totalServicePackage: 0, //<< tong so luong goi cuoc
+      totalUserServicePackage: 0, //<< tong so luong goi cuoc user da mua
+      totalUserBonusServicePackage: 0, //<< tong so luong goi cuoc user duoc thuong
+      totalWalletBalanceUnit: 0, //<< tong so luong dong coin
       totalUserPaymentDepositAmount: 0, //<< tong so tien nap cua user
       totalUserPaymentWithdrawAmount: 0, //<< tong so tien rut cua user
-      totalUserPaymentExchangeAmount: 0, //<< tong so tien user da quy doi ben trong he thong
-      totalProductOrderItemQuantity: 0, //<< tong so ve ban
-      totalProductOrderAmount: 0, //<< doanh thu
+      totalUserPaymentServiceAmount: 0, //<< tong so tien user da su dung
+      totalUserSellRecord: 0, //<< tong so tien hoa hong da thanh toan,
+      totalUserPaymentExchangeAmount: 0, //<< tong so tien user da quy doi ben trong he thong,
+      summaryWalletBalanceUnit: [],
+      summaryUserPaymentServicePackage: [],
     };
     try {
       let promiseList = [];
@@ -35,113 +39,33 @@ async function generalReport(req) {
       let promisetotalNewUsers = StatisticalFunctions.countTotalNewUsers(startDate, endDate);
       promiseList.push(promisetotalNewUsers);
 
-      let promisetotalUserPaymentDepositAmount = StatisticalFunctions.sumTotalUserPaymentDeposit(
-        {},
-        startDate,
-        endDate,
-      );
+      let promisetotalUserServicePackage = StatisticalFunctions.countTotalUserServicePackage(startDate, endDate);
+      promiseList.push(promisetotalUserServicePackage);
+
+      let promisetotalUserBonusServicePackage = StatisticalFunctions.countTotalCompletedUserServicePackage(startDate, endDate);
+      promiseList.push(promisetotalUserBonusServicePackage);
+
+      let promisetotalUserPaymentDepositAmount = StatisticalFunctions.sumTotalUserPaymentDeposit(startDate, endDate);
       promiseList.push(promisetotalUserPaymentDepositAmount);
 
-      let promisetotalUserPaymentWithdrawAmount = StatisticalFunctions.sumTotalUserPaymentWithdraw(
-        {},
-        startDate,
-        endDate,
-      );
+      let promisetotalUserPaymentWithdrawAmount = StatisticalFunctions.sumTotalUserPaymentWithdraw(startDate, endDate);
       promiseList.push(promisetotalUserPaymentWithdrawAmount);
 
-      let promisetotalUserPaymentExchangeAmount = StatisticalFunctions.sumTotalUserPaymentExchange(startDate, endDate);
+      let promisetotalUserPaymentServiceAmount = StatisticalFunctions.sumTotalUserPaymentService(startDate, endDate);
+      promiseList.push(promisetotalUserPaymentServiceAmount);
+
+      let promisetotalUserPaymentExchangeAmount = StatisticalFunctions.sumTotalAmountCompletedUserServicePackage(startDate, endDate);
       promiseList.push(promisetotalUserPaymentExchangeAmount);
-
-      let promisetotalProductOrderItemQuantity = StatisticalFunctions.sumTotalProductOrderItemQuantity(
-        {},
-        startDate,
-        endDate,
-      );
-      promiseList.push(promisetotalProductOrderItemQuantity);
-
-      let promisetotalProductOrder = StatisticalFunctions.sumTotalProductOrder({}, startDate, endDate);
-      promiseList.push(promisetotalProductOrder);
 
       Promise.all(promiseList).then(values => {
         reportData.totalUsers = values[0];
         reportData.totalNewUsers = values[1];
-        reportData.totalUserPaymentDepositAmount = values[2];
-        reportData.totalUserPaymentWithdrawAmount = values[3];
-        reportData.totalUserPaymentExchangeAmount = values[4];
-        reportData.totalProductOrderItemQuantity = values[5];
-        reportData.totalProductOrderAmount = values[6];
-        resolve(reportData);
-      });
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject('failed');
-    }
-  });
-}
-
-async function getUserDetailReport(req) {
-  let endDate = req.payload.endDate;
-  let startDate = req.payload.startDate;
-  const appUserId = req.payload.filter.appUserId;
-
-  return new Promise(async (resolve, reject) => {
-    let reportData = {
-      totalUserPaymentDepositAmount: 0, //<< tong so tien nap cua user
-      totalUserPaymentWithdrawAmount: 0, //<< tong so tien rut cua user
-      totalUserSumaryWin: 0,
-      totalUserPointAmount: 0,
-      totalUserPlaceOrder: 0, // tong mua
-      totalUserRewardAmount: 0, // tong thuong
-    };
-    try {
-      let promiseList = [];
-
-      let promisetotalUserPaymentDepositAmount = StatisticalFunctions.sumTotalUserPaymentDeposit(
-        { appUserId: appUserId, paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED },
-        startDate,
-        endDate,
-      );
-      promiseList.push(promisetotalUserPaymentDepositAmount);
-
-      let promisetotalUserPaymentWithdrawAmount = StatisticalFunctions.sumTotalUserPaymentWithdraw(
-        { appUserId: appUserId, paymentStatus: WITHDRAW_TRX_STATUS.COMPLETED },
-        startDate,
-        endDate,
-      );
-
-      promiseList.push(promisetotalUserPaymentWithdrawAmount);
-
-      let promisesumTotalUserSumaryWin = StatisticalFunctions.sumaryWinLoseAmount(
-        { appUserId: appUserId },
-        startDate,
-        endDate,
-      );
-      promiseList.push(promisesumTotalUserSumaryWin);
-
-      let promisesumSumaryPointAmount = StatisticalFunctions.sumaryPointAmount(
-        { appUserId: appUserId },
-        startDate,
-        endDate,
-      );
-      promiseList.push(promisesumSumaryPointAmount);
-
-      let promisetotalUserPlaceOrder = StatisticalFunctions.sumTotalUserPlaceOrder(
-        { appUserId: appUserId, orderStatus: 'Completed' },
-        startDate,
-        endDate,
-      );
-      promiseList.push(promisetotalUserPlaceOrder);
-
-      let promisetotalUserRewardAmount = StatisticalFunctions.totalRewardBalanceByUserId(appUserId);
-      promiseList.push(promisetotalUserRewardAmount);
-
-      Promise.all(promiseList).then(values => {
-        reportData.totalUserPaymentDepositAmount = values[0];
-        reportData.totalUserPaymentWithdrawAmount = values[1];
-        reportData.totalUserSumaryWin = values[2] || 0;
-        reportData.totalUserPointAmount = values[3] || 0;
-        reportData.totalUserPlaceOrder = values[4] || 0;
-        reportData.totalUserRewardAmount = values[5];
+        reportData.totalUserServicePackage = values[2];
+        reportData.totalUserCompletedServicePackage = values[3];
+        reportData.totalUserPaymentDepositAmount = values[4];
+        reportData.totalUserPaymentWithdrawAmount = values[5];
+        reportData.totalUserPaymentServiceAmount = values[6];
+        reportData.totalUserPaymentExchangeAmount = values[7] - (values[7] * 7) / 100; //tru 7% phi dich vu
         resolve(reportData);
       });
     } catch (e) {
@@ -208,8 +132,6 @@ async function userSummaryReferUser(req) {
           totalWithdraw: data.summaryTotalWithdraw,
           totalBuy: data.summaryTotalBuy,
           totalSell: data.summaryTotalSell,
-          totalBonus: data.totalBonus,
-          totalMember: data.totalMember,
         });
       } else {
         resolve({ data: [], total: 0 });
@@ -317,7 +239,7 @@ async function _sumWithdrawBTC(startDate, endDate) {
 }
 
 async function _sumExchangeFACtoUSDT(startDate, endDate) {
-  let sumExchangeFACtoUSDT = await PaymentExchangeTransactionResourceAccess.customSum(undefined, {
+  let sumExchangeFACtoUSDT = await PaymentExchangeTransactionResourceAccess.customSum({
     walletTypeBefore: WALLET_TYPE.FAC,
     walletTypeAfter: WALLET_TYPE.USDT,
     startDate: startDate,
@@ -327,18 +249,12 @@ async function _sumExchangeFACtoUSDT(startDate, endDate) {
 }
 
 async function _countAllPackage(startDate, endDate) {
-  let countAllPackage = await ServicePackageWalletViews.customCount(
-    undefined,
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
+  let countAllPackage = await ServicePackageWalletViews.customCount(undefined, startDate, endDate);
   return _checkCount(countAllPackage);
 }
 
 async function _sumExchangePointtoFAC(startDate, endDate) {
-  let sumExchangePointtoFAC = await PaymentExchangeTransactionResourceAccess.customSum(undefined, {
+  let sumExchangePointtoFAC = await PaymentExchangeTransactionResourceAccess.customSum({
     walletTypeBefore: WALLET_TYPE.POINT,
     walletTypeAfter: WALLET_TYPE.FAC,
     startDate: startDate,
@@ -348,14 +264,7 @@ async function _sumExchangePointtoFAC(startDate, endDate) {
 }
 
 async function _sumFACMint(startDate, endDate) {
-  let sumAllFACMint = await PaymentServicePackageUserResourceAccess.customSum(
-    undefined,
-    'profitClaimed',
-    undefined,
-    undefined,
-    startDate,
-    endDate,
-  );
+  let sumAllFACMint = await PaymentServicePackageUserResourceAccess.customSum(undefined, 'profitClaimed', startDate, endDate);
   return _checkCount(sumAllFACMint);
 }
 async function summaryUserReport(req) {
@@ -499,8 +408,7 @@ async function summaryServicePackageReport(req) {
       };
       filterServicePack100.packageType = PACKAGE_TYPE.A100FAC.type;
 
-      let promiseTotalPaymentServicePack100 =
-        StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack100);
+      let promiseTotalPaymentServicePack100 = StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack100);
       promiseList.push(promiseTotalPaymentServicePack100);
 
       // tổng số máy 500
@@ -508,8 +416,7 @@ async function summaryServicePackageReport(req) {
         packageCategory: PACKAGE_CATEGORY.NORMAL,
       };
       filterServicePack500.packageType = PACKAGE_TYPE.A500FAC.type;
-      let promiseTotalPaymentServicePack500 =
-        StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack500);
+      let promiseTotalPaymentServicePack500 = StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack500);
       promiseList.push(promiseTotalPaymentServicePack500);
 
       // tổng số máy 1000
@@ -517,8 +424,7 @@ async function summaryServicePackageReport(req) {
         packageCategory: PACKAGE_CATEGORY.NORMAL,
       };
       filterServicePack1000.packageType = PACKAGE_TYPE.A1000FAC.type;
-      let promiseTotalPaymentServicePack1000 =
-        StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack1000);
+      let promiseTotalPaymentServicePack1000 = StatisticalFunctions.countTotalPaymentServicePackageUserView(filterServicePack1000);
       promiseList.push(promiseTotalPaymentServicePack1000);
 
       let promiseSumTotalProfit = StatisticalFunctions.sumTotalProfitServicePackageUser({});
@@ -549,67 +455,6 @@ async function summaryServicePackageReport(req) {
     }
   });
 }
-
-async function getPaymentStatisticCount(req) {
-  return new Promise(async (resolve, reject) => {
-    let reportData = {
-      totalDepositRequest: 0, //<< tong so luong yeu cau nap tien NEW
-      totalWithdrawRequest: 0, //<< tong so luong yeu cau rut tien NEW
-      totalPaymentBonusRequest: 0, //<< tong so luong yeu cau tra tien hoa hong NEW
-    };
-    try {
-      let promiseList = [];
-
-      let promisetotalDepositRequest = StatisticalFunctions.countTotalPaymentDeposit({
-        paymentStatus: DEPOSIT_TRX_STATUS.NEW,
-      });
-      promiseList.push(promisetotalDepositRequest);
-
-      let promisetotalWithdrawRequest = StatisticalFunctions.countTotalWithdrawDeposit({
-        paymentStatus: WITHDRAW_TRX_STATUS.NEW,
-      });
-      promiseList.push(promisetotalWithdrawRequest);
-
-      let promisetotalPaymentBonusRequest = StatisticalFunctions.countTotalPaymentBonus({
-        paymentStatus: WITHDRAW_TRX_STATUS.NEW,
-      });
-      promiseList.push(promisetotalPaymentBonusRequest);
-
-      Promise.all(promiseList).then(values => {
-        reportData.totalDepositRequest = values[0] || 0;
-        reportData.totalWithdrawRequest = values[1] || 0;
-        reportData.totalPaymentBonusRequest = values[2] || 0;
-        resolve(reportData);
-      });
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject('failed');
-    }
-  });
-}
-
-async function summaryToTalProductOrderByChannelReport(req) {
-  let endDate = req.payload.endDate;
-  let startDate = req.payload.startDate;
-  let productChannel = req.payload.productChannel;
-  return new Promise(async (resolve, reject) => {
-    let reportData = {
-      totalProductOrderAmount: 0, //<< doanh thu
-    };
-    try {
-      reportData.totalProductOrderAmount = await StatisticalFunctions.summaryTotalProductOrderByChannel(
-        productChannel,
-        startDate,
-        endDate,
-      );
-      resolve(reportData);
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject('failed');
-    }
-  });
-}
-
 module.exports = {
   generalReport,
   summaryUserPayment,
@@ -617,7 +462,4 @@ module.exports = {
   summaryCountUserFAC,
   summaryUserReport,
   summaryServicePackageReport,
-  getUserDetailReport,
-  getPaymentStatisticCount,
-  summaryToTalProductOrderByChannelReport,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -11,11 +11,9 @@ const AppConfig = require('../../config/app');
 const Logger = require('../../utils/logging');
 
 function createToken(user, tokenType = 'normalUser') {
-  const userData = {
-    appUserId: user.appUserId,
-    staffId: user.staffId,
-    tokenType,
-  };
+  let userData = JSON.parse(JSON.stringify(user));
+
+  userData.tokenType = tokenType;
 
   return jwt.sign(userData, AppConfig.jwt.secret, {
     algorithm: 'HS256',

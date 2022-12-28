@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 require('dotenv').config();
 module.exports = {
@@ -35,8 +35,7 @@ module.exports = {
   },
   REFUSE_POST: {
     customerMessageTitle: 'Bài viết #{{postId}} của bạn đã bị ẩn.',
-    customerMessageContent:
-      'Bài viết #{{postId}} của bạn đã bị quản trị viên ẩn vào lúc {{timeRefused}} do vi phạm tiêu chuẩn của công ty.',
+    customerMessageContent: 'Bài viết #{{postId}} của bạn đã bị quản trị viên ẩn vào lúc {{timeRefused}} do vi phạm tiêu chuẩn của công ty.',
     customerMessageCategories: 'USER',
     customerMessageSendStatus: 'New',
   },
@@ -49,29 +48,25 @@ module.exports = {
   },
   REPORTED_POST: {
     customerMessageTitle: 'Có người đã báo cáo bài viết #{{postId}} của bạn.',
-    customerMessageContent:
-      'Có người đã báo cáo bài viết #{{postId}} của bạn vì lý do {{reason}} vào lúc {{timeRefused}}.',
+    customerMessageContent: 'Có người đã báo cáo bài viết #{{postId}} của bạn vì lý do {{reason}} vào lúc {{timeRefused}}.',
     customerMessageCategories: 'REALESTATE',
     customerMessageSendStatus: 'New',
   },
   UPDATE_POST_FOR_FOLLOWER: {
     customerMessageTitle: 'Bài viết #{{postId}} bạn quan tâm có cập nhật mới.',
-    customerMessageContent:
-      'Bài viết #{{postId}} mà bạn quan tâm có cập nhật mới vào lúc {{timeUpdate}}. Click để xem ngay.',
+    customerMessageContent: 'Bài viết #{{postId}} mà bạn quan tâm có cập nhật mới vào lúc {{timeUpdate}}. Click để xem ngay.',
     customerMessageCategories: 'REALESTATE',
     customerMessageSendStatus: 'New',
   },
   REFUSE_POST_FOR_FOLLOWER: {
     customerMessageTitle: 'Bài viết #{{postId}} bạn quan tâm đã bị ẩn.',
-    customerMessageContent:
-      'Bài viết #{{postId}} mà bạn quan tâm đã bị ẩn vào lúc {{timeRefused}} do vi phạm tiêu chuẩn của công ty.',
+    customerMessageContent: 'Bài viết #{{postId}} mà bạn quan tâm đã bị ẩn vào lúc {{timeRefused}} do vi phạm tiêu chuẩn của công ty.',
     customerMessageCategories: 'REALESTATE',
     customerMessageSendStatus: 'New',
   },
   RESTORE_POST_FOR_FOLLOWER: {
     customerMessageTitle: 'Bài viết #{{postId}} bạn quan tâm đã được khổi phục.',
-    customerMessageContent:
-      'Bài viết #{{postId}} mà bạn quan tâm đã đã được khôi phục vào lúc {{timeRefused}}. Giờ đây bạn có thể trao đổi mua bán.',
+    customerMessageContent: 'Bài viết #{{postId}} mà bạn quan tâm đã đã được khôi phục vào lúc {{timeRefused}}. Giờ đây bạn có thể trao đổi mua bán.',
     customerMessageCategories: 'REALESTATE',
     customerMessageSendStatus: 'New',
   },
@@ -95,8 +90,7 @@ module.exports = {
   },
   APPROVED_PAYMENT: {
     customerMessageTitle: 'Giao dịch #{{paymentId}} đã thành công. Bạn được khuyến mãi +{{promotionMoney}} điểm.',
-    customerMessageContent:
-      'Giao dịch #{{paymentId}} đã thành công. Bạn được khuyến mãi +{{promotionMoney}} điểm. Tổng số dư {{totalMoney}}',
+    customerMessageContent: 'Giao dịch #{{paymentId}} đã thành công. Bạn được khuyến mãi +{{promotionMoney}} điểm. Tổng số dư {{totalMoney}}',
     customerMessageCategories: 'USER',
     customerMessageSendStatus: 'New',
   },

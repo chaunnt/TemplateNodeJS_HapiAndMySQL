@@ -11,12 +11,10 @@ const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
-  producName: Joi.string().max(255),
-  quantity: Joi.number(),
+  productName: Joi.string().max(255),
   productChannel: Joi.string().max(255),
   productCategory: Joi.string().max(255),
   productType: Joi.string().max(255),
-  stockQuantity: Joi.number(),
   productStatus: Joi.string().max(255),
   price: Joi.number(),
   expireDate: Joi.date().example(new Date()).required().max(255),
@@ -28,7 +26,7 @@ const updateSchema = {
 };
 
 const filterSchema = {
-  producName: Joi.string().max(255),
+  productName: Joi.string().max(255),
   quantity: Joi.number(),
   productChannel: Joi.string().max(255),
   productCategory: Joi.string().max(255),

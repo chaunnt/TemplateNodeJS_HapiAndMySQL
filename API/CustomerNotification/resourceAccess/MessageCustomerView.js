@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
-const { DB } = require("../../../config/database")
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
+const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { MESSAGE_STATUS } = require("../CustomerMessageConstant");
-const tableName = "MessageCustomerView";
+const { MESSAGE_STATUS } = require('../CustomerMessageConstant');
+const tableName = 'MessageCustomerView';
 const rootTableName = 'MessageCustomer';
-const primaryKeyField = "messageCustomerId";
+const primaryKeyField = 'messageCustomerId';
 
 async function createRoleStaffView() {
   const CustomerMessageTable = 'CustomerMessage';
@@ -26,11 +28,13 @@ async function createRoleStaffView() {
     `${CustomerMessageTable}.customerMessageTitle`,
   ];
 
-  var viewDefinition = DB.select(fields).from(rootTableName).leftJoin(CustomerMessageTable, function () {
-    this.on(`${rootTableName}.messageId`, '=', `${CustomerMessageTable}.customerMessageId`);
-  });
+  var viewDefinition = DB.select(fields)
+    .from(rootTableName)
+    .leftJoin(CustomerMessageTable, function () {
+      this.on(`${rootTableName}.messageId`, '=', `${CustomerMessageTable}.customerMessageId`);
+    });
 
-  Common.createOrReplaceView(tableName, viewDefinition)
+  Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
@@ -57,41 +61,43 @@ async function updateAll(data, filter) {
   return await Common.updateAll(tableName, data, filter);
 }
 
-
 function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
-    queryBuilder.where(function() {
+    queryBuilder.where(function () {
       this.orWhere('customerMessageCategories', 'like', `%${searchText}%`)
-      .orWhere('customerMessageContent', 'like', `%${searchText}%`)
-      .orWhere('customerMessageTitle', 'like', `%${searchText}%`)
-    })
+        .orWhere('customerMessageContent', 'like', `%${searchText}%`)
+        .orWhere('customerMessageTitle', 'like', `%${searchText}%`);
+    });
   } else {
-    if(filterData.customerMessageContent){
-      queryBuilder.where('customerMessageContent', 'like', `%${filterData.customerMessageContent}%`)
+    if (filterData.customerMessageContent) {
+      queryBuilder.where('customerMessageContent', 'like', `%${filterData.customerMessageContent}%`);
       delete filterData.customerMessageContent;
     }
-  
-    if(filterData.customerMessageTitle){
-      queryBuilder.where('customerMessageTitle', 'like', `%${filterData.customerMessageTitle}%`)
+
+    if (filterData.customerMessageTitle) {
+      queryBuilder.where('customerMessageTitle', 'like', `%${filterData.customerMessageTitle}%`);
       delete filterData.customerMessageTitle;
     }
   }
 
-  if(startDate){
-    queryBuilder.where('createdAt', '>=', startDate)
+  if (startDate) {
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
-  if(endDate){
-    queryBuilder.where('createdAt', '<=', endDate)
+  if (endDate) {
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
-  
-  queryBuilder.where({isDeleted: 0, messageSendStatus: MESSAGE_STATUS.COMPLETED});
-  
+
+  queryBuilder.where({
+    isDeleted: 0,
+    messageSendStatus: MESSAGE_STATUS.COMPLETED,
+  });
+
   if (limit) {
     queryBuilder.limit(limit);
   }
@@ -103,7 +109,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -128,5 +134,5 @@ module.exports = {
   updateAll,
   _makeQueryBuilderByFilter,
   customSearch,
-  customCount
+  customCount,
 };

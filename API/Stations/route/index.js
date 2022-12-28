@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 const Stations = require('./StationsRoute');
 const Stations_User = require('./Stations_UserRoute');
 
@@ -20,6 +22,14 @@ module.exports = [
   // { method: 'POST', path: '/Stations/updateRightAdBanner', config: Stations.updateRightAdBanner},
 
   //Station USER APIs
-  { method: 'POST', path: '/Stations/user/getList', config: Stations_User.userGetListStation },
-  { method: 'POST', path: '/Stations/user/getDetailById', config: Stations_User.userGetDetailStationById },
+  {
+    method: 'POST',
+    path: '/Stations/user/getList',
+    config: Stations_User.userGetListStation,
+  },
+  {
+    method: 'POST',
+    path: '/Stations/user/getDetailById',
+    config: Stations_User.userGetDetailStationById,
+  },
 ];

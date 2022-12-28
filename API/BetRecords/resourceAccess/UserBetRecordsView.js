@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 'use strict';
 require('dotenv').config();
@@ -27,14 +27,6 @@ async function createUserTotalBetView() {
     `${rootTableName}.betRecordSection`,
     `${rootTableName}.betRecordNote`,
     `${rootTableName}.betRecordResult`,
-    `${rootTableName}.betRecordValue`,
-    `${rootTableName}.betRecordPaymentBonusStatus`,
-    `${rootTableName}.gameRecordId`,
-    `${rootTableName}.walletId`,
-    `${rootTableName}.productId`,
-    `${rootTableName}.productOrderId`,
-    `${rootTableName}.productOrderItemId`,
-
     `${rootTableName}.createdAt`,
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
@@ -90,7 +82,7 @@ async function sum(field, filter, order) {
   return await Common.sum(tableName, field, filter, order);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order) {
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
 
@@ -133,36 +125,29 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customSearch(filter, skip, limit, searchText, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order);
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, undefined);
+async function customCount(filter, searchText, startDate, endDate) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, undefined);
   return await query.count(`${primaryKeyField} as count`);
 }
 
 async function sumaryWinAmount(filter, startDate, endDate, searchText) {
   let sumField = 'betRecordWin';
   filter.betRecordStatus = BET_STATUS.COMPLETED;
-  return await customSum(sumField, filter, undefined, undefined, startDate, endDate, searchText);
+  return await customSum(sumField, filter, searchText, startDate, endDate);
 }
 
-async function customSum(sumField, filter, skip, limit, startDate, endDate, searchText, order) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customSum(sumField, filter, searchText, startDate, endDate, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, order);
   return queryBuilder.sum(`${sumField} as sumResult`);
 }
 
 async function sumBetAmountDistinctByAppUserId(filter, startDate, endDate) {
-  return await Common.sumAmountDistinctByCustomField(
-    tableName,
-    'betRecordAmountIn',
-    'appUserId',
-    filter,
-    startDate,
-    endDate,
-  );
+  return await Common.sumAmountDistinctByCustomField(tableName, 'betRecordAmountIn', 'appUserId', filter, startDate, endDate);
 }
 
 async function customCountDistinct(filter, distinctFields, startDate, endDate) {
@@ -192,7 +177,7 @@ async function customCountDistinct(filter, distinctFields, startDate, endDate) {
 }
 
 function _makeQueryBuilderForReferedUser(filter, skip, limit, searchText, startDate, endDate, order) {
-  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit, startDate, endDate, searchText, order);
+  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit, searchText, startDate, endDate, order);
 
   if (filter.memberReferIdF1) {
     queryBuilder.where({ memberReferIdF1: filter.memberReferIdF1 });
@@ -216,9 +201,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, searchText, startD
     //   queryBuilder.where({memberReferIdF10: filter.memberReferIdF10});
   } else if (filter.appUserId) {
     queryBuilder.where(function () {
-      this.orWhere('memberReferIdF1', filter.appUserId)
-        .orWhere('memberReferIdF2', filter.appUserId)
-        .orWhere('memberReferIdF3', filter.appUserId);
+      this.orWhere('memberReferIdF1', filter.appUserId).orWhere('memberReferIdF2', filter.appUserId).orWhere('memberReferIdF3', filter.appUserId);
       // .orWhere('memberReferIdF4', filter.appUserId)
       // .orWhere('memberReferIdF5', filter.appUserId)
       // .orWhere('memberReferIdF6', filter.appUserId)
@@ -233,15 +216,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, searchText, startD
 }
 
 async function customSumForReferedUser(sumField, filter, searchText, startDate, endDate, order) {
-  let queryBuilder = _makeQueryBuilderForReferedUser(
-    filter,
-    undefined,
-    undefined,
-    searchText,
-    startDate,
-    endDate,
-    order,
-  );
+  let queryBuilder = _makeQueryBuilderForReferedUser(filter, undefined, undefined, searchText, startDate, endDate, order);
   return queryBuilder.sum(`${sumField} as sumResult`);
 }
 

@@ -8,7 +8,6 @@
 const MembershipResourceAccess = require('../resourceAccess/AppUserMembershipResourceAccess');
 const Logger = require('../../../utils/logging');
 const AppUserMembershipFunction = require('../AppUserMembershipFunction');
-const { ERROR } = require('../../Common/CommonConstant');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -17,7 +16,6 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error AppUserMembership can not insert: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -33,27 +31,9 @@ async function find(req) {
       let skip = req.payload.skip;
       let limit = req.payload.limit;
       let order = req.payload.order;
-      let startDate = req.payload.startDate;
-      let endDate = req.payload.endDate;
-      let searchText = req.payload.searchText;
-      let data = await MembershipResourceAccess.customSearch(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
-      let dataCount = await MembershipResourceAccess.customCount(
-        filter,
-        skip,
-        limit,
-        startDate,
-        endDate,
-        searchText,
-        order,
-      );
+
+      let data = await MembershipResourceAccess.customSearch(filter, skip, limit, order);
+      let dataCount = await MembershipResourceAccess.customCount(filter, order);
       if (data && dataCount) {
         resolve({ data: data, total: dataCount[0].count });
       } else {
@@ -74,7 +54,6 @@ async function findById(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error AppUserMembership can not findById with id ${id}: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -92,7 +71,6 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error AppUserMembership can not updateById with id ${id}: ${ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);

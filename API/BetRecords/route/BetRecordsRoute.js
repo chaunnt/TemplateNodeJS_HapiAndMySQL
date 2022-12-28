@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
 
 /**
  * Created by A on 7/18/17.
@@ -13,7 +13,7 @@ const { BET_AMOUNT } = require('../BetRecordsConstant');
 
 const insertSchema = {
   betRecordAmountIn: Joi.number()
-    .min(BET_AMOUNT[0])
+    .min(1)
     .max(BET_AMOUNT[BET_AMOUNT.length - 1])
     .default(BET_AMOUNT[0])
     .required(),

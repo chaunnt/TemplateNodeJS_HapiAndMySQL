@@ -1,24 +1,26 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { STATION_STATUS } = require('../StationsConstants');
-const tableName = "Stations";
-const primaryKeyField = "stationsId";
+const tableName = 'Stations';
+const primaryKeyField = 'stationsId';
 
 function _getDefaultBookingConfig() {
   let defaultBookingConfig = [
     {
       index: 0,
-      time: "07:00 - 11:30",
-      limit: 4
+      time: '07:00 - 11:30',
+      limit: 4,
     },
     {
       index: 1,
-      time: "13:30 - 22:00",
-      limit: 4
+      time: '13:30 - 22:00',
+      limit: 4,
     },
     // {
     //   index: 2,
@@ -165,7 +167,7 @@ function _getDefaultBookingConfig() {
     //   time: "22:30 - 23:00",
     //   limit: 4
     // }
-  ]
+  ];
   return JSON.stringify(defaultBookingConfig);
 }
 
@@ -177,21 +179,21 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments('stationsId').primary();
           table.string('stationsName');
-          table.text('stationsDescription','longtext');
+          table.text('stationsDescription', 'longtext');
           table.string('stationUrl').defaultTo('');
           table.string('stationWebhookUrl').defaultTo('');
           table.string('stationBookingConfig', 2000).defaultTo(_getDefaultBookingConfig());
           table.string('stationsLogo', 500).defaultTo(`https://${process.env.HOST_NAME}/uploads/avatar.png`);
           table.string('stationsLogoThumbnails', 500).defaultTo(`https://${process.env.HOST_NAME}/uploads/avatar.png`);
-          table.string('stationsHotline', 500).defaultTo("999999999");
-          table.string('stationsEmail').defaultTo("stationemail@gmail.com");
-          table.string('stationsAddress', 500).defaultTo("1 street, VietNam");
+          table.string('stationsHotline', 500).defaultTo('999999999');
+          table.string('stationsEmail').defaultTo('stationemail@gmail.com');
+          table.string('stationsAddress', 500).defaultTo('1 street, VietNam');
           table.integer('stationStatus').defaultTo(STATION_STATUS.ACTIVE);
           timestamps(table);
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve()
+          resolve();
         });
     });
   });
@@ -232,11 +234,11 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
       this.orWhere('stationsHotline', 'like', `%${searchText}%`)
         .orWhere('stationsEmail', 'like', `%${searchText}%`)
         .orWhere('stationsAddress', 'like', `%${searchText}%`)
-        .orWhere('stationsName', 'like', `%${searchText}%`)
+        .orWhere('stationsName', 'like', `%${searchText}%`);
     });
   } else {
-    if(filterData.stationsName){
-      queryBuilder.where('stationsName', 'like', `%${filterData.stationsName}%`)
+    if (filterData.stationsName) {
+      queryBuilder.where('stationsName', 'like', `%${filterData.stationsName}%`);
       delete filterData.stationsName;
     }
   }
@@ -251,12 +253,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
     queryBuilder.offset(skip);
   }
 
-  queryBuilder.where({isDeleted: 0});
+  queryBuilder.where({ isDeleted: 0 });
 
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("updatedAt", "desc")
+    queryBuilder.orderBy('updatedAt', 'desc');
   }
 
   return queryBuilder;
@@ -271,13 +273,12 @@ async function customCount(filter, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, order);
   return new Promise((resolve, reject) => {
     try {
-      query.count(`${primaryKeyField} as count`)
-        .then(records => {
-          resolve(records);
-        });
+      query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
     } catch (e) {
-      Logger.error("ResourceAccess", `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
-      Logger.error("ResourceAccess", e);
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -292,5 +293,4 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-
 };

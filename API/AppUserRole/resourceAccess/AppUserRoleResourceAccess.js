@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AppUserRole";
-const primaryKeyField = "appUserRoleId";
+const tableName = 'AppUserRole';
+const primaryKeyField = 'appUserRoleId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -22,14 +24,7 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          let appUserRoles = [
-            "Admin",
-            "Operator",
-            "Moderator",
-            "Editor",
-            "Agency",
-            "Accountant",
-          ];
+          let appUserRoles = ['Admin', 'Operator', 'Moderator', 'Editor', 'Agency', 'Accountant'];
           let appUserRolesArr = [];
           let adminPermissions = await DB(`Permission`).select();
           let permissionList = [];
@@ -42,14 +37,16 @@ async function createTable() {
             const appUserRole = appUserRoles[i];
             appUserRolesArr.push({
               appUserRoleName: appUserRole,
-              permissions: permissionList
+              permissions: permissionList,
             });
           }
 
-          DB(`${tableName}`).insert(appUserRolesArr).then((result) => {
-            Logger.info(`${tableName}`, `init ${tableName}` + result);
-            resolve();
-          });
+          DB(`${tableName}`)
+            .insert(appUserRolesArr)
+            .then(result => {
+              Logger.info(`${tableName}`, `init ${tableName}` + result);
+              resolve();
+            });
         });
     });
   });
@@ -82,5 +79,5 @@ module.exports = {
   find,
   count,
   updateById,
-  initDB
+  initDB,
 };

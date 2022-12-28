@@ -1,11 +1,13 @@
-"use strict";
-require("dotenv").config();
+/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+
+'use strict';
+require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
-const { DB, timestamps } = require("../../../config/database");
+const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = "AreaStreet";
-const primaryKeyField = "areaStreetId";
+const tableName = 'AreaStreet';
+const primaryKeyField = 'areaStreetId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -51,9 +53,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  if(filterData.areaStreetName) {
+  if (filterData.areaStreetName) {
     queryBuilder.where('areaStreetName', 'like', `%${filter.areaStreetName}%`);
-    delete filterData.areaStreetName
+    delete filterData.areaStreetName;
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });
@@ -66,7 +68,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy("createdAt", "desc")
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -89,5 +91,5 @@ module.exports = {
   updateById,
   initDB,
   customSearch,
-  customCount
+  customCount,
 };

@@ -61,10 +61,10 @@ async function createWalletForUser(userId) {
       appUserId: userId,
       walletType: WALLET_TYPE.POINT, // vi tiền chính của user
     },
-    {
-      appUserId: userId,
-      walletType: WALLET_TYPE.WIN, // vi trúng thửong
-    },
+    // {
+    //   appUserId: userId,
+    //   walletType: WALLET_TYPE.WIN, // vi trúng thửong
+    // },
   ];
   let createdResult = await WalletResource.insert(newWalletData);
   return createdResult;

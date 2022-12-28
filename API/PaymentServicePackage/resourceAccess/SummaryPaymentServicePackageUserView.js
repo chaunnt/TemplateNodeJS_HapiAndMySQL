@@ -111,9 +111,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, startDate, endDate
   if (filter && filter.appUserId) {
     const _appUserId = filter.appUserId;
     queryBuilder.where(function () {
-      this.orWhere('memberReferIdF1', _appUserId)
-        .orWhere('memberReferIdF2', _appUserId)
-        .orWhere('memberReferIdF3', _appUserId);
+      this.orWhere('memberReferIdF1', _appUserId).orWhere('memberReferIdF2', _appUserId).orWhere('memberReferIdF3', _appUserId);
       // .orWhere("memberReferIdF4", _appUserId)
       // .orWhere("memberReferIdF5", _appUserId);
     });

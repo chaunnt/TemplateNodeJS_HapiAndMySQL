@@ -1,3 +1,5 @@
+/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+
 /**
  * Created by A on 7/18/17.
  */
@@ -15,7 +17,7 @@ const CustomerMeasureRecordModel = require('./model/CustomerMeasureRecordModel')
 let YOUJI_TOKEN = undefined;
 
 async function _fetchYoujiToken() {
-  console.info("_fetchYoujiToken " + new Date());
+  console.info('_fetchYoujiToken ' + new Date());
   // curl -X POST "https://open.youjiuhealth.com/api/session?app_id=699871606176812&app_secret=NjliY2MwZDcxNzg3Y2U3NGFkNGU5YzRkZThkNWFmZTc2MDEwNWY2Zg" -H "accept: application/vnd.XoneAPI.v2+json"
   return new Promise((resolve, reject) => {
     chai
@@ -35,14 +37,14 @@ async function _fetchYoujiToken() {
         }
         resolve(YOUJI_TOKEN);
       });
-  })
+  });
 }
 
 //fetch token for firstTime
-_fetchYoujiToken().then((token) => {
+_fetchYoujiToken().then(token => {
   // console.log(token)
   // _fetchYoujiReportListByPhone("0962961214").then((result) => {
-    // console.log(result.data);
+  // console.log(result.data);
   //   const measureId = result.data[1].measurement.id;
   //   _fetchYoujiReportDetailById(measureId).then((result) => {
   //     const fs = require('fs');
@@ -50,13 +52,13 @@ _fetchYoujiToken().then((token) => {
   //     console.log(result);
   //   });
   // })
-})
+});
 
 //refresh token after 10 minutes
 setInterval(() => {
-  _fetchYoujiToken().then((token) => {
-    console.log(token)
-  })
+  _fetchYoujiToken().then(token => {
+    console.log(token);
+  });
 }, 1000 * 60 * 10); //10 minutes
 
 function _convertYoujiRecordListToMeasureList(youjiRecordList) {
@@ -79,7 +81,7 @@ function _convertYoujiRecordListToMeasureList(youjiRecordList) {
       age: _youjiRecord.age,
       score: _youjiRecord.score,
       outline: _youjiRecord.outline,
-      testType: _youjiRecord.inclusion === 1 ? "Body Composition Analysis" : "Postural Assessment",
+      testType: _youjiRecord.inclusion === 1 ? 'Body Composition Analysis' : 'Postural Assessment',
     };
     newMeasureList.push(_newMeasureRecord);
   }
@@ -88,23 +90,23 @@ function _convertYoujiRecordListToMeasureList(youjiRecordList) {
 
 function _assessmentTextFromValue(value) {
   if (value === 3) {
-    return "HIGH";
+    return 'HIGH';
   } else if (value === 1) {
-    return "LOW";
+    return 'LOW';
   } else {
-    return "NORMAL";
+    return 'NORMAL';
   }
 }
 
 function _riskAssessmentTextFromValue(value) {
   if (value === 4) {
-    return "High";
+    return 'High';
   } else if (value === 3) {
-    return "Medium";
+    return 'Medium';
   } else if (value === 2) {
-    return "Low";
+    return 'Low';
   } else {
-    return "No";
+    return 'No';
   }
 }
 
@@ -125,33 +127,33 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
     age: youjiRecord.measurement.age,
     score: youjiRecord.measurement.score,
     outline: youjiRecord.measurement.outline,
-    testType: youjiRecord.measurement.inclusion === 1 ? "Body Composition Analysis" : "Postural Assessment",
-  }
+    testType: youjiRecord.measurement.inclusion === 1 ? 'Body Composition Analysis' : 'Postural Assessment',
+  };
 
   if (youjiRecord.measurement.inclusion === 1) {
     //  -------body composittion analysis
     const _youjiBodyComposition = youjiRecord.composition;
     let bodyComposittionAnalysis = [
       {
-        bodyComposittionAnalysis_title: "WEIGHT",
+        bodyComposittionAnalysis_title: 'WEIGHT',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.weight.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.weight.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.weight.prv[1],
       },
       {
-        bodyComposittionAnalysis_title: "MINERAL",
+        bodyComposittionAnalysis_title: 'MINERAL',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.mineral.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.mineral.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.mineral.prv[1],
       },
       {
-        bodyComposittionAnalysis_title: "FAT FREE MASS",
+        bodyComposittionAnalysis_title: 'FAT FREE MASS',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.ffm.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.ffm.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.ffm.prv[1],
       },
       {
-        bodyComposittionAnalysis_title: "TOTAL BODYWATER",
+        bodyComposittionAnalysis_title: 'TOTAL BODYWATER',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.tbw.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.tbw.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.tbw.prv[1],
@@ -169,13 +171,13 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
       //   bodyComposittionAnalysis_end_value: _youjiBodyComposition.weight.prv[1],
       // },
       {
-        bodyComposittionAnalysis_title: "FAT",
+        bodyComposittionAnalysis_title: 'FAT',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.fat.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.fat.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.fat.prv[1],
       },
       {
-        bodyComposittionAnalysis_title: "PROTEIN",
+        bodyComposittionAnalysis_title: 'PROTEIN',
         bodyComposittionAnalysis_avg: _youjiBodyComposition.protein.value,
         bodyComposittionAnalysis_start_value: _youjiBodyComposition.protein.prv[0],
         bodyComposittionAnalysis_end_value: _youjiBodyComposition.protein.prv[1],
@@ -205,8 +207,8 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
         healthAssessment_title: `Risk Assessment`,
         healthAssessment_value: _riskAssessmentTextFromValue(youjiRecord.score),
         healthAssessment_unit: `Risk`,
-      }
-    ]
+      },
+    ];
     _newMeasureRecord.healthAssessment = healthAssessment;
 
     //  ------segmental_Muscle------
@@ -224,7 +226,7 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
       segmentalMuscle_LL_EVAL: _assessmentTextFromValue(_youjiSegmentalMuscle.ll.grade),
       segmentalMuscle_RL: _youjiSegmentalMuscle.rl.value,
       segmentalMuscle_RL_EVAL: _assessmentTextFromValue(_youjiSegmentalMuscle.rl.grade),
-    }
+    };
 
     //  ------segmental fat
     const _youjiSegmentalFat = youjiRecord.composition.segmental_fat;
@@ -242,33 +244,33 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
       segmentalFat_RL: _youjiSegmentalFat.rl.value,
       segmentalFat_RL_EVAL: _assessmentTextFromValue(_youjiSegmentalFat.rl.grade),
       segmentalFat_waistToHipFatRatio: youjiRecord.composition.whfr.value,
-    }
+    };
 
     //  -------physical assessment-----
     const _youjiPhysicalAssessment = youjiRecord.composition;
     let PhysicalAssessment = [
       {
-        PhysicalAssessment_title: "BMI (KG/M2)",
+        PhysicalAssessment_title: 'BMI (KG/M2)',
         PhysicalAssessment_value: _youjiPhysicalAssessment.bmi.value,
         PhysicalAssessment_normal_range: `${_youjiPhysicalAssessment.bmi.prv[0]} ~ ${_youjiPhysicalAssessment.bmi.prv[1]}`,
       },
       {
-        PhysicalAssessment_title: "WEIGHT (KG)",
+        PhysicalAssessment_title: 'WEIGHT (KG)',
         PhysicalAssessment_value: _youjiPhysicalAssessment.weight.value,
         PhysicalAssessment_normal_range: `${_youjiPhysicalAssessment.weight.prv[0]} ~ ${_youjiPhysicalAssessment.weight.prv[1]}`,
       },
       {
-        PhysicalAssessment_title: "SKELETAL MUSCLE MASS (KG)",
+        PhysicalAssessment_title: 'SKELETAL MUSCLE MASS (KG)',
         PhysicalAssessment_value: _youjiPhysicalAssessment.smm.value,
         PhysicalAssessment_normal_range: `${_youjiPhysicalAssessment.smm.prv[0]} ~ ${_youjiPhysicalAssessment.smm.prv[1]}`,
       },
       {
-        PhysicalAssessment_title: "BODY WATER (KG)",
+        PhysicalAssessment_title: 'BODY WATER (KG)',
         PhysicalAssessment_value: _youjiPhysicalAssessment.tbw.value,
         PhysicalAssessment_normal_range: `${_youjiPhysicalAssessment.tbw.prv[0]} ~ ${_youjiPhysicalAssessment.tbw.prv[1]}`,
       },
       {
-        PhysicalAssessment_title: "PERCENT BODY FAT (%)",
+        PhysicalAssessment_title: 'PERCENT BODY FAT (%)',
         PhysicalAssessment_value: _youjiPhysicalAssessment.pbf.value,
         PhysicalAssessment_normal_range: `${_youjiPhysicalAssessment.pbf.prv[0]} ~ ${_youjiPhysicalAssessment.pbf.prv[1]}`,
       },
@@ -279,16 +281,16 @@ function _convertYoujiRecordDetailToMeasureDetail(youjiRecord) {
     const _youjiControlAdvice = youjiRecord.composition;
     let controlAdvice = [
       {
-        controlAdvice_title: "FAT (KG)",
+        controlAdvice_title: 'FAT (KG)',
         controlAdvice_curent: _youjiControlAdvice.fat.value,
         controlAdvice_control: `-${_youjiControlAdvice.fat_control.value}`,
       },
       {
-        controlAdvice_title: "MUSCLE (KG)",
+        controlAdvice_title: 'MUSCLE (KG)',
         controlAdvice_curent: _youjiControlAdvice.muscle.value,
         controlAdvice_control: `+${_youjiControlAdvice.muscle_control.value}`,
       },
-    ]
+    ];
     _newMeasureRecord.controlAdvice = controlAdvice;
   } else {
     //  -----posture assessment-----
@@ -323,7 +325,7 @@ async function _fetchYoujiReportListByPhone(phoneNumber, skip = 0) {
           resolve(undefined);
         }
       });
-  })
+  });
 }
 
 async function _fetchYoujiReportDetailById(id) {
@@ -345,7 +347,7 @@ async function _fetchYoujiReportDetailById(id) {
           resolve(undefined);
         }
       });
-  })
+  });
 }
 
 async function fetchRecordDetailById(id) {
@@ -361,7 +363,7 @@ async function fetchRecordListByPhone(phoneNumber, skip = 0) {
   let outputData = {
     data: [],
     total: 0,
-  }
+  };
 
   if (_recordData && _recordData.data) {
     outputData.data = _convertYoujiRecordListToMeasureList(_recordData.data);
@@ -386,21 +388,21 @@ function _extractHistoricalDataFromList(measureList, measureStartIndex) {
   //  -------historycal record-----
   let historicalMeasureList = [
     {
-      HistoricalRecord_title: "WEIGHT (KG)",
-      HistoricalRecord_data1: "23.4",
+      HistoricalRecord_title: 'WEIGHT (KG)',
+      HistoricalRecord_data1: '23.4',
     },
     {
-      HistoricalRecord_title: "PERCENT BODY FAT (%)",
-      HistoricalRecord_data1: "23.4",
+      HistoricalRecord_title: 'PERCENT BODY FAT (%)',
+      HistoricalRecord_data1: '23.4',
     },
     {
-      HistoricalRecord_title: "SKELETAL MUSCLE MASS (KG)",
-      HistoricalRecord_data1: "23.4",
+      HistoricalRecord_title: 'SKELETAL MUSCLE MASS (KG)',
+      HistoricalRecord_data1: '23.4',
     },
     {
-      HistoricalRecord_title: "TIME",
-      HistoricalRecord_data1: "10:04",
-    }
+      HistoricalRecord_title: 'TIME',
+      HistoricalRecord_data1: '10:04',
+    },
   ];
   let historicalIndex = 1;
   for (let i = 0; i < measureList.length; i++) {
@@ -409,7 +411,7 @@ function _extractHistoricalDataFromList(measureList, measureStartIndex) {
     if (i < measureStartIndex) {
       continue;
     }
-    if (measureList[i].testType === "Body Composition Analysis") {
+    if (measureList[i].testType === 'Body Composition Analysis') {
       historicalMeasureList[0][`HistoricalRecord_data${historicalIndex}`] = _measureData.weight;
       historicalMeasureList[1][`HistoricalRecord_data${historicalIndex}`] = _measureData.outline.pbf;
       historicalMeasureList[2][`HistoricalRecord_data${historicalIndex}`] = _measureData.outline.smm;
@@ -425,7 +427,7 @@ async function fetchAllRecordByPhone(phoneNumber, skip = 0) {
   let outputData = {
     data: [],
     total: 0,
-  }
+  };
 
   if (_recordData && _recordData.data) {
     let measureList = [];
@@ -434,7 +436,7 @@ async function fetchAllRecordByPhone(phoneNumber, skip = 0) {
     measureList = await _fetchYoujiDetailForAllRecord(measureList);
 
     for (let i = 0; i < measureList.length; i++) {
-      if (measureList[i].testType === "Body Composition Analysis") {
+      if (measureList[i].testType === 'Body Composition Analysis') {
         measureList[i].HistoricalRecord = _extractHistoricalDataFromList(measureList, i);
       }
     }
@@ -449,6 +451,4 @@ module.exports = {
   fetchAllRecordByPhone,
   fetchRecordListByPhone,
   fetchRecordDetailById,
-}
-
-
+};

@@ -33,6 +33,8 @@ async function createView() {
     `${UserTableName}.paymentStatus`,
     `${UserTableName}.paymentType`,
     `${UserTableName}.paymentRef`,
+    `${UserTableName}.paymentSecondaryRef`,
+
     `${UserTableName}.paymentNote`,
     `${UserTableName}.paymentOwner`,
     `${UserTableName}.paymentOriginSource`,
