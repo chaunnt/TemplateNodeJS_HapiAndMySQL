@@ -1632,15 +1632,15 @@ glue@^4.1.0:
     items "2.x.x"
     joi "10.x.x"
 
-good-console@^6.4.0:
-  version "6.4.1"
-  resolved "https://registry.yarnpkg.com/good-console/-/good-console-6.4.1.tgz#5922974868bcf3bd9594372ba33818dc0d01a464"
-  integrity sha512-XCEZzd8YLoW+4e1SBtdBMLyQ4mFrOgAckMUZGDtppUVoX9ur3DkP/0TuE8BYht3QnfddKX0lyOhV/XmeOP9Jow==
+good-console@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/good-console/-/good-console-8.0.0.tgz#cc7262081f09fac5678b397e8847c194fbf85f64"
+  integrity sha512-+TIZjkwZhzaeqVQqLLVyMjbuwlBHQ9N4o1cp5VwVo9X68ilvqV0fVIv/ftRiTER5fPieWyyXymL4ZXWH8APtbg==
   dependencies:
-    hoek "4.x.x"
-    joi "8.1.x"
-    json-stringify-safe "5.0.x"
-    moment "2.19.x"
+    hoek "6.x.x"
+    joi "14.x.x"
+    json-stringify-safe "5.x.x"
+    moment "2.x.x"
 
 good-loggly@^3.1.0:
   version "3.1.0"
@@ -1822,6 +1822,11 @@ hoek@4.2.x, hoek@4.x.x, hoek@^4.2.0:
   version "4.2.1"
   resolved "https://registry.yarnpkg.com/hoek/-/hoek-4.2.1.tgz#9634502aa12c445dd5a7c5734b572bb8738aacbb"
   integrity sha512-QLg82fGkfnJ/4iy1xZ81/9SIJiq1NGFUMGs6ParyjBZr6jW2Ufj/snDqTHixNlHdPNwN2RLVD0Pi3igeK9+JfA==
+
+hoek@6.x.x:
+  version "6.1.3"
+  resolved "https://registry.yarnpkg.com/hoek/-/hoek-6.1.3.tgz#73b7d33952e01fe27a38b0457294b79dd8da242c"
+  integrity sha512-YXXAAhmF9zpQbC7LEcREFtXfGq5K1fmd+4PHkBq8NUqmzW3G+Dq10bI/i0KucLRwss3YYFQ0fSfoxBZYiGUqtQ==
 
 hosted-git-info@^2.1.4:
   version "2.8.9"
@@ -2141,15 +2146,14 @@ joi@12.x.x:
     isemail "3.x.x"
     topo "2.x.x"
 
-joi@8.1.x:
-  version "8.1.1"
-  resolved "https://registry.yarnpkg.com/joi/-/joi-8.1.1.tgz#2d8b52a5d909d217ed47248577eefe8b1798f48f"
-  integrity sha512-fVXkcbz9ZnYpQPk7wIEMK1hEoaKaXyIdRKvhMWvNKuznHWgu4F96R65QtNdAsGEVXEGKOp3bYLXI23JbrZPfjg==
+joi@14.x.x:
+  version "14.3.1"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-14.3.1.tgz#164a262ec0b855466e0c35eea2a885ae8b6c703c"
+  integrity sha512-LQDdM+pkOrpAn4Lp+neNIFV3axv1Vna3j38bisbQhETPMANYRbFJFUyOZcOClYvM/hppMhGWuKSFEK9vjrB+bQ==
   dependencies:
-    hoek "4.x.x"
-    isemail "2.x.x"
-    moment "2.x.x"
-    topo "2.x.x"
+    hoek "6.x.x"
+    isemail "3.x.x"
+    topo "3.x.x"
 
 js-stringify@^1.0.1:
   version "1.0.2"
@@ -2217,7 +2221,7 @@ json-stable-stringify-without-jsonify@^1.0.1:
   resolved "https://registry.yarnpkg.com/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz#9db7b59496ad3f3cfef30a75142d2d930ad72651"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
 
-json-stringify-safe@5.0.x, json-stringify-safe@~5.0.1:
+json-stringify-safe@5.0.x, json-stringify-safe@5.x.x, json-stringify-safe@~5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
   integrity sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==
@@ -2609,11 +2613,6 @@ mocha@^8.3.2:
     yargs "16.2.0"
     yargs-parser "20.2.4"
     yargs-unparser "2.0.0"
-
-moment@2.19.x:
-  version "2.19.4"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.4.tgz#17e5e2c6ead8819c8ecfad83a0acccb312e94682"
-  integrity sha512-1xFTAknSLfc47DIxHDUbnJWC+UwgWxATmymaxIPQpmMh7LBm7ZbwVEsuushqwL2GYZU0jie4xO+TK44hJPjNSQ==
 
 moment@2.x.x:
   version "2.29.4"
@@ -4048,6 +4047,13 @@ topo@2.x.x:
   integrity sha512-QMfJ9TC5lKcmLZImOZ/BTSWJeVbay7XK2nlzvFALW3BA5OkvBnbs0poku4EsRpDMndDVnM58EU/8D3ZcoVehWg==
   dependencies:
     hoek "4.x.x"
+
+topo@3.x.x:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/topo/-/topo-3.0.3.tgz#d5a67fb2e69307ebeeb08402ec2a2a6f5f7ad95c"
+  integrity sha512-IgpPtvD4kjrJ7CRA3ov2FhWQADwv+Tdqbsf1ZnPUSAtCJ9e1Z44MmoSGDXGk4IppoZA7jd/QRkNddlLJWlUZsQ==
+  dependencies:
+    hoek "6.x.x"
 
 touch@^3.1.0:
   version "3.1.0"
