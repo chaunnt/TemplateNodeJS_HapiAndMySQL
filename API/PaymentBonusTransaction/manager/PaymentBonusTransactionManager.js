@@ -13,7 +13,7 @@ const PaymentBonusFunction = require('../PaymentBonusTransactionFunctions');
 const PaymentDepositTransactionFunctions = require('../../PaymentDepositTransaction/PaymentDepositTransactionFunctions');
 const UserWallet = require('../../Wallet/resourceAccess/WalletResourceAccess');
 const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
-const PaymentExchangeFunctions = require('../../PaymentExchangeTransaction/PaymentExchangeTransactionFunctions');
+
 const Logger = require('../../../utils/logging');
 const { INVALID_REFER_USER } = require('../PaymentBonusTransactionConstant');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
@@ -457,6 +457,7 @@ async function userRequestExchangePoint(req) {
       }
       user = user[0];
 
+      const PaymentExchangeFunctions = require('../../PaymentExchangeTransaction/PaymentExchangeTransactionFunctions');
       let result = await PaymentExchangeFunctions.requestExchangeBonusToPOINT(user, paymentAmount, walletId);
       if (result) {
         resolve(result);

@@ -6,7 +6,7 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = 'Permission';
+const tableName = 'StaffPermission';
 const primaryKeyField = 'permissionId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
@@ -25,7 +25,7 @@ async function createTable() {
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          let initialPermissions = [
+          let initialStaffPermissions = [
             'VIEW_DASHBOARD',
             'VIEW_PRODUCTS',
             'VIEW_ORDERS',
@@ -43,8 +43,8 @@ async function createTable() {
             'APPROVE_WITHDRAW',
           ];
           let permissionArr = [];
-          for (let i = 0; i < initialPermissions.length; i++) {
-            const permission = initialPermissions[i];
+          for (let i = 0; i < initialStaffPermissions.length; i++) {
+            const permission = initialStaffPermissions[i];
             permissionArr.push({
               permissionName: permission,
               permissionKey: permission.toUpperCase().replace(/\s/gi, '_'),

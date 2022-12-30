@@ -6,9 +6,9 @@
 'use strict';
 const GameFunctions = require('../GameFunctions');
 const { GAME_RECORD_STATUS } = require('../GameRecordsConstant');
-const { BET_UNIT, BET_TYPE, BET_STATUS } = require('../../BetRecords/BetRecordsConstant');
-const BetRecordFunction = require('../../BetRecords/BetRecordsFunctions');
-const BetRecordResource = require('../../BetRecords/resourceAccess/BetRecordsResourceAccess');
+const { BET_UNIT, BET_TYPE, BET_STATUS } = require('../../GamePlayRecords/GamePlayRecordsConstant');
+const BetRecordFunction = require('../../GamePlayRecords/GamePlayRecordsFunctions');
+const BetRecordResource = require('../../GamePlayRecords/resourceAccess/GamePlayRecordsResourceAccess');
 const GameRecordsResourceAccess = require('../resourceAccess/GameRecordsResourceAccess');
 // const CryptoFunction = require('../../CryptoCurrency/CryptoCurrencyFunctions');
 const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;

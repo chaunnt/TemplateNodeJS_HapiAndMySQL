@@ -11,7 +11,6 @@ const CustomerMessageResourceAccess = require('./resourceAccess/CustomerMessageR
 
 const ApiUtilsFunctions = require('../ApiUtils/utilFunctions');
 const { MESSAGE_STATUS, MESSAGE_TYPE, MESSAGE_TOPIC, MESSAGE_CATEGORY, MESSAGE_RECEIVER } = require('./CustomerMessageConstant');
-const { pushNotificationByTopic, pushNotificationByTokens } = require('../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
 const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 
 const Logger = require('../../utils/logging');
@@ -194,6 +193,8 @@ async function sendMessageToManyCustomer(customerList, stationsId, customerMessa
   }
 
   let sendMessageResult;
+  const { pushNotificationByTopic, pushNotificationByTokens } = require('../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
+
   if (customerMessageCategories === MESSAGE_TYPE.GENERAL) {
     sendMessageResult = await pushNotificationByTopic(customerMessageCategories, customerMessageTitle, customerMessageContent, data, messageType);
   } else {

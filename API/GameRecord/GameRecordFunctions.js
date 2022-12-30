@@ -5,12 +5,12 @@
  */
 'use strict';
 const GameRecordsResourceAccess = require('./resourceAccess/GameRecordsResourceAccess');
-const BetRecordsResource = require('../BetRecords/resourceAccess/BetRecordsResourceAccess');
+const GamePlayRecordsResource = require('../GamePlayRecords/resourceAccess/GamePlayRecordsResourceAccess');
 const utilFunctions = require('../ApiUtils/utilFunctions');
 const ProductResourceAccess = require('../Product/resourceAccess/ProductResourceAccess');
 const { GAME_RECORD_STATUS, GAME_RATIO, GAME_RECORD_TYPE, GAME_RESULT } = require('./GameRecordConstant');
 const moment = require('moment');
-const { BET_STATUS } = require('../BetRecords/BetRecordsConstant');
+const { BET_STATUS } = require('../GamePlayRecords/GamePlayRecordsConstant');
 const { WALLET_TYPE } = require('../Wallet/WalletConstant');
 const UserWallet = require('../Wallet/resourceAccess/WalletResourceAccess');
 const CustomerMessageFunctions = require('../CustomerMessage/CustomerMessageFunctions');
@@ -353,22 +353,22 @@ async function completeGameRecord(gameRecordSection, gameRecordType) {
     console.error(`can not find game to complete ${gameRecordSection} ${gameRecordType}`);
   }
 
-  let existedBetRecords = await BetRecordsResource.find({
+  let existedGamePlayRecords = await GamePlayRecordsResource.find({
     betRecordSection: gameRecordSection,
   });
 
   //if it was predefined by admin, then update status to display it
   let result;
   let pointWin = 0;
-  if (existedBetRecords && existedBetRecords.length > 0) {
-    for (let i = 0; i < existedBetRecords.length; i++) {
+  if (existedGamePlayRecords && existedGamePlayRecords.length > 0) {
+    for (let i = 0; i < existedGamePlayRecords.length; i++) {
       //kiem tra ket qua vé đơn
-      const betRecordType = existedBetRecords[i].betRecordType;
+      const betRecordType = existedGamePlayRecords[i].betRecordType;
       if (betRecordType === GAME_RECORD_TYPE.SINGLE) {
-        result = _detectSingleResult(existedGameRecord, existedBetRecords[i]);
+        result = _detectSingleResult(existedGameRecord, existedGamePlayRecords[i]);
       } else if (betRecordType === GAME_RECORD_TYPE.BATCH) {
         // kiem tra ket qua vé cặp
-        result = _detectBatchResult(existedGameRecord, existedBetRecords[i]);
+        result = _detectBatchResult(existedGameRecord, existedGamePlayRecords[i]);
       }
       //cap nhat ket qua vao csdl
       pointWin = result.pointWin;
@@ -381,14 +381,14 @@ async function completeGameRecord(gameRecordSection, gameRecordType) {
         productCategory: `${result.result}`,
       };
 
-      await BetRecordsResource.updateById(existedBetRecords[i].betRecordId, updateBetRecordData);
-      await ProductResourceAccess.updateById(existedBetRecords[i].productId, updateProductData);
+      await GamePlayRecordsResource.updateById(existedGamePlayRecords[i].betRecordId, updateBetRecordData);
+      await ProductResourceAccess.updateById(existedGamePlayRecords[i].productId, updateProductData);
 
       if (pointWin && pointWin > 0) {
-        let result = await rewardToWinner(existedBetRecords[i].appUserId, pointWin);
+        let result = await rewardToWinner(existedGamePlayRecords[i].appUserId, pointWin);
         if (result) {
           let notifiTitle = 'Trúng thưởng xổ số';
-          let notifiContent = `Chúc mừng bạn đã trưởng thưởng xổ số ${pointWin} đồng. Thông tin vé: đài ${gameRecordType} loại vé ${existedBetRecords.betRecordType} với số vé ${existedBetRecords.betRecordValue}`;
+          let notifiContent = `Chúc mừng bạn đã trưởng thưởng xổ số ${pointWin} đồng. Thông tin vé: đài ${gameRecordType} loại vé ${existedGamePlayRecords.betRecordType} với số vé ${existedGamePlayRecords.betRecordValue}`;
           await CustomerMessageFunctions.sendNotificationUser(appUserId, notifiTitle, notifiContent);
         }
       }

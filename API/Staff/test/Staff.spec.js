@@ -62,7 +62,7 @@ describe(`Tests ${Model.modelName}`, function () {
       email: faker.internet.email(),
       password: 'string',
       phoneNumber: 'string',
-      roleId: 3,
+      staffRoleId: 3,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -86,7 +86,7 @@ describe(`Tests ${Model.modelName}`, function () {
       email: faker.internet.email(),
       password: 'string',
       phoneNumber: 'string',
-      roleId: 1,
+      staffRoleId: 1,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)

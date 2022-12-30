@@ -78,13 +78,6 @@ async function createTable() {
           table.string('activeOTPCode');
           table.string('activeOTPAt');
           optionalFields(table);
-          table.string('province', 500).nullable(); //<<ID hoac ten cua province
-          table.string('district', 500).nullable(); //<<ID hoac ten cua district
-          table.string('ward', 500).nullable(); //<<ID hoac ten cua ward
-          table.string('address', 500).nullable(); //<<dia chi
-          table.string('sotaikhoan', 500).nullable();
-          table.string('tentaikhoan', 500).nullable();
-          table.string('tennganhang', 500).nullable();
           timestamps(table);
           table.index(`${primaryKeyField}`);
           table.unique('username');

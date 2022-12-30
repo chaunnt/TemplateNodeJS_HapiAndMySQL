@@ -17,7 +17,6 @@ const utilitiesFunction = require('../ApiUtils/utilFunctions');
 const QRCodeFunction = require('../../ThirdParty/QRCode/QRCodeFunctions');
 const TokenFunction = require('../ApiUtils/token');
 const Logger = require('../../utils/logging');
-const EmailClient = require('../../ThirdParty/Email/EmailClient');
 
 const WALLET_TYPE = require('../Wallet/WalletConstant').WALLET_TYPE;
 /** Gọi ra để sử dụng đối tượng "authenticator" của thằng otplib */
@@ -382,69 +381,6 @@ async function createNewUser(userData) {
   });
 }
 
-async function sendEmailToResetPassword(user, userToken, email) {
-  let link = `${process.env.LINK_WEB_SITE}/resetPassword?token=${userToken}`;
-  let userType = '';
-  if (user.userType === USER_TYPE.PERSONAL) {
-    userType = 'Cá nhân';
-  } else {
-    userType = 'Môi giới';
-  }
-  let emailResult = await EmailClient.sendEmail(
-    email,
-    `${process.env.SMTP_EMAIL} - Thông Báo Thay Đổi Mật Khẩu`,
-    'ĐẶT LẠI MẬT KHẨU CỦA BẠN',
-    `<div style="width: 100%; font-family: Arial, Helvetica, sans-serif;">
-      <div style="display: flex; width: 100%; align-items: center; justify-content: center; justify-items: center;">
-          <div style="width: 70%;">
-              <p>Chào bạn <strong>${user.firstName}</strong></p>
-              <div>Bạn đang yêu cầu thay đổi mật khẩu tài khoản <a style="color: blue;" href="">${email}</a></div>
-              <div>Loại tài khoản là <strong>${userType}</strong></div>
-              <p>Để cấp lại mật khẩu, Vui lòng click vào đường dẫn dưới đây: <strong><a href="${link}" style="color: blue;">Link xác nhận khôi phục mật khẩu</a></strong></p>
-              <br />
-              <p>Mọi thắc mắc vui lòng liên hệ hòm email: <a href="">${process.env.SMTP_EMAIL}</a> để được hỗ trợ và giải đáp</p>
-              <p>Chúc bạn có những trải nghiệm thú vị cùng <a href="${process.env.LINK_WEB_SITE}" style="text-decoration: none; cursor: pointer; color: cadetblue;">fihome.com.vn</a></p>
-              <div>Trân trọng,</div>
-              <div>Ban quản trị</div>
-          </div>
-      </div>
-    </div>`,
-    undefined,
-  );
-  return emailResult;
-}
-
-async function sendEmailToVerifyEmail(user, userToken, email) {
-  let link = `${process.env.LINK_WEB_SITE}/verifyEmail?token=${userToken}`;
-  let userType = '';
-  if (user.userType === USER_TYPE.PERSONAL) {
-    userType = 'Cá nhân';
-  } else {
-    userType = 'Môi giới';
-  }
-  let emailResult = await EmailClient.sendEmail(
-    email,
-    `${process.env.SMTP_EMAIL} - Xác Thực Email Của Bạn`,
-    'XÁC THỰC EMAIL CỦA BẠN',
-    `<div style="width: 100%; font-family: Arial, Helvetica, sans-serif;">
-      <div style="display: flex; width: 100%; align-items: center; justify-content: center; justify-items: center;">
-          <div style="width: 70%;">
-              <p>Chào bạn <strong>${user.firstName}</strong></p>
-              <div>Bạn đang yêu cầu xác thực email <a style="color: blue;" href="">${email}</a></div>
-              <div>Loại tài khoản là <strong>${userType}</strong></div>
-              <p>Để xác thực email, Vui lòng click vào đường dẫn dưới đây: <strong><a href="${link}" style="color: blue;">Link xác thực email</a></strong></p>
-              <br />
-              <p>Mọi thắc mắc vui lòng liên hệ hòm email: <a href="">${process.env.SMTP_EMAIL}</a> để được hỗ trợ và giải đáp</p>
-              <p>Chúc bạn có những trải nghiệm thú vị cùng <a href="${process.env.LINK_WEB_SITE}" style="text-decoration: none; cursor: pointer; color: cadetblue;">fihome.com.vn</a></p>
-              <div>Trân trọng,</div>
-              <div>Ban quản trị</div>
-          </div>
-      </div>
-    </div>`,
-  );
-
-  return emailResult;
-}
 async function _CheckUserF(referUserId) {
   let resultArr = [];
   let result = await _checkIdUser(referUserId, resultArr);
@@ -519,7 +455,7 @@ async function _calculateUserTransaction(user, startDate, endDate) {
     orderStatus: 'Completed',
   });
 
-  const BetRecordResourceAccess = require('../BetRecords/resourceAccess/BetRecordsResourceAccess');
+  const BetRecordResourceAccess = require('../GamePlayRecords/resourceAccess/GamePlayRecordsResourceAccess');
   let totalWin = await BetRecordResourceAccess.sumaryWinLoseAmount(startDate, endDate, {
     appUserId: user.appUserId,
   });
@@ -680,8 +616,6 @@ module.exports = {
   generate2FACode,
   verify2FACode,
   createNewUser,
-  sendEmailToResetPassword,
-  sendEmailToVerifyEmail,
   verifyUserSecondaryPassword,
   getUnreadNotificationCount,
   retrieveUserTransaction,

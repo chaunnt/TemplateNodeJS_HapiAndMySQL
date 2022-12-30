@@ -1,7 +1,7 @@
 /* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
-const UserBetRecordsView = require('../../BetRecords/resourceAccess/UserBetRecordsView');
+const UserGamePlayRecordsView = require('../../GamePlayRecords/resourceAccess/UserGamePlayRecordsView');
 const { payBonusForReferralUsers } = require('../UserPaymentBonusFunctions');
 
 //tinh toan hoa hong tung ngay cho user
@@ -12,7 +12,7 @@ async function updateBonusDailyForAllUser() {
 
   console.info(`start updateBonusDailyForAllUser ${yesterdayStart} -- ${yesterdayEnd}`);
 
-  let betRecordSummary = await UserBetRecordsView.sumBetAmountDistinctByAppUserId({}, yesterdayStart, yesterdayEnd);
+  let betRecordSummary = await UserGamePlayRecordsView.sumBetAmountDistinctByAppUserId({}, yesterdayStart, yesterdayEnd);
 
   if (betRecordSummary && betRecordSummary.length > 0) {
     for (let i = 0; i < betRecordSummary.length; i++) {

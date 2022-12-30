@@ -1,6 +1,6 @@
 /* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
-const BetRecordsViews = require('../BetRecords/resourceAccess/UserBetRecordsView');
+const GamePlayRecordsViews = require('../GamePlayRecords/resourceAccess/GamePlayRecordsView');
 const LeaderBoardViews = require('./resourceAccess/LeaderBoardViews');
 const LeaderBoardResourAccess = require('./resourceAccess/LeaderBoardResourAccess');
 const moment = require('moment');
@@ -12,7 +12,7 @@ async function _calculatePlayScore(appUserId) {
 
   let filter = {};
   filter.appUserId = appUserId;
-  let result = await BetRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
+  let result = await GamePlayRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
   if (result && result.length) {
     let sumResult;
     if (result[0].sumResult === null) {
@@ -32,7 +32,7 @@ async function _calculateReferScore(appUserId) {
 
   let filter = {};
   filter.memberReferIdF1 = appUserId;
-  let result = await BetRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
+  let result = await GamePlayRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
   if (result && result.length > 0) {
     let sumResult;
     if (result[0].sumResult === null) {

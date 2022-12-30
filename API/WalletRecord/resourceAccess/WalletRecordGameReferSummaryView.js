@@ -12,7 +12,7 @@ const rootTableName = 'WalletRecord';
 const primaryKeyField = 'gameRecordId';
 async function createView() {
   const GameTable = 'GameRecord';
-  const BetRecordTable = 'BetRecords';
+  const BetRecordTable = 'GamePlayRecords';
   let fields = [
     `${rootTableName}.appUserId`,
     `${rootTableName}.gameRecordId`,

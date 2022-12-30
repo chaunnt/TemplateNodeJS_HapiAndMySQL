@@ -4,7 +4,7 @@
  * Created by A on 7/18/17.
  */
 'use strict';
-const moduleName = 'Permission';
+const moduleName = 'StaffPermission';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);

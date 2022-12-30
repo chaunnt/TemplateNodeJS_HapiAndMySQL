@@ -41,13 +41,13 @@ httpServer.listen(WEBSOCKET_PORT, function () {
 async function initHttpsServer() {
   return new Promise((resolve, reject) => {
     try {
-      fs.readFile(`${process.env.KEY_PATH}openssl/${process.env.NODE_ENV}/privkey.pem`, (err, keyData) => {
+      fs.readFile(`${process.env.KEY_PATH}openssl/privkey.pem`, (err, keyData) => {
         if (err) {
           console.error(err);
           resolve(undefined);
           return;
         }
-        fs.readFile(`${process.env.KEY_PATH}openssl/${process.env.NODE_ENV}/fullchain.pem`, (err, certData) => {
+        fs.readFile(`${process.env.KEY_PATH}openssl/fullchain.pem`, (err, certData) => {
           if (err) {
             console.error(err);
             resolve(undefined);

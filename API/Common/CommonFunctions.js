@@ -110,8 +110,8 @@ async function verifyStaffToken(request, reply) {
       return;
     }
 
-    if (!currentUser || !currentUser.roleId || currentUser.roleId < 1) {
-      Logger.error('do not have roleId or roleId is invalid');
+    if (!currentUser || !currentUser.staffRoleId || currentUser.staffRoleId < 1) {
+      Logger.error('do not have staffRoleId or staffRoleId is invalid');
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
@@ -132,20 +132,20 @@ async function verifyAdminToken(request, reply) {
       return;
     }
 
-    if (!currentUser.roleId || currentUser.roleId < 1) {
-      Logger.error('do not have roleId or roleId is invalid');
+    if (!currentUser.staffRoleId || currentUser.staffRoleId < 1) {
+      Logger.error('do not have staffRoleId or staffRoleId is invalid');
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
     const AGENT_ROLE = 5;
-    if (currentUser.roleId === AGENT_ROLE) {
+    if (currentUser.staffRoleId === AGENT_ROLE) {
       //if it is agent, reject user
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
-    if (currentUser.roleId != 1) {
+    if (currentUser.staffRoleId != 1) {
       Logger.error('do not have role admin');
       reply.response(errorCodes[505]).code(505).takeover();
       return;
@@ -165,14 +165,14 @@ async function verifyAgentToken(request, reply) {
       return;
     }
 
-    if (!currentUser.roleId || currentUser.roleId < 1) {
+    if (!currentUser.staffRoleId || currentUser.staffRoleId < 1) {
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
     //neu day la agent
     const AGENT_ROLE = 5; //<< agent role luon la ID lon nhat ben trong he thong
-    if (currentUser.roleId < AGENT_ROLE) {
+    if (currentUser.staffRoleId < AGENT_ROLE) {
       //if it is agent, reject user
       reply.response(errorCodes[505]).code(505).takeover();
       return;

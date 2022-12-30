@@ -6,21 +6,21 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const tableName = 'Role';
-const primaryKeyField = 'roleId';
+const tableName = 'StaffRole';
+const primaryKeyField = 'staffRoleId';
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
-          table.increments('roleId').primary();
-          table.string('roleName');
+          table.increments('staffRoleId').primary();
+          table.string('staffRoleName');
           table.string('permissions');
           timestamps(table);
-          table.index('roleId');
+          table.index('staffRoleId');
           table.index('permissions');
-          table.index('roleName');
+          table.index('staffRoleName');
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -39,31 +39,31 @@ async function initDB() {
 
 async function seeding() {
   return new Promise(async (resolve, reject) => {
-    let initialRoles = [
+    let initialStaffRoles = [
       {
-        roleName: 'Super Admin',
+        staffRoleName: 'Super Admin',
         permissions:
           'VIEW_DASHBOARD,VIEW_USERS,VIEW_STAFF,VIEW_STATION,VIEW_MENU,VIEW_SERVICE,VIEW_SCHEDULE,VIEW_CONFIGURATION,EDIT_USERS,EDIT_STAFF,VIEW_SERVICE_PACKAGE',
       },
       {
-        roleName: 'Station Admin',
+        staffRoleName: 'Station Admin',
         permissions: 'VIEW_DASHBOARD,VIEW_USERS,VIEW_STAFF,EDIT_STAFF,VIEW_SCHEDULE',
       },
       {
-        roleName: 'Station Support',
+        staffRoleName: 'Station Support',
         permissions: 'VIEW_USERS,VIEW_STAFF,VIEW_SCHEDULE',
       },
       {
-        roleName: 'Station Operator',
+        staffRoleName: 'Station Operator',
         permissions: 'VIEW_SCHEDULE',
       },
       {
-        roleName: 'Station Trainer',
+        staffRoleName: 'Station Trainer',
         permissions: 'VIEW_SCHEDULE',
       },
     ];
     DB(`${tableName}`)
-      .insert(initialRoles)
+      .insert(initialStaffRoles)
       .then(result => {
         Logger.info(`${tableName}`, `seeding ${tableName}` + result);
         resolve();
@@ -93,9 +93,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
-  if (filterData.roleName) {
-    queryBuilder.where('roleName', 'like', `%${filter.roleName}%`);
-    delete filterData.roleName;
+  if (filterData.staffRoleName) {
+    queryBuilder.where('staffRoleName', 'like', `%${filter.staffRoleName}%`);
+    delete filterData.staffRoleName;
   }
   queryBuilder.where(filterData);
   queryBuilder.where({ isDeleted: 0 });

@@ -27,7 +27,7 @@ const updateSchema = {
   active: Joi.number().min(0).max(1),
   twoFACode: Joi.string().max(255),
   telegramId: Joi.string(),
-  roleId: Joi.number(),
+  staffRoleId: Joi.number(),
   email: Joi.string().email().max(255),
   isDeleted: Joi.number(),
   stationsId: Joi.number(),
@@ -41,7 +41,7 @@ const filterSchema = {
   firstName: Joi.string().max(255),
   email: Joi.string().max(255),
   phoneNumber: Joi.string().min(8).max(15),
-  roleId: Joi.number(),
+  staffRoleId: Joi.number(),
   stationsId: Joi.number(),
 };
 
@@ -59,7 +59,7 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         ...insertSchema,
-        roleId: Joi.number().default(0),
+        staffRoleId: Joi.number().default(0),
       }),
     },
     handler: function (req, res) {

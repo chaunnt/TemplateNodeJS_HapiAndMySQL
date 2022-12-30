@@ -37,4 +37,4 @@
 // require('../API/PaymentWithdrawTransaction/test');
 // require('../API/PaymentExchangeTransaction/test');
 // require('../API/PaymentMethod/test');
-// require('../API/BetRecords/test');
+// require('../API/GamePlayRecords/test');

@@ -1,21 +1,22 @@
 /* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const moment = require('moment');
-
-const { sendEmail } = require('../../ThirdParty/Email/EmailClient');
-const { generateNewOTPEmail } = require('../../ThirdParty/Email/EmailGenerator');
-const { sendVoiceOTP } = require('../../ThirdParty/StringeeOTPAPI/StringeeOtpFunctions');
 const { OTP_CONFIRM_STATUS, OTP_ERROR } = require('./OTPMessageConstant');
 const OTPMessageResourAccess = require('./resourceAccess/OTPMessageResourceAccess');
 
 async function sendOTPToPhoneNumber(phoneNumber, otp) {
+  const { sendVoiceOTP } = require('../../ThirdParty/StringeeOTPAPI/StringeeOtpFunctions');
   let sendResult = await sendVoiceOTP(phoneNumber, otp);
   return sendResult;
 }
 
 async function sendOTPToEmail(email, otp) {
+  const { generateNewOTPEmail } = require('../../ThirdParty/Email/EmailGenerator');
   let _emailContent = generateNewOTPEmail('', otp);
+
+  const { sendEmail } = require('../../ThirdParty/Email/EmailClient');
   let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
+
   return sendOtpResult;
 }
 

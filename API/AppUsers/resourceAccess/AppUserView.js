@@ -17,7 +17,6 @@ async function createViews() {
     `${rootTableName}.tennganhang`,
     `${rootTableName}.username`,
     `${rootTableName}.firstName`,
-    `${rootTableName}.isDeleted`,
     `${rootTableName}.lastName`,
     `${rootTableName}.phoneNumber`,
     `${rootTableName}.userHomeAddress`,

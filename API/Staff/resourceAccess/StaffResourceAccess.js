@@ -19,7 +19,7 @@ async function createTable() {
           table.string('lastName');
           table.string('firstName');
           table.string('email');
-          table.integer('roleId');
+          table.integer('staffRoleId');
           table.string('password');
           table.string('active').defaultTo(1);
           table.string('ipAddress');
@@ -72,7 +72,7 @@ async function seeding() {
         email: 'string@string.com',
         password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
         phoneNumber: 'string',
-        roleId: 1,
+        staffRoleId: 1,
       },
       {
         lastName: 'agency',
@@ -81,7 +81,7 @@ async function seeding() {
         email: 'agency@string.com',
         password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
         phoneNumber: 'agency',
-        roleId: 5,
+        staffRoleId: 5,
         stationsId: 1,
       },
     ];

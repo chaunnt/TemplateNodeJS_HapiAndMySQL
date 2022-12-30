@@ -729,13 +729,8 @@ async function getUsersByMonth(req) {
       if (diff > 365) {
         reject('start date and end date is so far');
       }
-      let staff = req.currentUser;
       let filter = {};
-      if (staff.roleId && staff.roleId !== 1) {
-        filter.areaProvinceId = staff.areaProvinceId;
-        filter.areaDistrictId = staff.areaDistrictId;
-        filter.areaWardId = staff.areaWardId;
-      }
+
       var users = await AppUserView.countUserMonthByYear(filter, startDate, endDate);
       end = new Date(moment(endDate).endOf('month').format('YYYY-MM-DD'));
       while (start <= end) {
@@ -873,7 +868,7 @@ async function verifyInfoUser(req) {
         return; //to make sure everything stop
       }
 
-      // if (staff.roleId && staff.roleId !== 1) {
+      // if (staff.staffRoleId && staff.staffRoleId !== 1) {
       //   const verifyArea = verifyAreaPermission(staff, foundUser);
       //   if (!verifyArea) {
       //     reject("Don't have permission");
@@ -916,7 +911,7 @@ async function rejectInfoUser(req) {
     try {
       let appUserId = req.payload.id;
       const staff = req.currentUser;
-      if (staff.roleId && staff.roleId !== 1) {
+      if (staff.staffRoleId && staff.staffRoleId !== 1) {
         const foundUser = await AppUsersResourceAccess.findById(appUserId);
         if (!foundUser) reject('error');
         const verifyArea = verifyAreaPermission(staff, foundUser);
@@ -993,7 +988,7 @@ async function exportExcel(req) {
       let filter = req.payload.filter;
       let order = req.payload.order;
       const staff = req.currentUser;
-      if (staff.roleId && staff.roleId !== 1) {
+      if (staff.staffRoleId && staff.staffRoleId !== 1) {
         filter.areaProvinceId = staff.areaProvinceId;
         filter.areaDistrictId = staff.areaDistrictId;
         filter.areaWardId = staff.areaWardId;
@@ -1165,7 +1160,7 @@ async function adminResetPassword(req) {
       let userId = req.payload.id;
       let user = await AppUsersResourceAccess.findById(userId);
       const staff = req.currentUser;
-      if (staff.roleId && staff.roleId !== 1) {
+      if (staff.staffRoleId && staff.staffRoleId !== 1) {
         if (!user) reject('error');
         const verifyArea = verifyAreaPermission(staff, user);
         if (!verifyArea) reject("Don't have permission");

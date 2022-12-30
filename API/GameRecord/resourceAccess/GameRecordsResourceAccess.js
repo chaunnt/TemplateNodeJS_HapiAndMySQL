@@ -6,7 +6,7 @@ const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { GAME_RECORD_STATUS } = require('../GameRecordConstant');
-const { BET_TYPE } = require('../../BetRecords/BetRecordsConstant');
+const { BET_TYPE } = require('../../GamePlayRecords/GamePlayRecordsConstant');
 
 const tableName = 'GameRecords';
 const primaryKeyField = 'gameRecordId';
@@ -32,7 +32,6 @@ async function createTable() {
         .then(async () => {
           console.info(`${tableName} table created done`);
           resolve();
-          process.exit(true);
         });
     });
   });

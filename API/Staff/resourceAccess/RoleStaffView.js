@@ -9,10 +9,10 @@ const rootTableName = 'Staff';
 const primaryKeyField = 'staffId';
 
 async function createRoleStaffView() {
-  const RoleTableName = 'Role';
+  const RoleTableName = 'StaffRole';
   let fields = [
     `${rootTableName}.staffId`,
-    `${rootTableName}.roleId`,
+    `${rootTableName}.staffRoleId`,
     `${rootTableName}.username`,
     `${rootTableName}.firstName`,
     `${rootTableName}.lastName`,
@@ -35,13 +35,13 @@ async function createRoleStaffView() {
     `${rootTableName}.staffToken`,
 
     `${RoleTableName}.permissions`,
-    `${RoleTableName}.roleName`,
+    `${RoleTableName}.staffRoleName`,
   ];
 
   var viewDefinition = DB.select(fields)
     .from(rootTableName)
     .leftJoin(RoleTableName, function () {
-      this.on(`${rootTableName}.roleId`, '=', `${RoleTableName}.roleId`);
+      this.on(`${rootTableName}.staffRoleId`, '=', `${RoleTableName}.staffRoleId`);
     });
 
   Common.createOrReplaceView(tableName, viewDefinition);
@@ -105,7 +105,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   queryBuilder.where(filterData);
 
-  queryBuilder.where('roleId', '<>', 1);
+  queryBuilder.where('staffRoleId', '<>', 1);
   queryBuilder.where('staffId', '<>', 1);
 
   if (limit) {

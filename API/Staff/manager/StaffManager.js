@@ -17,7 +17,7 @@ async function insert(req) {
     try {
       let staffData = req.payload;
 
-      if (staffData.roleId && staffData.roleId === 1) {
+      if (staffData.staffRoleId && staffData.staffRoleId === 1) {
         reject('can not insert staff with role admin');
         return;
       }
