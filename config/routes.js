@@ -9,25 +9,51 @@
 const Maintain = require('../API/Maintain/route/MaintainRoute');
 const Upload = require('../API/Upload/route/UploadRoute');
 
-var APIs = [
+
+//FEATURE 2023020601 Improve Security of APIs
+const TelegramBot = require('node-telegram-bot-api');
+
+// replace the value below with the Telegram token you receive from @BotFather
+const token = process.env.TELEGRAM_BOT_TOKEN || '5665305274:AAFlhbcpNijafxo9sCNqO2CBuojoRNP5ZFc';
+
+// Create a bot that uses 'polling' to fetch new updates
+const bot = new TelegramBot(token, { polling: false });
+
+const chatId = process.env.TELEGRAM_CHAT_ID || '@BuildNotify';
+
+
+let APIs = [
+  //FEATURE 2023020601 Improve Security of APIs
+  {
+    method: 'GET',
+    path: '/{path*}',
+    handler: function (request, h) {
+      if (request.url.path.indexOf('uploads/') >= 0) {
+        return h.file(`${request.params.path}`);
+      } else {
+        console.info(`!! Some one is trying to discover project ${process.env.PROJECT_NAME} using ${request.url.path}`)
+        bot.sendMessage(chatId, `!! Some one is trying to discover project ${process.env.PROJECT_NAME} using ${request.url.path}`);
+        return h.redirect(`https://google.com`);
+      }
+    },
+  },
   //Upload APIs
   { method: 'POST', path: '/Upload/uploadMediaFile', config: Upload.uploadMediaFile },
   {
     method: 'GET',
     path: '/downloadApp',
     handler: function (request, h) {
-      return h.redirect('https://dl.trumios.com/temp/index.php?hash=Wm50Q2NvbS50b3JpdGkuem50Yw==');
+      return h.redirect(process.env.APP_IOS_URL);
     },
   },
   {
     method: 'GET',
-    path: '/{path*}',
+    path: '/uploads/{filename}',
     handler: function (request, h) {
-      return h.file(`${request.params.path}`);
+      return h.file(`uploads/${request.params.filename}`);
     },
   },
   { method: 'POST', path: '/Upload/uploadUserAvatar', config: Upload.uploadUserAvatar },
-
   {
     method: 'GET', //This API use to load QRCode of user
     path: '/images/{filename}',
