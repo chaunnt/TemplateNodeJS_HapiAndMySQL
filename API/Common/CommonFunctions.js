@@ -46,22 +46,25 @@ async function verifyToken(request, reply) {
 
     //recheck again with realtime DB
     if (result.appUserId) {
-      let currentUser = await UserResource.find({
-        appUserId: result.appUserId,
-      });
-      if (currentUser && currentUser.length > 0 && currentUser[0].active) {
-        //append current user to request
-        request.currentUser = currentUser[0];
+      let currentUser = await UserResource.findById(result.appUserId);
+
+      // requestToken = requestToken.replace('Bearer ', '');
+      // if (currentUser && currentUser.length > 0 && currentUser[0].userToken && currentUser[0].userToken !== requestToken) {
+      //   reply.response(errorCodes[505]).code(505).takeover();
+      //   return;
+      // }
+
+      if (currentUser && currentUser.active) {
+        request.currentUser = currentUser;
         resolve('ok');
       } else {
         reply.response(errorCodes[505]).code(505).takeover();
         return;
       }
     } else if (result.staffId) {
-      let currentStaff = await StaffResource.find({ staffId: result.staffId });
-      if (currentStaff && currentStaff.length > 0 && currentStaff[0].active) {
-        //append current user to request
-        request.currentUser = currentStaff[0];
+      let currentStaff = await StaffResource.findById(result.staffId);
+      if (currentStaff && currentStaff.active) {
+        request.currentUser = currentStaff;
 
         //do not allow multiple staff login
         //if (currentStaff[0].staffToken !== request.headers.authorization.replace('Bearer ','')) {
