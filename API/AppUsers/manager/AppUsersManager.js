@@ -420,6 +420,33 @@ async function loginUser(req) {
   });
 }
 
+async function loginTest(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let username = req.payload.email;
+      let password = req.payload.password;
+
+      let foundUser = await _login(username, password);
+      //check if user has verified email
+      if (foundUser && foundUser.isVerifiedEmail !== USER_VERIFY_EMAIL_STATUS.IS_VERIFIED) {
+        await _sendOTPToUserEmail(foundUser);
+        reject(USER_ERROR.NOT_VERIFIED_EMAIL);
+      } else {
+        if (foundUser) {
+          // store ip to refresh last activities
+          _storeUserIp(req, foundUser.appUserId);
+          resolve(foundUser);
+        } else {
+          console.error(`loginTest Error: ${ERROR}`);
+          reject('Process failed');
+        }
+      }
+    } catch (e) {
+      console.log('error ', e);
+    }
+  });
+}
+
 async function changePasswordUser(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1671,6 +1698,7 @@ module.exports = {
   deleteById,
   registerUser,
   loginUser,
+  loginTest,
   changePasswordUser,
   verify2FA,
   loginFacebook,
