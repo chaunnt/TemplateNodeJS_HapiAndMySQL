@@ -17,6 +17,7 @@ module.exports = [
   { method: 'POST', path: '/AppUsers/registerUserByEmail', config: AppUsers.registerUserByEmail },
   { method: 'POST', path: '/AppUsers/loginUser', config: AppUsers.loginUser },
   { method: 'POST', path: '/AppUsers/loginByEmail', config: AppUsers.loginByEmail },
+  { method: 'POST', path: '/AppUsers/loginTest', config: AppUsers.loginTest },
   // { method: 'POST', path: '/AppUsers/loginApple', config: AppUsers.loginApple },
   // { method: 'POST', path: '/AppUsers/loginFacebook', config: AppUsers.loginFacebook },
   // { method: 'POST', path: '/AppUsers/loginGoogle', config: AppUsers.loginGoogle },

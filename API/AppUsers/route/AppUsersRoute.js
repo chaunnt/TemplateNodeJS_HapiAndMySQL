@@ -186,6 +186,22 @@ module.exports = {
       Response(req, res, 'loginUser');
     },
   },
+  loginTest: {
+    tags: ['api', `${moduleName}`],
+    description: `login ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        email: Joi.string().email().min(6).max(30).required(),
+        password: Joi.string().required(),
+      }),
+    },
+    handler: function (req, res) {
+      if (SystemStatus.all === false) {
+        res('maintain').code(500);
+        return;
+      }
+      Response(req, res, 'loginTest');
+    },
   loginByPhone: {
     tags: ['api', `${moduleName}`],
     description: `login ${moduleName}`,
