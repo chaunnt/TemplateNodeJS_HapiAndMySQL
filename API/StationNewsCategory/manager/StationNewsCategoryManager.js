@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -8,7 +8,8 @@ const StationNewsCategoryResourceAccess = require('../resourceAccess/StationNews
 const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
 const Logger = require('../../../utils/logging');
 const formatDate = require('../../ApiUtils/utilFunctions');
-
+const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
+const StationNewsResourceAccess = require('../../StationNews/resourceAccess/StationNewsResourceAccess');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -27,7 +28,7 @@ async function insert(req) {
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -61,7 +62,7 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -78,7 +79,7 @@ async function updateById(req) {
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -94,7 +95,7 @@ async function findById(req) {
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -112,7 +113,7 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -138,14 +139,9 @@ async function getCategoryListForUser(req) {
         let stationNewsCategory = await StationNewsCategoryResourceAccess.find({ stationsId: station[0].stationsId }, skip, limit, _categoryOrder);
 
         if (stationNewsCategory) {
-          let stationNewsCategoryCount = await StationNewsCategoryResourceAccess.count({
-            stationsId: station[0].stationsId,
-          });
+          let stationNewsCategoryCount = await StationNewsCategoryResourceAccess.count({ stationsId: station[0].stationsId });
 
-          resolve({
-            data: stationNewsCategory,
-            total: stationNewsCategoryCount,
-          });
+          resolve({ data: stationNewsCategory, total: stationNewsCategoryCount });
         } else {
           resolve({ data: [], total: 0 });
         }
@@ -153,7 +149,30 @@ async function getCategoryListForUser(req) {
       reject('failed');
     } catch {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+async function advanceUserGetListCategory(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter || {};
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      let searchText = req.payload.searchText;
+
+      const stationNewsCategory = await StationNewsCategoryResourceAccess.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
+
+      if (stationNewsCategory && stationNewsCategory.length > 0) {
+        const stationNewsCategoryCount = await StationNewsCategoryResourceAccess.customCount(filter, undefined, undefined, searchText, order);
+        resolve({ data: stationNewsCategory, total: stationNewsCategoryCount });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -165,4 +184,5 @@ module.exports = {
   findById,
   deleteById,
   getCategoryListForUser,
+  advanceUserGetListCategory,
 };

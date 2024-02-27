@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -28,10 +28,68 @@ const updateSchema = {
 };
 
 module.exports = {
+  findById: {
+    tags: ['api', `${moduleName}`],
+    description: `findById ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0).required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'findById');
+    },
+  },
+  advanceUserGetDetail: {
+    tags: ['api', `${moduleName}`],
+    description: `advanceUserGetDetail ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0).required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'findById');
+    },
+  },
   updateById: {
     tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+        data: Joi.object(updateSchema),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'updateById');
+    },
+  },
+  advanceUserUpdateStationIntro: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -51,7 +109,33 @@ module.exports = {
   stationIntroductionDetail: {
     tags: ['api', `${moduleName}`],
     description: `get details ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
     validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        stationUrl: Joi.string().required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getStationIntroductionDetail');
+    },
+  },
+  advanceUserStationIntroductionDetail: {
+    tags: ['api', `${moduleName}`],
+    description: `get details ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
       payload: Joi.object({
         stationUrl: Joi.string().required(),
       }),

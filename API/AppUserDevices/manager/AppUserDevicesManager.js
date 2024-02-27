@@ -1,9 +1,9 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 const AppUserDevicesResourceAccess = require('../resourceAccess/AppUserDevicesResourceAccess');
 const { POPULAR_ERROR, UNKNOWN_ERROR } = require('../../Common/CommonConstant');
-const Logger = require('../../../utils/logging');
+
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -16,7 +16,7 @@ async function insert(req) {
         return reject(POPULAR_ERROR.INSERT_FAILED);
       }
     } catch (e) {
-      Logger.error(e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -42,7 +42,7 @@ async function find(req) {
       }
       return resolve({ data: [], total: 0 });
     } catch (e) {
-      Logger.error(e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -61,7 +61,7 @@ async function updateById(req) {
         return reject(POPULAR_ERROR.UPDATE_FAILED);
       }
     } catch (e) {
-      Logger.error(e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -80,7 +80,7 @@ async function findById(req) {
         return reject(POPULAR_ERROR.RECORD_NOT_FOUND);
       }
     } catch (e) {
-      Logger.error(e);
+      console.error(e);
       reject('failed');
     }
   });

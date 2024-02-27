@@ -1,4 +1,4 @@
-/* Copyright (c) 2023-2024 Reminano */
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
 
 const DeviceDetector = require('node-device-detector');
 const AppUserDevicesResourceAccess = require('../AppUserDevices/resourceAccess/AppUserDevicesResourceAccess');
@@ -13,7 +13,7 @@ function _detectUserDevice(userAgent) {
   return detector.detect(userAgent);
 }
 
-async function saveUserDevice(appUserId, userAgent, action) {
+async function saveUserDevice(appUserId, userAgent) {
   if (!appUserId) return;
   const requestInfo = _detectUserDevice(userAgent);
   const userDevice = requestInfo.device || {};
@@ -26,7 +26,6 @@ async function saveUserDevice(appUserId, userAgent, action) {
     deviceBrand: userDevice.brand || '',
     deviceModel: userDevice.model || '',
     deviceCode: userDevice.code || '',
-    action: action,
   };
 
   await AppUserDevicesResourceAccess.insert(data);

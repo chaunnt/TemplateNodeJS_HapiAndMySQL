@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 const moduleName = 'SMSMessage';
@@ -10,9 +10,9 @@ const { SMS_MESSAGE_STATUS } = require('../SMSMessageConstants');
 const moment = require('moment');
 
 const insertSchema = {
-  smsMessageContent: Joi.string().default('VSTT03439029602 +100,000,000VND'),
+  smsMessageContent: Joi.string().required(),
   smsMessageNote: Joi.string().default('AUTO_SYNC'),
-  smsMessageOrigin: Joi.string().default('BIDV'),
+  smsMessageOrigin: Joi.string().default('BIDV').required(),
   smsMessageStatus: Joi.string().default(SMS_MESSAGE_STATUS.NEW),
   smsReceiveDate: Joi.string().default(moment().format('YYYY/MM/DD')),
   smsReceiveTime: Joi.string().default(moment().format('HH:mm')),
@@ -24,7 +24,7 @@ const filterSchema = {
     SMS_MESSAGE_STATUS.COMPLETED,
     SMS_MESSAGE_STATUS.CANCELED,
     SMS_MESSAGE_STATUS.FAILED,
-    SMS_MESSAGE_STATUS.SENDING,
+    SMS_MESSAGE_STATUS.PENDING,
     SMS_MESSAGE_STATUS.NEW,
   ]),
   smsMessageOrigin: Joi.string(),
@@ -36,7 +36,7 @@ const updateSchema = {
     SMS_MESSAGE_STATUS.COMPLETED,
     SMS_MESSAGE_STATUS.CANCELED,
     SMS_MESSAGE_STATUS.FAILED,
-    SMS_MESSAGE_STATUS.SENDING,
+    SMS_MESSAGE_STATUS.PENDING,
     SMS_MESSAGE_STATUS.NEW,
   ]),
   smsMessageOrigin: Joi.string(),
@@ -65,23 +65,6 @@ module.exports = {
       Response(req, res, 'insert');
     },
   },
-  create: {
-    tags: ['api', `${moduleName}`],
-    description: `insert ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object(insertSchema),
-    },
-    handler: function (req, res) {
-      Response(req, res, 'create');
-    },
-  },
   find: {
     tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
@@ -102,7 +85,7 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100).min(1),
+        limit: Joi.number().default(20).max(100),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
           value: Joi.string().default('desc').allow(''),
@@ -148,7 +131,7 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100).min(1),
+        limit: Joi.number().default(20).max(100),
         searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
@@ -217,6 +200,24 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'updateById');
+    },
+  },
+  robotInsert: {
+    tags: ['api', `${moduleName}`],
+    description: `robotInsert ${moduleName}`,
+    // validate: {
+    //   query: Joi.object({
+    //     phoneNumber: Joi.string().required(),
+    //     apiKey: Joi.string().required(),
+    //   }).unknown(),
+    //   payload: Joi.object({
+    //     number: Joi.string().required(),
+    //     message: Joi.string().required(),
+    //     type: Joi.string().required(),
+    //   })
+    // },
+    handler: function (req, res) {
+      Response(req, res, 'robotInsert');
     },
   },
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -49,7 +49,7 @@ async function initViews() {
   createAppDevicesView();
 }
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -75,6 +75,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, order) {
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
       this.orWhere('stationsName', 'like', `%${searchText}%`)
         .orWhere('stationUrl', 'like', `%${searchText}%`)

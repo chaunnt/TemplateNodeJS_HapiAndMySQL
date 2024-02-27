@@ -1,14 +1,13 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
-const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'AppUserDevices';
 const primaryKeyField = 'appUserDevicesId';
 async function createTable() {
-  Logger.info(`createTable ${tableName}`);
+  console.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -20,14 +19,13 @@ async function createTable() {
           table.string('deviceBrand');
           table.string('deviceModel');
           table.string('deviceCode');
-          table.integer('action');
           table.string('macAddress');
           timestamps(table);
           table.index(`${primaryKeyField}`);
           table.index('deviceType');
         })
         .then(() => {
-          Logger.info(`${tableName} table created done`);
+          console.info(`${tableName} table created done`);
           resolve();
         });
     });
@@ -70,6 +68,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   const filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
       this.orWhere('deviceType', 'like', `%${searchText}%`);
     });
@@ -97,7 +96,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && ['desc', 'asc'].includes(order.value)) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;

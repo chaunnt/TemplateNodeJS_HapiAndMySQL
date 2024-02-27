@@ -1,9 +1,9 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 module.exports = {
   SMS_MESSAGE_STATUS: {
     NEW: 'New',
-    SENDING: 'Sending',
+    PENDING: 'Pending',
     COMPLETED: 'Completed',
     FAILED: 'Failed',
     CANCELED: 'Canceled',

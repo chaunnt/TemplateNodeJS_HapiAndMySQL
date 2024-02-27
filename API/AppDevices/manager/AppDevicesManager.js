@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 const AppDevicesResourceAccess = require('../resourceAccess/AppDevicesResourceAccess');
@@ -64,9 +64,9 @@ async function updateById(req) {
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let deviceList = await AppDevicesViews.find({ appDeviceId: req.payload.id });
+      let deviceList = await AppDevicesViews.findById(req.payload.id);
       if (deviceList) {
-        resolve(deviceList[0]);
+        resolve(deviceList);
       } else {
         resolve({});
       }
@@ -91,7 +91,7 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }

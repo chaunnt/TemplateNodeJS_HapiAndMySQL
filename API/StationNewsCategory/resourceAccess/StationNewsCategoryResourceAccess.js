@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -8,23 +8,19 @@ const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'StationNewsCategory';
 const primaryKeyField = 'stationNewsCategoryId';
+const newCategoryData = require('../data/seedingData');
+
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
-          table.increments('stationNewsCategoryId').primary();
+          table.increments(primaryKeyField).primary();
           table.integer('stationsId');
           table.string('stationNewsCategoryTitle');
           table.string('stationNewsCategoryContent', 500);
           table.string('stationNewsCategoryDisplayIndex').defaultTo(0);
-          table.integer('totalViewed').defaultTo(0);
-          table.integer('dayViewed').defaultTo(0);
-          table.integer('monthViewed').defaultTo(0);
-          table.integer('weekViewed').defaultTo(0);
-          table.integer('searchCount').defaultTo(0);
-          table.integer('followCount').defaultTo(0);
           table.string('stationNewsCategoryAvatar');
           timestamps(table);
           table.index('stationNewsCategoryId');
@@ -32,9 +28,23 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve();
+          seeding().then(() => {
+            resolve();
+          });
         });
     });
+  });
+}
+
+async function seeding() {
+  const seedData = [...newCategoryData.NEWS_CATEGORY];
+  return new Promise(async (resolve, reject) => {
+    DB(`${tableName}`)
+      .insert(seedData)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -43,7 +53,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -68,10 +78,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
-      this.orWhere('stationNewsCategoryTitle', 'like', `%${searchText}%`)
-        .orWhere('stationNewsCategoryContent', 'like', `%${searchText}%`)
-        .orWhere('stationNewsCategoryCategories', 'like', `%${searchText}%`);
+      this.orWhere('stationNewsCategoryTitle', 'like', `%${searchText}%`).orWhere('stationNewsCategoryContent', 'like', `%${searchText}%`);
     });
   } else {
     if (filterData.stationNewsCategoryName) {
@@ -136,41 +145,6 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   });
 }
 
-async function updateFollowCount(stationNewsCategoryId) {
-  let filter = {};
-  filter[primaryKeyField] = stationNewsCategoryId;
-  return await DB(tableName).where(filter).increment('followCount', 1);
-}
-
-async function updateSearchCount(stationNewsCategoryId) {
-  let filter = {};
-  filter[primaryKeyField] = stationNewsCategoryId;
-  return await DB(tableName).where(filter).increment('searchCount', 1);
-}
-
-async function addViewCount(stationNewsCategoryId) {
-  let filter = {};
-  filter[primaryKeyField] = stationNewsCategoryId;
-
-  await DB(tableName).where(filter).increment('stationNewsCategoryTotalViewed', 1);
-  await DB(tableName).where(filter).increment('dayViewed', 1);
-  await DB(tableName).where(filter).increment('monthViewed', 1);
-  await DB(tableName).where(filter).increment('weekViewed', 1);
-
-  return 1;
-}
-
-async function resetDayViewedCount() {
-  return await DB(tableName).update({ dayViewed: 0 });
-}
-
-async function resetMonthViewedCount() {
-  return await DB(tableName).update({ monthViewed: 0 });
-}
-
-async function resetWeekViewedCount() {
-  return await DB(tableName).update({ weekViewed: 0 });
-}
 async function deleteById(stationNewsCategoryId) {
   let dataId = {};
   dataId[primaryKeyField] = stationNewsCategoryId;
@@ -186,11 +160,5 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-  resetWeekViewedCount,
-  resetMonthViewedCount,
-  resetDayViewedCount,
-  updateFollowCount,
-  updateSearchCount,
-  addViewCount,
   deleteById,
 };

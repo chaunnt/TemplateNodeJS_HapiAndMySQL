@@ -6,14 +6,15 @@
 'use strict';
 const MaintainFunctions = require('../MaintainFunctions');
 const Logger = require('../../../utils/logging');
+const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
 async function maintainAll(req) {
   return new Promise(async (resolve, reject) => {
     try {
       MaintainFunctions.maintainAll(req.payload.status);
       resolve('success');
     } catch (e) {
-      Logger.error(e);
-      reject('failed');
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -24,8 +25,8 @@ async function maintainDeposit(req) {
       MaintainFunctions.maintainDeposit(req.payload.status);
       resolve('success');
     } catch (e) {
-      Logger.error(e);
-      reject('failed');
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -48,8 +49,8 @@ async function maintainWithdraw(req) {
       MaintainFunctions.maintainWithdraw(req.payload.status);
       resolve('success');
     } catch (e) {
-      Logger.error(e);
-      reject('failed');
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -60,8 +61,8 @@ async function maintainSignup(req) {
       MaintainFunctions.maintainSignup(req.payload.status);
       resolve('success');
     } catch (e) {
-      Logger.error(e);
-      reject('failed');
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -119,8 +120,8 @@ async function getSystemStatus(req) {
     try {
       resolve(MaintainFunctions.getSystemStatus());
     } catch (e) {
-      Logger.error(e);
-      reject('failed');
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }

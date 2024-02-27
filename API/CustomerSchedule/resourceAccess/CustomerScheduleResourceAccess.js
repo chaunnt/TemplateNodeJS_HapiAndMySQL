@@ -1,13 +1,13 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
 
-const moment = require('moment');
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { SCHEDULE_STATUS } = require('../CustomerScheduleConstants');
+const { SCHEDULE_TYPE } = require('../CustomerScheduleConstants');
+
 const tableName = 'CustomerSchedule';
 
 const primaryKeyField = 'customerScheduleId';
@@ -18,36 +18,46 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments('customerScheduleId').primary();
-          table.string('customerIdentity');
-          table.string('customerPhone');
-          table.string('customerName');
-          table.string('customerEmail');
-          table.string('customerScheduleDate');
-          table.string('customerScheduleTime');
-          table.string('customerScheduleAddress', 500);
-          table.string('customerScheduleNote');
-          table.string('customerScheduleStatus').defaultTo(SCHEDULE_STATUS.NEW);
+          table.string('licensePlates');
+          table.string('phone');
+          table.string('fullnameSchedule');
+          table.string('email');
+          table.string('dateSchedule');
+          table.string('time');
+          table.string('notificationMethod');
+          table.integer('vehicleType');
+          table.integer('licensePlateColor');
           table.integer('stationsId');
-          table.integer('appUserId');
-          table.integer('staffId');
-          table.integer('agencyId');
-          table.integer('stationServicesId');
-          table.integer('stationProductsId');
-          table.integer('scheduleRefId'); //lien ket den id cua paymentpackage
+          table.integer('scheduleSerial');
           table.string('scheduleCode');
+          table.integer('CustomerScheduleStatus').defaultTo(0);
+          table.integer('appUserId').nullable();
+          table.integer('customerRecordId');
+          table.text('scheduleNote').nullable();
+          table.integer('createdBy');
+          table.integer('customerReviewId');
+          table.integer('scheduleType').defaultTo(SCHEDULE_TYPE.VEHICLE_INSPECTION); // loai lich hen
+          table.string('scheduleHash');
+          table.integer('confirmStatus').defaultTo(0);
+          table.string(`scheduleTracking`).nullable();
+          table.integer(`appUserVehicleId`);
+          table.integer(`customerReceiptId`);
+          table.string('partnerName'); // Lưu tên của partner khi partner đặt lịch
+          table.string('daySchedule'); // Ngày đặt lịch dung để sort
           timestamps(table);
-          table.index('customerEmail');
-          table.index('customerPhone');
-          table.index('customerIdentity');
-          table.index('customerScheduleDate');
-          table.index('customerScheduleStatus');
+          table.index('customerScheduleId');
+          table.index('licensePlates');
+          table.index('phone');
+          table.index('email');
+          table.index('time');
+          table.index('dateSchedule');
+          table.index('CustomerScheduleStatus');
           table.index('stationsId');
           table.index('appUserId');
-          table.index('staffId');
-          table.index('agencyId');
-          table.index('stationServicesId');
-          table.index('stationProductsId');
-          table.index('scheduleRefId');
+          table.index('vehicleType');
+          table.index('scheduleType');
+          table.index('appUserVehicleId');
+          table.index('daySchedule');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -62,7 +72,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(customerScheduleId, data) {
@@ -93,49 +103,26 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
-      this.orWhere('customerIdentity', 'like', `%${searchText}%`)
-        .orWhere('customerPhone', 'like', `%${searchText}%`)
-        .orWhere('customerEmail', 'like', `%${searchText}%`)
-        .orWhere('customerName', 'like', `%${searchText}%`);
+      this.orWhere('licensePlates', 'like', `%${searchText}%`)
+        .orWhere('email', 'like', `%${searchText}%`)
+        .orWhere('phone', 'like', `%${searchText}%`)
+        .orWhere('fullnameSchedule', 'like', `%${searchText}%`)
+        .orWhere('scheduleSerial', 'like', `%${searchText}%`)
+        .orWhere('scheduleCode', 'like', `%${searchText}%`);
     });
-  } else {
-    if (filterData.customerName) {
-      queryBuilder.where('customerName', 'like', `%${filterData.customerName}%`);
-      delete filterData.customerName;
-    }
-
-    if (filterData.customerEmail) {
-      queryBuilder.where('customerEmail', 'like', `%${filterData.customerEmail}%`);
-      delete filterData.customerEmail;
-    }
-
-    if (filterData.customerPhone) {
-      queryBuilder.where('customerPhone', 'like', `%${filterData.customerPhone}%`);
-      delete filterData.customerPhone;
-    }
-
-    if (filterData.customerIdentity) {
-      queryBuilder.where('customerIdentity', 'like', `%${filterData.customerIdentity}%`);
-      delete filterData.customerIdentity;
-    }
   }
 
   if (startDate) {
-    let _startDate = moment(startDate).format('YYYY/MM/DD');
-    // let _startTime = moment(startDate).format("HH:mm");
-    queryBuilder.where('customerScheduleDate', '>=', _startDate);
-    // queryBuilder.where('customerScheduleTime', '>=', _startTime)
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    let _endDate = moment(endDate).format('YYYY/MM/DD');
-    // let _endTime = moment(endDate).format("HH:mm");
-    queryBuilder.where('customerScheduleDate', '<=', _endDate);
-    // queryBuilder.where('customerScheduleTime', '<=', _endTime)
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
-  queryBuilder.where(filterData);
+  Common.filterHandler(filterData, queryBuilder);
 
   queryBuilder.where({ isDeleted: 0 });
 
@@ -165,7 +152,7 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
-        resolve(records);
+        resolve(records[0].count);
       });
     } catch (e) {
       Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
@@ -173,6 +160,51 @@ async function customCount(filter, startDate, endDate, searchText, order) {
       reject(undefined);
     }
   });
+}
+
+async function findDeletedRecord(skip, limit) {
+  let queryBuilder = DB(tableName);
+
+  queryBuilder.where({ isDeleted: 1 });
+
+  if (limit) {
+    queryBuilder.limit(limit);
+  }
+
+  if (skip) {
+    queryBuilder.offset(skip);
+  }
+
+  return new Promise((resole, reject) => {
+    try {
+      queryBuilder.select().then(records => {
+        resole(records);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
+async function permanentlyDelete(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.permanentlyDelete(tableName, dataId);
+}
+
+async function findAllPhoneHasManySchedule() {
+  let queryBuilder = await DB.raw(
+    'SELECT phone, countSchedule FROM (SELECT phone, count(customerScheduleId) as countSchedule FROM CustomerSchedule WHERE isDeleted = 0 AND CustomerScheduleStatus = 10 GROUP BY phone) tbl WHERE countSchedule > 5 ORDER BY countSchedule DESC',
+  );
+  return queryBuilder[0];
+}
+
+async function findAllVehicleHasManyNewSchedule() {
+  let queryBuilder = await DB.raw(
+    `SELECT licensePlates, count(*) AS count FROM  ${tableName} WHERE (CustomerScheduleStatus = 0 OR CustomerScheduleStatus = 10) AND isDeleted = 0 GROUP BY licensePlates HAVING count >=  2;`,
+  );
+  return queryBuilder[0];
 }
 
 module.exports = {
@@ -183,7 +215,12 @@ module.exports = {
   updateById,
   initDB,
   modelName: tableName,
+  primaryKeyField,
   customSearch,
   customCount,
   deleteById,
+  findDeletedRecord,
+  permanentlyDelete,
+  findAllPhoneHasManySchedule,
+  findAllVehicleHasManyNewSchedule,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -65,7 +65,33 @@ module.exports = {
   find: {
     tags: ['api', `${moduleName}`],
     description: `update ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
+    // pre: [{ method: CommonFunctions.verifyToken }], //TODO REMOVE LATER
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        order: Joi.object({
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'find');
+    },
+  },
+  advanceUserGetList: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
     auth: {
       strategy: 'jwt',
     },

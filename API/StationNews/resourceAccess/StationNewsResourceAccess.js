@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -16,25 +16,27 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments('stationNewsId').primary();
           table.integer('stationsId');
+          table.integer('ordinalNumber'); // Số thứ tự
           table.string('stationNewsTitle', 1000);
           table.text('stationNewsContent', 'longtext');
           table.integer('stationNewsRating').defaultTo(5);
-          table.string('stationNewsCreators');
+          table.integer('stationNewsCreators');
           table.integer('stationNewsStatus').defaultTo(0);
-          table.string('stationNewsTagCloud', 2000);
-          table.string('stationNewsCategories');
+          table.text('stationNewsTagCloud').nullable();
+          table.integer('stationNewsCategories').defaultTo(0);
           table.integer('totalViewed').defaultTo(0);
           table.integer('dayViewed').defaultTo(0);
           table.integer('monthViewed').defaultTo(0);
           table.integer('weekViewed').defaultTo(0);
           table.integer('searchCount').defaultTo(0);
           table.integer('followCount').defaultTo(0);
+          table.text('embeddedCode').nullable();
           table.string('stationNewsAvatar');
+          table.integer('reviewStatus').defaultTo(0);
           table.timestamp('stationNewsUpdatedAt').defaultTo(DB.fn.now());
           timestamps(table);
           table.index('stationNewsId');
           table.index('stationNewsStatus');
-          table.index('stationNewsTitle');
           table.index('stationNewsCategories');
         })
         .then(async () => {
@@ -50,7 +52,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -75,10 +77,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
-      this.orWhere('stationNewsTitle', 'like', `%${searchText}%`)
-        .orWhere('stationNewsContent', 'like', `%${searchText}%`)
-        .orWhere('stationNewsCategories', 'like', `%${searchText}%`);
+      this.orWhere('stationNewsTitle', 'like', `%${searchText}%`).orWhere('stationNewsContent', 'like', `%${searchText}%`);
     });
   } else {
     if (filterData.stationNewsName) {
@@ -133,7 +134,7 @@ async function customCount(filter, startDate, endDate, searchText, order) {
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
-        resolve(records);
+        resolve(records[0].count);
       });
     } catch (e) {
       Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);

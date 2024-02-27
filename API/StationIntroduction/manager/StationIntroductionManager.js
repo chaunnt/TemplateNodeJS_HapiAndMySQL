@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -32,7 +32,20 @@ async function getStationIntroductionDetail(req) {
   });
 }
 
+async function findById(req) {
+  return new Promise(async (resolve, reject) => {
+    let stationsId = req.payload.id;
+    let result = await StationIntroFunction.getStationIntroById(stationsId);
+    if (result) {
+      resolve(result);
+    } else {
+      reject('failed');
+    }
+  });
+}
+
 module.exports = {
   getStationIntroductionDetail,
   updateById,
+  findById,
 };

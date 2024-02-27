@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -26,11 +26,11 @@ async function createTable() {
           Logger.info(`${tableName}`, `${tableName} table created done`);
           let appUserRoles = ['Admin', 'Operator', 'Moderator', 'Editor', 'Agency', 'Accountant'];
           let appUserRolesArr = [];
-          let adminPermissions = await DB(`Permission`).select();
+          let adminPermissions = await DB(`AppUserPermission`).select();
           let permissionList = [];
           for (let i = 0; i < adminPermissions.length; i++) {
             const permission = adminPermissions[i];
-            permissionList.push(permission.permissionKey);
+            permissionList.push(permission.appUserPermissionKey);
           }
           permissionList = permissionList.join(',');
           for (let i = 0; i < appUserRoles.length; i++) {
@@ -57,7 +57,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -70,12 +70,17 @@ async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
 }
 
+async function findById(id) {
+  return await Common.findById(tableName, primaryKeyField, id);
+}
+
 async function count(filter, order) {
   return await Common.count(tableName, primaryKeyField, filter, order);
 }
 
 module.exports = {
   insert,
+  findById,
   find,
   count,
   updateById,

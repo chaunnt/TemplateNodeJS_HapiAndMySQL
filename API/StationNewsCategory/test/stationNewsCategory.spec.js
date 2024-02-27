@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 const faker = require('faker');
 const chai = require('chai');
@@ -122,7 +122,7 @@ describe(`Tests StationNewsCategory`, function () {
       });
   });
 
-  it('delete by id failse format stationNewsCategory', done => {
+  it('delete by id false format stationNewsCategory', done => {
     const body = {
       id: 'a',
     };
@@ -157,7 +157,7 @@ describe(`Tests StationNewsCategory`, function () {
         done();
       });
   });
-  it('get news category List failse stationUrl', done => {
+  it('get news category List false stationUrl', done => {
     const body = {
       skip: 0,
       limit: 20,

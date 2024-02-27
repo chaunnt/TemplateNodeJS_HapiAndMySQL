@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -32,6 +32,8 @@ async function createTable() {
             'Manage settings',
             'Manage schedule',
             'Manage news',
+            'View schedule',
+            'Add schedule',
           ];
           let appUserPermissionArr = [];
           for (let i = 0; i < initialAppUserPermissions.length; i++) {
@@ -58,7 +60,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {

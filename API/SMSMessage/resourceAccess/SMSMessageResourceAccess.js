@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -19,22 +19,21 @@ async function createTable() {
         .createTable(`${tableName}`, function (table) {
           table.increments(primaryKeyField).primary();
           table.string('smsMessageOrigin').defaultTo(''); // được gửi từ đâu
-          table.float('smsMessageBalanceAmount', 48, 24).defaultTo(0); // số tiền
-          table.integer('smsMessageRef').nullable(); // số tham chiếu đến PaymentDepositTransaction
+          table.string('smsMessageReceiver').defaultTo(''); // được gửi từ đâu
           table.string('smsMessageStatus').defaultTo(SMS_MESSAGE_STATUS.NEW); // status
           table.string('smsMessageContent', 2000).defaultTo(''); // full content
-          table.string('smsReceiveTime').defaultTo(''); // HH:mm giờ gửi tin nhắn từ máy
-          table.string('smsReceiveDate').defaultTo(''); // YYYYMMDD ngày gửi tin nhắn từ máy
+          table.string('smsSendTime').defaultTo(''); // HH:mm giờ gửi tin nhắn từ máy
+          table.string('smsSendDate').defaultTo(''); // YYYYMMDD ngày gửi tin nhắn từ máy
           table.string('smsReceiveMessageTime').defaultTo(''); // HH:mm giờ trong tin nhắn
           table.string('smsReceiveMessageDate').defaultTo(''); // YYYYMMDD ngày trong tin nhắn
           table.string('smsHash').defaultTo(''); // UUID của tin nhắn, generate từ hash của smsMessageContent + smsMessageOrigin + smsReceiveDate + smsReceiveTime
           table.string('smsMessageNote').defaultTo(''); // note
-          table.integer('smsMessageAppUserId').nullable(); // app user id
+          table.integer('smsMessageStationId'); // station id
           timestamps(table);
           table.index(primaryKeyField);
           table.index('smsMessageOrigin');
           table.index('smsMessageStatus');
-          table.index('smsMessageAppUserId');
+          table.index('smsMessageStationId');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -49,7 +48,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -75,6 +74,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
       this.orWhere('smsMessageOrigin', 'like', `%${searchText}%`)
         .orWhere('smsMessageContent', 'like', `%${searchText}%`)
@@ -83,13 +83,11 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
 
   if (startDate) {
-    const moment = require('moment');
-    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    const moment = require('moment');
-    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -107,7 +105,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -118,8 +116,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
@@ -131,6 +129,12 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
       reject(undefined);
     }
   });
+}
+
+async function permanentlyDelete(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.permanentlyDelete(tableName, dataId);
 }
 
 async function updateAll(data, filter) {
@@ -148,4 +152,5 @@ module.exports = {
   customSearch,
   customCount,
   updateAll,
+  permanentlyDelete,
 };

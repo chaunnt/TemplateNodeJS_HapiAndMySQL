@@ -1,10 +1,10 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const fs = require('fs');
-const Logger = require('../../../utils/logging');
+
 const { checkResponseStatus } = require('../../Common/test/Common');
 
 chai.should();
@@ -30,6 +30,7 @@ describe(`Tests Upload`, function () {
       email: faker.internet.email(),
       password: 'string',
       phoneNumber: 'string',
+      stationsId: 0,
     };
     chai
       .request(`0.0.0.0:${process.env.PORT}`)
@@ -37,7 +38,7 @@ describe(`Tests Upload`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          Logger.error(err);
+          console.error(err);
         }
         checkResponseStatus(res, 200);
         token = 'Bearer ' + res.body.data.token;
@@ -46,7 +47,7 @@ describe(`Tests Upload`, function () {
   });
 
   it('Upload user avatar', done => {
-    fs.readFile('uploads/sampleAvatar.jpg', function read(err, data) {
+    fs.readFile('uploads/VTSS.png', function read(err, data) {
       if (err) {
         return null;
       }
@@ -54,7 +55,7 @@ describe(`Tests Upload`, function () {
       var base64data = Buffer.from(data, 'binary').toString('base64');
       const body = {
         image: base64data,
-        imageFormat: 'jpg',
+        imageFormat: 'png',
       };
       chai
         .request(`0.0.0.0:${process.env.PORT}`)
@@ -63,7 +64,7 @@ describe(`Tests Upload`, function () {
         .send(body)
         .end((err, res) => {
           if (err) {
-            Logger.error(err);
+            console.error(err);
           }
           checkResponseStatus(res, 200);
           done();
@@ -72,7 +73,7 @@ describe(`Tests Upload`, function () {
   });
 
   it('Upload media file', done => {
-    fs.readFile('uploads/sampleAvatar.jpg', function read(err, data) {
+    fs.readFile('uploads/VTSS.png', function read(err, data) {
       if (err) {
         return null;
       }
@@ -89,7 +90,7 @@ describe(`Tests Upload`, function () {
         .send(body)
         .end((err, res) => {
           if (err) {
-            Logger.error(err);
+            console.error(err);
           }
           checkResponseStatus(res, 200);
           done();

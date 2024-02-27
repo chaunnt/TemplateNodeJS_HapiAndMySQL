@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -10,7 +10,7 @@ const NewsCategoryFunctions = require('../StationNewsCategoryFunctions');
 
 async function initCategoryForAllStations(station) {
   let _stationCount = await StationResource.count({});
-  console.log(_stationCount);
+
   if (_stationCount) {
     for (let i = 0; i < _stationCount; i++) {
       let _stationInfo = await StationResource.find({}, i, 1);

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -28,7 +28,57 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve();
+          let uploadInfos = [
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/nhan-xe-cuoi-day-chuyen.mp3',
+              uploadUnicodeName: 'Nhận xe cuối dây chuyền',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/nhan-xe-cuoi-day-chuyen.mp3`,
+            },
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/nop-phi-duong-bo-cua-1.mp3',
+              uploadUnicodeName: 'Nộp phí đường bộ cửa 1',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/nop-phi-duong-bo-cua-1.mp3`,
+            },
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/moi-chu-xe.mp3',
+              uploadUnicodeName: 'Mời chủ xe',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/moi-chu-xe.mp3`,
+            },
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/nhan-giay-to-xe-cua-2.mp3',
+              uploadUnicodeName: 'Nhận giấy tờ xe cửa 2',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/nhan-giay-to-xe-cua-2.mp3`,
+            },
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/ra-xe-cho-dan-tem.mp3',
+              uploadUnicodeName: 'Ra xe, chờ dán tem',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/ra-xe-cho-dan-tem.mp3`,
+            },
+            {
+              uploadFileExtension: 'mp3',
+              uploadFileName: 'uploads/voices/tra-ket-qua-kiem-dinh-cua-4.mp3',
+              uploadUnicodeName: 'Trả kết quả kiểm định cửa 4',
+              uploadFileSize: 100,
+              uploadFileUrl: `https://${process.env.HOST_NAME}/uploads/voices/tra-ket-qua-kiem-dinh-cua-4.mp3`,
+            },
+          ];
+
+          DB(`${tableName}`)
+            .insert(uploadInfos)
+            .then(result => {
+              Logger.info(`${tableName}`, `init ${tableName} result ` + result);
+              resolve();
+            });
         });
     });
   });

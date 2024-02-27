@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 const moduleName = 'AppUserDevices';
@@ -76,7 +76,7 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100).min(1),
+        limit: Joi.number().default(20).max(100),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
           value: Joi.string().default('desc').allow(''),

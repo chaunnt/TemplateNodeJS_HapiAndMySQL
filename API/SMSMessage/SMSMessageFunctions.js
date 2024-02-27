@@ -1,92 +1,76 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
 
-const moment = require('moment');
 const SMSMessageResourceAccess = require('./resourceAccess/SMSMessageResourceAccess');
-const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
+const LogSMSResourceAccess = require('./resourceAccess/LogSMSResourceAccess');
 
-function _getBalance(text) {
-  // check tiền khi nội dung là +121,123,213VND....
-  let matchAmount = text.match(/\+\s*?[0-9,]+\s*?(VND)?/i);
-  if (matchAmount && matchAmount.length > 0) {
-    // thường thì biến động số dư ở trước nội dung nên cứ lấy value[0]
-    return parseInt(matchAmount[0].replace(/\D*/, ''));
-  }
-  // check tiền khi nội dung là +121.123.213VND....
-  matchAmount = text.match(/\+\s*?[0-9.]+\s*?(VND)?/i);
-  if (matchAmount && matchAmount.length > 0) {
-    // thường thì biến động số dư ở trước nội dung nên cứ lấy value[0]
-    return parseInt(matchAmount[0].replace(/\D*/, ''));
-  }
-  return 0;
+async function addNewSMSMessage(smsData) {
+  console.info(smsData);
+  let existingSMSMessage = await SMSMessageResourceAccess.insert(smsData);
+  return existingSMSMessage;
 }
 
-function _getDateReceived(text) {
-  // 08/06/22 => 08/06/2022
-  let matchDate = text.match(/\d{2}\/\d{2}\/\d{2,4}/g);
-  if (matchDate && matchDate.length > 0) {
-    matchDate = matchDate[0];
-    if (matchDate.length === 8) {
-      // 03/06/22
-      matchDate = matchDate.split('/');
-      matchDate[2] = '20' + matchDate[2];
-      matchDate = matchDate.reverse(); // 03/06/2022
-      return matchDate.join('/');
+async function addNewLogSMSMessage(logData) {
+  let newLogSMS = await LogSMSResourceAccess.insert(logData);
+  return newLogSMS;
+}
+
+function isOTPSMSMessage(message) {
+  if (message) {
+    if (message.toUpperCase().indexOf('TTDK_OTP') >= 0) {
+      return true;
     }
-    return matchDate.split('/').reverse().join('/');
-  }
-  return moment().format('YYYY/MM/DD');
-}
-
-function _getTimeReceived(text) {
-  let matchTime = text.match(/\d{2}:\d{2}/g);
-  if (matchTime && matchTime.length > 0) {
-    return matchTime[0];
-  }
-  return moment().format('HH:mm');
-}
-
-async function handleDetectSMSMessage(content = '') {
-  if (!content) {
-    return undefined;
-  }
-  let values = {};
-  content = content.replace('\n', '');
-  // check số tiền
-  values.smsMessageBalanceAmount = _getBalance(content);
-  if (!values.smsMessageBalanceAmount) {
-    return undefined;
-  }
-  // check user nạp tiền. ND chuyển khoản: NAPTIEN_<ID>_.....
-  let matchUserNapTien = content.match(/VSTT\s*?([0-9]{10,12})/i);
-  if (matchUserNapTien && matchUserNapTien.length > 0) {
-    let userPhoneNumber = matchUserNapTien[0].replace('VSTT', '');
-    let userData = await AppUserResource.find({
-      phoneNumber: userPhoneNumber,
-    });
-    if (!(userData && userData.length > 0)) {
-      return undefined;
+    if (message.toUpperCase().indexOf('TTDK') >= 0 && message.toUpperCase().indexOf('OTP') >= 0) {
+      return true;
     }
-    values.smsMessageAppUserId = userData[0].appUserId;
-  } else {
-    values.smsMessageAppUserId = null;
+    if (message.toUpperCase().indexOf('TTDK_KICH_HOAT') >= 0) {
+      return true;
+    }
+    if (message.toUpperCase().indexOf('TTDK') >= 0 && message.toUpperCase().indexOf('KICH') >= 0 && message.toUpperCase().indexOf('HOAT') >= 0) {
+      return true;
+    }
   }
-  // check thời gian nhận tin nhắn
-  values.smsReceiveMessageDate = await _getDateReceived(content);
-  values.smsReceiveMessageTime = await _getTimeReceived(content);
-  return values;
+  return false;
 }
 
-async function verifySMS(smsMessage) {
-  let existingSMSMessage = await SMSMessageResourceAccess.find({
-    smsHash: smsMessage.smsHash,
-    // smsMessageStationId: smsMessage.smsMessageStationId
-  });
-  if (existingSMSMessage && existingSMSMessage.length > 0) {
-    throw 'EXISTING_SMS';
+function isResetPasswordSMSMessage(message) {
+  if (message) {
+    if (message.toUpperCase().indexOf('TTDK_MATKHAU') >= 0) {
+      return true;
+    }
+    if (message.toUpperCase().indexOf('TTDK') >= 0 && message.toUpperCase().indexOf('MATKHAU') >= 0) {
+      return true;
+    }
   }
+  return false;
+}
+
+function isSMSBookingSchedule(message) {
+  let isScheduleSMS = -1; // Không phải SMS đặt lịch
+
+  if (message) {
+    // 2004D 59F12345 06/12/2023
+    if (message.toUpperCase().split(' ').length === 3) {
+      isScheduleSMS = 1;
+    }
+
+    // TTDK 2004D dat lich 59A12345 06/13/2023
+    if (message.toUpperCase().indexOf('TTDK') >= 0 && message.toUpperCase().indexOf('DAT') >= 0 && message.toUpperCase().indexOf('LICH') >= 0) {
+      return 2;
+    }
+
+    //  TTDK_HEN 2004D 59F12345 06/12/2023
+    if (message.toUpperCase().indexOf('TTDK_HEN') >= 0) {
+      return 3;
+    }
+  }
+
+  return isScheduleSMS;
 }
 
 module.exports = {
-  handleDetectSMSMessage,
-  verifySMS,
+  addNewSMSMessage,
+  isOTPSMSMessage,
+  isResetPasswordSMSMessage,
+  isSMSBookingSchedule,
+  addNewLogSMSMessage,
 };

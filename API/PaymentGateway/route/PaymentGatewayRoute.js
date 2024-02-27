@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -50,12 +50,27 @@ module.exports = {
         authorization: Joi.string().description('Bearer {token}'),
       }).unknown(),
       payload: Joi.object({
-        servicePackageId: Joi.number().min(1).required().default(1),
+        customerReceiptId: Joi.number().min(1).required().default(1),
       }),
     },
-    pre: [{ method: CommonFunctions.verifyToken }],
+    handler: function (req, res) {
+      Response(req, res, 'makePaymentRequestVNPAY');
+    },
+  },
+  advanceUserMakePaymentRequestVNPAY: {
+    tags: ['api', `${moduleName}`],
+    description: 'Make payment request to VNPAY',
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
     auth: {
       strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string().description('Bearer {token}'),
+      }).unknown(),
+      payload: Joi.object({
+        customerReceiptId: Joi.number().min(1).required().default(1),
+      }),
     },
     handler: function (req, res) {
       Response(req, res, 'makePaymentRequestVNPAY');
@@ -64,25 +79,6 @@ module.exports = {
   receivePaymentMOMO: {
     tags: ['api', `${moduleName}`],
     description: 'Receive a payment from MOMO',
-    validate: {
-      //do not know if body of request from MOMO is.
-      payload: Joi.object({
-        // partnerCode: Joi.string(),
-        // accessKey: Joi.string(),
-        // amount: Joi.number(),
-        // partnerRefId: Joi.string(),
-        // partnerTransId: Joi.string().allow(''),
-        // transType: Joi.string(),
-        // momoTransId: Joi.string(),
-        // status: Joi.number(),
-        // message: Joi.string(),
-        // responseTime: Joi.number(),
-        // storeId: Joi.string(),
-        // signature: Joi.string(),
-      })
-        .unknown()
-        .allow(null),
-    },
     handler: function (req, res) {
       Response(req, res, 'receivePaymentMOMO');
     },
@@ -99,7 +95,7 @@ module.exports = {
         authorization: Joi.string().description('Bearer {token}'),
       }).unknown(),
       payload: Joi.object({
-        servicePackageId: Joi.number().min(1).required().default(1),
+        receiptId: Joi.number().min(1).required().default(1),
       }),
     },
     handler: function (req, res) {

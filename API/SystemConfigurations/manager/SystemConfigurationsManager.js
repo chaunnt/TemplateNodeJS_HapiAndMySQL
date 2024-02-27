@@ -1,87 +1,83 @@
-/* Copyright (c) 2021-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
- * Created by Huu on 11/18/21.
+ * Created by A on 7/18/17.
  */
-
 'use strict';
-const SystemConfigurationsResourceAccess = require('../resourceAccess/SystemConfigurationsResourceAccess');
+const SystemConfigurationsResource = require('../resourceAccess/SystemConfigurationsResourceAccess');
 const Logger = require('../../../utils/logging');
-const SystemConfigurationsFunction = require('../SystemConfigurationsFunction');
-const { logAppDataChanged } = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
+const { UNKNOWN_ERROR, NOT_FOUND } = require('../../Common/CommonConstant');
+const PublicSystemConfigModel = require('../model/PublicSystemConfigModel');
+const { META_DATA } = require('../data/metaData');
 
-async function find(req) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let data = await SystemConfigurationsResourceAccess.find({}, 0, 1);
-
-      if (data) {
-        resolve({ data: data, total: 1 });
-      } else {
-        resolve({ data: [], total: 0 });
-      }
-    } catch (e) {
-      Logger.error(__filename, e);
-      reject('failed');
-    }
-  });
-}
-
+const SYSTEM_CONFIG_ID = 1;
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
-      let data = req.payload.data;
-      let dataBefore = {};
-      let dataAfter = {};
-      for (let i = 0; i < Object.keys(data).length; i++) {
-        const element = Object.keys(data)[i];
-        dataBefore[element] = config[0][element];
-      }
-      dataAfter = data;
-      let result = await SystemConfigurationsResourceAccess.updateById(config[0].systemConfigurationsId, data);
+      let systemConfig = req.payload.data;
+      let result = await SystemConfigurationsResource.updateById(SYSTEM_CONFIG_ID, systemConfig);
       if (result) {
-        await logAppDataChanged(dataBefore, dataAfter, req.currentUser, SystemConfigurationsResourceAccess.modelName);
         resolve(result);
       }
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
 
-async function userGetDetail(req) {
+async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let data = await SystemConfigurationsResourceAccess.find({}, 0, 1);
-
-      if (data && data.length > 0) {
-        let _systemConfig = data[0];
-
-        if (_systemConfig.USDTWalletAddress && _systemConfig.USDTWalletAddress !== null) {
-          //them QRCode cho front-end
-          const QRCodeFunction = require('../../../ThirdParty/QRCode/QRCodeFunctions');
-          const QRCodeImage = await QRCodeFunction.createQRCode(_systemConfig.USDTWalletAddress);
-          if (QRCodeImage) {
-            _systemConfig.USDTWalletAddressQRCode = `https://${process.env.HOST_NAME}/${QRCodeImage}`;
-          }
-        }
-
-        resolve(_systemConfig);
+      //only support for 1 system configuration
+      let sysmteConfig = await SystemConfigurationsResource.findById(SYSTEM_CONFIG_ID);
+      if (sysmteConfig) {
+        resolve(sysmteConfig);
       } else {
         reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function getPublicSystemConfigurations(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      //get all system banner
+      let result = await SystemConfigurationsResource.findById(SYSTEM_CONFIG_ID);
+
+      let publicConfig = await PublicSystemConfigModel.fromData(result);
+
+      if (publicConfig) {
+        resolve(publicConfig);
+      } else {
+        return reject(NOT_FOUND);
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      return reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function getMetaData(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      resolve(META_DATA);
+    } catch (e) {
+      Logger.error(__filename, e);
+      return reject(UNKNOWN_ERROR);
     }
   });
 }
 
 module.exports = {
-  find,
   updateById,
-  userGetDetail,
+  findById,
+  getPublicSystemConfigurations,
+  getMetaData,
 };

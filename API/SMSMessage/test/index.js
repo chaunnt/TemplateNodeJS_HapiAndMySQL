@@ -1,3 +1,4 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
 
-require('./SMSMessageTest.spec');
+// require('./SMSMessageTest.spec');
+require('./SMSMessage_CustomerSchedule.spec');

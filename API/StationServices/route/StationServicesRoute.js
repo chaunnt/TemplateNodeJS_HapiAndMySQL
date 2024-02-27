@@ -1,39 +1,27 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
-/**
- * Created by A on 7/18/17.
- */
 'use strict';
 const moduleName = 'StationServices';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
+const { SERVICE_TYPES } = require('../StationServicesConstants');
 
 const insertSchema = {
-  stationServicesTitle: Joi.string().required(),
-  stationServicesContent: Joi.string().required(),
-  stationServicesAvatar: Joi.string().required(),
-  stationServicesCategory: Joi.string().required(),
-  productAttribute1: Joi.string(),
-  productAttribute2: Joi.string(),
-  productAttribute3: Joi.string(),
+  stationsId: Joi.number().integer().min(1).required(),
+  serviceType: Joi.number().integer().valid(Object.values(SERVICE_TYPES)).required(),
+  servicePrice: Joi.number(),
+  serviceName: Joi.string(),
 };
 
 const updateSchema = {
-  stationServicesTitle: Joi.string(),
-  stationServicesContent: Joi.string(),
-  stationServicesAvatar: Joi.string(),
-  stationServicesCategory: Joi.string(),
-  productAttribute1: Joi.string(),
-  productAttribute2: Joi.string(),
-  productAttribute3: Joi.string(),
-  isDeleted: Joi.number(),
-  isHidden: Joi.number(),
+  ...insertSchema,
 };
 
 const filterSchema = {
-  stationServicesCategory: Joi.string(),
+  stationsId: Joi.number().integer().min(0),
+  serviceType: Joi.number().integer().valid(Object.values(SERVICE_TYPES)),
 };
 
 module.exports = {
@@ -76,7 +64,7 @@ module.exports = {
   },
   find: {
     tags: ['api', `${moduleName}`],
-    description: `update ${moduleName}`,
+    description: `find ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
@@ -86,8 +74,8 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        searchText: Joi.string(),
         filter: Joi.object(filterSchema),
+        searchText: Joi.string(),
         startDate: Joi.string(),
         endDate: Joi.string(),
         skip: Joi.number().default(0).min(0),
@@ -123,7 +111,7 @@ module.exports = {
   },
   deleteById: {
     tags: ['api', `${moduleName}`],
-    description: `find by id ${moduleName}`,
+    description: `Delete ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
@@ -138,6 +126,103 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'deleteById');
+    },
+  },
+  advanceUserDeleteById: {
+    tags: ['api', `${moduleName}`],
+    description: `Delete ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'advanceUserDeleteById');
+    },
+  },
+  advanceUserInsert: {
+    tags: ['api', `${moduleName}`],
+    description: `insert ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        serviceType: Joi.number()
+          .integer()
+          .valid(...Object.values(SERVICE_TYPES))
+          .required(),
+        servicePrice: Joi.number(),
+        serviceName: Joi.string().required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'advanceUserInsert');
+    },
+  },
+  advanceUserList: {
+    tags: ['api', `${moduleName}`],
+    description: `find ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'advanceUserGetList');
+    },
+  },
+  userGetListStationService: {
+    tags: ['api', `${moduleName}`],
+    description: `find ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyTokenOrAllowEmpty }],
+    // auth: {
+    //   strategy: 'jwt',
+    // },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userGetListStationService');
     },
   },
 };

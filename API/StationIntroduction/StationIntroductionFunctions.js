@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -6,8 +6,10 @@
 'use strict';
 const StationIntroductionResourceAccess = require('./resourceAccess/StationIntroductionResourceAccess');
 const StationsResourceAccess = require('../Stations/resourceAccess/StationsResourceAccess');
+const { LINK_BANNER_DEFAULT, LINK_MEDIA_DEFAULT } = require('./StationIntroductionConstants');
 
 const FUNC_FAILED = undefined;
+
 async function updateStationIntro(stationId, data) {
   let station = await StationsResourceAccess.findById(stationId);
   if (station === undefined) {
@@ -37,13 +39,13 @@ async function updateStationIntro(stationId, data) {
 
 async function getStationIntroByUrl(stationUrl) {
   //lookup station by using url
-  let station = await StationsResourceAccess.find(
-    {
-      stationUrl: stationUrl,
-    },
-    0,
-    1,
-  );
+  let station = await StationsResourceAccess.find({ stationUrl: stationUrl }, 0, 1);
+
+  //retry to find config with
+  if (!station || station.length <= 0) {
+    station = await StationsResourceAccess.find({ stationLandingPageUrl: stationUrl }, 0, 1);
+  }
+
   if (station === undefined || station.length < 1) {
     return FUNC_FAILED;
   }
@@ -52,6 +54,10 @@ async function getStationIntroByUrl(stationUrl) {
 
   //find intro by station id
   let stationId = station.stationsId;
+  return await getStationIntroById(stationId);
+}
+
+async function getStationIntroById(stationId) {
   let existingStationIntroData = await StationIntroductionResourceAccess.findById(stationId);
 
   if (existingStationIntroData) {
@@ -61,7 +67,29 @@ async function getStationIntroByUrl(stationUrl) {
   }
 }
 
+function createDefaultStationIntroduction() {
+  let stationIntro = {
+    slideBanners: LINK_BANNER_DEFAULT,
+    stationIntroductionSlogan: 'Vì sự an toàn và hài lòng của khách hàng',
+    stationIntroductionTitle: 'TRUNG TÂM ĐĂNG KIỂM XE CƠ GIỚI',
+    stationIntroductionContent: 'Đây là nội dung chính',
+    stationIntroductionMedia: LINK_MEDIA_DEFAULT,
+    stationIntroSection1Content: 'Đây là nội dung phụ 1',
+    stationIntroSection1Media: LINK_MEDIA_DEFAULT,
+    stationIntroSection2Content: 'Đây là nội dung phụ 2',
+    stationIntroSection2Media: LINK_MEDIA_DEFAULT,
+    stationIntroServices: 'Đây là nội dung giới thiệu các dịch vụ',
+    stationFacebookUrl: 'https://www.facebook.com/watch/?v=915618905865843&ref=sharing',
+    stationTwitterUrl: 'https://twitter.com/TomAndJerry/status/1525143581370900480?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Etweet',
+    stationYoutubeUrl: 'https://www.youtube.com/watch?v=wJnBTPUQS5A&list=RDwJnBTPUQS5A&start_radio=1',
+    stationInstagramUrl: 'https://www.instagram.com/tv/CcYKy4yBOe_/',
+  };
+  return stationIntro;
+}
+
 module.exports = {
   updateStationIntro,
   getStationIntroByUrl,
+  getStationIntroById,
+  createDefaultStationIntroduction,
 };

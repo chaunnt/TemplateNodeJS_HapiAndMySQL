@@ -1,36 +1,32 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
-/**
- * Created by A on 7/18/17.
- */
 'use strict';
 const StationServicesResourceAccess = require('../resourceAccess/StationServicesResourceAccess');
-const StationsResourceAccess = require('../../Stations/resourceAccess/StationsResourceAccess');
-const Logger = require('../../../utils/logging');
-const formatDate = require('../../ApiUtils/utilFunctions');
-const ImageUtils = require('../../ApiUtils/imageUtilsFunctions');
+const { POPULAR_ERROR, NOT_FOUND, UNKNOWN_ERROR } = require('../../Common/CommonConstant');
+const { STATION_SERVICE_ERRORS } = require('../StationServicesConstants');
+const CustomerScheduleFunctions = require('../../CustomerSchedule/CustomerScheduleFunctions');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let stationServicesData = req.payload;
-      stationServicesData.stationsId = req.currentUser.stationsId;
+      let servicesData = req.payload;
 
-      //xu ly tao ra thumbnail tu avatar (neu co cap nhat)
-      if (stationServicesData.stationServicesAvatar) {
-        let _thumbnailsUrl = await ImageUtils.createThumbnailsImage(stationServicesData.stationServicesAvatar);
-        if (_thumbnailsUrl) {
-          stationServicesData.stationServicesAvatarThumbnails = _thumbnailsUrl;
-        }
+      const isExistedService = await StationServicesResourceAccess.find({
+        stationsId: servicesData.stationsId,
+        serviceType: servicesData.serviceType,
+      });
+      if (isExistedService && isExistedService.length > 0) {
+        return reject(STATION_SERVICE_ERRORS.DUPLICATE_SERVICE);
       }
 
-      let result = await StationServicesResourceAccess.insert(stationServicesData);
+      const result = await StationServicesResourceAccess.insert(servicesData);
       if (result) {
-        resolve(result);
+        return resolve(result);
+      } else {
+        return reject(POPULAR_ERROR.INSERT_FAILED);
       }
-      reject('failed');
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -39,33 +35,24 @@ async function insert(req) {
 async function find(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let filter = req.payload.filter;
-      let skip = req.payload.skip;
-      let limit = req.payload.limit;
-      let order = req.payload.order;
-      let searchText = req.payload.searchText;
-      let endDate = req.payload.endDate;
-      let startDate = req.payload.startDate;
-      if (endDate) {
-        endDate = formatDate.FormatDate(endDate);
-      }
-      if (startDate) {
-        startDate = formatDate.FormatDate(startDate);
-      }
+      const filter = req.payload.filter;
+      const skip = req.payload.skip;
+      const limit = req.payload.limit;
+      const order = req.payload.order;
+      const startDate = req.payload.startDate;
+      const endDate = req.payload.endDate;
+      const searchText = req.payload.searchText;
 
-      if (!filter) {
-        filter = {};
+      let serviceList = await StationServicesResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      if (serviceList && serviceList.length > 0) {
+        let serviceCount = await StationServicesResourceAccess.customCount(filter, startDate, endDate, searchText, order);
+        if (serviceCount > 0) {
+          return resolve({ data: serviceList, total: serviceCount });
+        }
       }
-
-      let stationServices = await StationServicesResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let stationServicesCount = await StationServicesResourceAccess.customCount(filter, startDate, endDate, searchText, order);
-      if (stationServices && stationServicesCount) {
-        resolve({ data: stationServices, total: stationServicesCount });
-      } else {
-        resolve({ data: [], total: 0 });
-      }
+      return resolve({ data: [], total: 0 });
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -74,24 +61,17 @@ async function find(req) {
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let stationServicesId = req.payload.id;
-      let stationServicesData = req.payload.data;
+      const id = req.payload.id;
+      const data = req.payload.data;
 
-      //xu ly tao ra thumbnail tu avatar (neu co cap nhat)
-      if (stationServicesData.stationServicesAvatar) {
-        let _thumbnailsUrl = await ImageUtils.createThumbnailsImage(stationServicesData.stationServicesAvatar);
-        if (_thumbnailsUrl) {
-          stationServicesData.stationServicesAvatarThumbnails = _thumbnailsUrl;
-        }
+      let updateResult = await StationServicesResourceAccess.updateById(id, data);
+      if (updateResult) {
+        return resolve(updateResult);
+      } else {
+        return reject(POPULAR_ERROR.UPDATE_FAILED);
       }
-
-      let result = await StationServicesResourceAccess.updateById(stationServicesId, stationServicesData);
-      if (result) {
-        resolve(result);
-      }
-      reject('failed');
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -100,14 +80,17 @@ async function updateById(req) {
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let stationServicesId = req.payload.id;
-      let result = await StationServicesResourceAccess.findById(stationServicesId);
-      if (result) {
-        resolve(result);
+      const id = req.payload.id;
+
+      let stationService = await StationServicesResourceAccess.findById(id);
+
+      if (stationService) {
+        return resolve(stationService);
+      } else {
+        return reject(POPULAR_ERROR.RECORD_NOT_FOUND);
       }
-      reject('failed');
     } catch (e) {
-      Logger.error(__filename, e);
+      console.error(e);
       reject('failed');
     }
   });
@@ -116,55 +99,127 @@ async function findById(req) {
 async function deleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let stationServicesId = req.payload.id;
+      let id = req.payload.id;
 
-      let result = await StationServicesResourceAccess.deleteById(stationServicesId);
+      let result = await StationServicesResourceAccess.deleteById(id);
       if (result) {
-        resolve(result);
+        return resolve(result);
       } else {
-        reject('failed');
+        return reject(POPULAR_ERROR.DELETE_FAILED);
       }
     } catch (e) {
       Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function advanceUserInsert(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let serviceData = req.payload;
+      const userStationsId = req.currentUser.stationsId;
+      serviceData.stationsId = userStationsId;
+
+      const isExistedService = await StationServicesResourceAccess.find({ stationsId: userStationsId, serviceType: serviceData.serviceType });
+      if (isExistedService && isExistedService.length > 0) {
+        return reject(STATION_SERVICE_ERRORS.DUPLICATE_SERVICE);
+      }
+
+      const result = await StationServicesResourceAccess.insert(serviceData);
+      if (result) {
+        // Câp nhật lại mảng trạm phù hợp để nhận lịch tư vấn khi trạm bật dịch vụ
+        await CustomerScheduleFunctions.updateAppropriateStation(serviceData.serviceType);
+
+        return resolve(result);
+      } else {
+        return reject(POPULAR_ERROR.INSERT_FAILED);
+      }
+    } catch (e) {
+      console.error(e);
       reject('failed');
     }
   });
 }
 
-async function userGetDetailProduct(req) {
+async function advanceUserDeleteById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let stationServicesId = req.payload.id;
-      let result = await StationServicesResourceAccess.findById(stationServicesId);
+      let id = req.payload.id;
+      const userStationId = req.currentUser.stationsId;
+
+      const targetService = await StationServicesResourceAccess.findById(id);
+      if (!targetService || targetService.stationsId !== userStationId) {
+        return reject(NOT_FOUND);
+      }
+
+      let result = await StationServicesResourceAccess.deleteById(id);
       if (result) {
-        resolve(result);
+        // Câp nhật lại mảng trạm phù hợp để nhận lịch tư vấn khi trạm tắt dịch vụ
+        await CustomerScheduleFunctions.updateAppropriateStation(targetService.serviceType);
+
+        return resolve(result);
       } else {
-        reject('failed');
+        return reject(POPULAR_ERROR.DELETE_FAILED);
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
 
-async function userGetListProduct(req) {
+async function advanceUserGetList(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let skip = req.payload.skip;
-      let limit = req.payload.limit;
-      let filter = req.payload.filter;
-      let stationServices = await StationServicesResourceAccess.find(filter, skip, limit);
+      const filter = req.payload.filter || {};
+      const skip = req.payload.skip;
+      const limit = req.payload.limit;
+      const order = req.payload.order;
+      const startDate = req.payload.startDate;
+      const endDate = req.payload.endDate;
+      const searchText = req.payload.searchText;
 
-      if (stationServices && stationServices.length > 0) {
-        let stationServicesCount = await StationServicesResourceAccess.count(filter);
-        resolve({ data: stationServices, total: stationServicesCount });
-      } else {
-        resolve({ data: [], total: 0 });
+      const userStationId = req.currentUser.stationsId;
+      filter.stationsId = userStationId;
+
+      let serviceList = await StationServicesResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      if (serviceList && serviceList.length > 0) {
+        let serviceCount = await StationServicesResourceAccess.customCount(filter, startDate, endDate, searchText, order);
+        if (serviceCount > 0) {
+          return resolve({ data: serviceList, total: serviceCount });
+        }
       }
+      return resolve({ data: [], total: 0 });
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function userGetListStationService(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const filter = req.payload.filter || {};
+      const skip = req.payload.skip;
+      const limit = req.payload.limit;
+      const order = req.payload.order;
+      const startDate = req.payload.startDate;
+      const endDate = req.payload.endDate;
+      const searchText = req.payload.searchText;
+
+      let serviceList = await StationServicesResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      if (serviceList && serviceList.length > 0) {
+        let serviceCount = await StationServicesResourceAccess.customCount(filter, startDate, endDate, searchText, order);
+        if (serviceCount > 0) {
+          return resolve({ data: serviceList, total: serviceCount });
+        }
+      }
+      return resolve({ data: [], total: 0 });
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -174,7 +229,9 @@ module.exports = {
   find,
   updateById,
   findById,
-  userGetDetailProduct,
-  userGetListProduct,
   deleteById,
+  advanceUserInsert,
+  advanceUserDeleteById,
+  advanceUserGetList,
+  userGetListStationService,
 };

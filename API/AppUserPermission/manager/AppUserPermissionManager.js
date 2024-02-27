@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -6,6 +6,7 @@
 'use strict';
 const AppUserPermissionResourceAccess = require('../resourceAccess/AppUserPermissionResourceAccess');
 const Logger = require('../../../utils/logging');
+const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -13,7 +14,7 @@ async function insert(req) {
       resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -35,7 +36,7 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -46,7 +47,7 @@ async function updateById(req) {
       resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -56,7 +57,7 @@ async function findById(req) {
       resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }

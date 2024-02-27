@@ -1,19 +1,19 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 module.exports = {
   subject: '[KiemDinhOto.vn] XÁC NHẬN LỊCH HẸN',
   htmlBody: `<div class="container">
   <div class="row">
      <div class="col-md-12">
-        <p>Xin chào {{customerName}},</p>
+        <p>Xin chào {{fullnameSchedule}},</p>
         <p></br></p>
-        <p>{{stationsName}} xác nhận lịch hẹn kiểm định của khách hàng có ô tô BKS {{customerIdentity}} vào lúc {{time}} {{dateSchedule}} tại {{stationsAddress}}. </p>
+        <p>{{stationsName}} xác nhận lịch hẹn kiểm định của khách hàng có ô tô BKS {{licensePlates}} vào lúc {{time}} {{dateSchedule}} tại {{stationsAddress}}. </p>
         <p></br></p>
         <p>Quý khách lưu ý mang đủ các giấy tờ phương tiện bao gồm: </p>
         <ul>
-          <li>- Giấy đăng ký xe</li>
-          <li>- Bảo hiểm trách nhiệm bắt buộc</li>
-          <li>- Giấy chứng nhận đăng kiểm cũ</li>
+          <li> Giấy đăng ký xe</li>
+          <li> Bảo hiểm trách nhiệm bắt buộc</li>
+          <li> Giấy chứng nhận đăng kiểm cũ</li>
         </ul>
         <p>Trước khi đi kiểm định, quý khách có thể kiểm tra thông tin phạt nguội</p>
         <p></br></p>

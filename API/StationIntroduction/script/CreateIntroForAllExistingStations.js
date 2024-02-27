@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -31,13 +31,13 @@ async function createIntroForAllExistingStations() {
   if (stationCount === undefined) {
     return FUNC_FAILED;
   }
-  console.log(stationCount);
+
   const BATCH_SIZE = 10;
   let batchCount = parseInt(stationCount / 10);
   if (batchCount * BATCH_SIZE < stationCount) {
     batchCount = batchCount + 1;
   }
-  console.log(batchCount);
+
   for (let i = 0; i < batchCount; i++) {
     let stationList = await StationsResourceAccess.find({}, BATCH_SIZE * i, BATCH_SIZE);
     if (stationList && stationList.length > 0) {

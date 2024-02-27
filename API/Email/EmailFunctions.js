@@ -1,11 +1,13 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 require('dotenv').config();
 
 const EmailClient = require('../../ThirdParty/Email/EmailClient');
 const Handlebars = require('handlebars');
 
-const templateConfirmSchedule = require('./emailTemplates/confirmSchedule');
+const EMAIL_TEMPLATE_COMFIRM_SCHEDULE = require('./emailTemplates/confirmSchedule');
+const EMAIL_TEMPLATE_RESET_USER_PASS = require('./emailTemplates/resetUserPassword');
+const EMAIL_TEMPLATE_REPORT_DATA = require('./emailTemplates/reportData');
 
 function convertBodyFromTemplate(template, subjectParams, bodyParams) {
   const subject = Handlebars.compile(template.subject)(subjectParams);
@@ -14,23 +16,34 @@ function convertBodyFromTemplate(template, subjectParams, bodyParams) {
   return { subject, body, bodyHtml };
 }
 
-async function confirmScheduleViaEmail(receiver, customerScheduleData, stationsData) {
-  if (customerScheduleData && stationsData) {
-    let subjectParams = {};
-    let bodyParams = {
-      ...customerScheduleData,
-      ...stationsData,
-    };
-
-    let { subject, bodyHtml } = convertBodyFromTemplate(templateConfirmSchedule, subjectParams, bodyParams);
-
-    let sendResult = await EmailClient.sendEmail(receiver, subject, undefined, bodyHtml);
-    return sendResult;
-  } else {
+async function sendResetPasswordEmail(receiverEmail, fullName, userToken, isAdvanceUserAccount) {
+  if (!userToken || !receiverEmail) {
+    console.error(`sendResetPasswordEmail: undefined receiverEmail ${receiverEmail} or token ${userToken}`);
     return undefined;
   }
+
+  const WEB_HOST_NAME = isAdvanceUserAccount ? process.env.WEB_STATION_HOST_NAME : process.env.WEB_HOST_NAME;
+
+  let subjectParams = {};
+  let bodyParams = {
+    paramFullName: fullName,
+    paramResetPasswordUrl: `https://${WEB_HOST_NAME}/fogot-password?action=updatePass&token=${userToken}`,
+    paramCopyright: process.env.PROJECT_NAME,
+  };
+
+  let { subject, bodyHtml } = convertBodyFromTemplate(EMAIL_TEMPLATE_RESET_USER_PASS, subjectParams, bodyParams);
+
+  let sendResult = await EmailClient.sendEmail(receiverEmail, subject, undefined, bodyHtml);
+  return sendResult;
+}
+
+async function sendReportDataEmail(receiver, subjectParams, bodyParams) {
+  let { subject, bodyHtml } = convertBodyFromTemplate(EMAIL_TEMPLATE_REPORT_DATA, subjectParams, bodyParams);
+  let sendResult = await EmailClient.sendEmail(receiver, subject, undefined, bodyHtml);
+  return sendResult;
 }
 
 module.exports = {
-  confirmScheduleViaEmail,
+  sendResetPasswordEmail,
+  sendReportDataEmail,
 };

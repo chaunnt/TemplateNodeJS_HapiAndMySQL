@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -7,7 +7,7 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'AppDevices';
 const primaryKeyField = 'appDeviceId';
 async function createTable() {
-  console.log(`createTable ${tableName}`);
+  console.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -34,7 +34,7 @@ async function createTable() {
           table.index('appUserId');
         })
         .then(() => {
-          console.log(`${tableName} table created done`);
+          console.info(`${tableName} table created done`);
           resolve();
         });
     });
@@ -46,7 +46,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -67,6 +67,11 @@ async function deleteById(AppDevicesId) {
   dataId[primaryKeyField] = AppDevicesId;
   return await Common.deleteById(tableName, dataId);
 }
+
+async function findById(id) {
+  return await Common.findById(tableName, primaryKeyField, id);
+}
+
 module.exports = {
   insert,
   find,
@@ -74,4 +79,5 @@ module.exports = {
   updateById,
   initDB,
   deleteById,
+  findById,
 };

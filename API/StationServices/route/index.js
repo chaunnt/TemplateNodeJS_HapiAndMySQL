@@ -1,43 +1,17 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
-const StationProduct = require('./StationServicesRoute');
-const StationProduct_User = require('./StationServices_UserRoute');
+const StationServices = require('./StationServicesRoute');
 
 module.exports = [
-  //Api StationProduct
-  {
-    method: 'POST',
-    path: '/StationServices/insert',
-    config: StationProduct.insert,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/updateById',
-    config: StationProduct.updateById,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/findById',
-    config: StationProduct.findById,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/find',
-    config: StationProduct.find,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/deleteById',
-    config: StationProduct.deleteById,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/user/getList',
-    config: StationProduct_User.userGetListProduct,
-  },
-  {
-    method: 'POST',
-    path: '/StationServices/user/getDetail',
-    config: StationProduct_User.userGetDetailProduct,
-  },
+  // { method: 'POST', path: '/StationServices/insert', config: StationServices.insert }, // Tạm thời chưa được sử dụng
+  // { method: 'POST', path: '/StationServices/findById', config: StationServices.findById }, // Tạm thời chưa được sử dụng
+  // { method: 'POST', path: '/StationServices/find', config: StationServices.find }, // Tạm thời chưa được sử dụng
+  // { method: 'POST', path: '/StationServices/updateById', config: StationServices.updateById }, // Tạm thời chưa được sử dụng
+  // { method: 'POST', path: '/StationServices/deleteById', config: StationServices.deleteById }, // Tạm thời chưa được sử dụng
+
+  { method: 'POST', path: '/StationServices/advanceUser/insert', config: StationServices.advanceUserInsert },
+  { method: 'POST', path: '/StationServices/advanceUser/delete', config: StationServices.advanceUserDeleteById },
+  { method: 'POST', path: '/StationServices/advanceUser/list', config: StationServices.advanceUserList },
+
+  { method: 'POST', path: '/StationServices/user/getListStationService', config: StationServices.userGetListStationService },
 ];

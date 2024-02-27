@@ -1,10 +1,9 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
-require('dotenv').config();
 const UploadFunctions = require('../UploadFunctions');
 const Logger = require('../../../utils/logging');
 const { moveFileFromLocalToLinode } = require('../../../ThirdParty/LinodeStorage/LinodeStorageFunctions');

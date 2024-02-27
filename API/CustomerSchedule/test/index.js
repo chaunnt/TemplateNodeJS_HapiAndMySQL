@@ -1,5 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
 
-// require('./CustomerSchedule.spec');
-// require('./CustomerSchedule_User.spec');
-require('./CustomerSchedule_Staff.spec');
+require('./CustomerSchedule_AdvanceUser.spec');
+require('./CustomerSchedule_User.spec');

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -13,18 +13,18 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 const insertSchema = {
   stationsId: Joi.number(),
   appUserId: Joi.number(),
-  deviceMacAddress: Joi.string().max(255),
-  deviceMachineHostName: Joi.string().max(255),
-  deviceCPUArchitecture: Joi.string().max(255),
-  deviceKernelType: Joi.string().max(255),
-  deviceKernelVersion: Joi.string().max(255),
-  deviceMachineUUID: Joi.string().max(255),
-  devicePrettyProductName: Joi.string().max(255),
-  deviceProductType: Joi.string().max(255),
-  deviceProductVersion: Joi.string().max(255),
-  deviceOSName: Joi.string().max(255),
-  deviceUniqueIdentity: Joi.string().max(255),
-  deviceNote: Joi.string().max(255),
+  deviceMacAddress: Joi.string(),
+  deviceMachineHostName: Joi.string(),
+  deviceCPUArchitecture: Joi.string(),
+  deviceKernelType: Joi.string(),
+  deviceKernelVersion: Joi.string(),
+  deviceMachineUUID: Joi.string(),
+  devicePrettyProductName: Joi.string(),
+  deviceProductType: Joi.string(),
+  deviceProductVersion: Joi.string(),
+  deviceOSName: Joi.string(),
+  deviceUniqueIdentity: Joi.string(),
+  deviceNote: Joi.string(),
 };
 
 const updateSchema = {
@@ -34,9 +34,9 @@ const updateSchema = {
 
 const filterSchema = {
   ...insertSchema,
-  stationsName: Joi.string().max(255),
+  stationsName: Joi.string(),
   stationUrl: Joi.string(),
-  deviceStatus: Joi.number().max(255),
+  deviceStatus: Joi.number(),
 };
 
 module.exports = {
