@@ -1,0 +1,41 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Automation test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: 124-179
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm run test
+    - name: Report to Telegram
+      if: always()
+      # You may pin to the exact commit or the version.
+      # uses: ivanmilov/telegram_notify_action@a1f3560d057f57010bff3236c74bc5757c48869e
+      uses: ivanmilov/telegram_notify_action@v1
+      with:
+        # Telegram API key
+        api_key: "5665305274:AAFlhbcpNijafxo9sCNqO2CBuojoRNP5ZFc" # token secret
+        # Chat id to send message to
+        chat_id: -689564142 # user id or channel name secret
+        # Text message to send
+        message: TTDK API AUTOMATION TEST ${{ job.status }} ( ${{ github.ref_name }} - ${{ github.event.head_commit.message }})

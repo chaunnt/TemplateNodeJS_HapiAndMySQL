@@ -1,0 +1,11 @@
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
+
+module.exports = {
+  APP_USER_WORK_INFO_ERROR: {
+    MISSING_PERMISSION: 'MISSING_PERMISSION',
+  },
+  APP_USER_LEVEL: {
+    NORMAL: 1,
+    HIGH_LEVEL: 2,
+  },
+};
