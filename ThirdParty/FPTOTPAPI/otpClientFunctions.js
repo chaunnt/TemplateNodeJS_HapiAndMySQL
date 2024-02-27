@@ -13,8 +13,8 @@ async function sendVoiceOTP(phoneNumber, otp) {
   let reqBody = {
     otpcode: otp,
     phone: phoneNumber,
-    username: 'keno88',
-    password: 'Ejuv9B7LAJK7zkFS',
+    username: 'kenken',
+    password: '123098asdlj12',
   };
   console.log(reqBody);
   const api = 'http://otp.ezcall.vn';

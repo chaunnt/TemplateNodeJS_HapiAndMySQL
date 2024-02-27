@@ -11,12 +11,12 @@ chai.use(chaiHttp);
 const VMG_HOST_URL = process.env.VMG_HOST_URL || 'https://api.brandsms.vn';
 const VMG_TOKEN =
   process.env.VMG_TOKEN ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c24iOiJ2dHNzIiwic2lkIjoiOWY3ZWFhYjItMTE2Ni00M2M5LWFjZjYtYjljYWJjZjNjYTg1Iiwib2J0IjoiIiwib2JqIjoiIiwibmJmIjoxNjU1NDM4OTgzLCJleHAiOjE2NTU0NDI1ODMsImlhdCI6MTY1NTQzODk4M30.iQ9FdtyX2R-bntxDXsyKsMHmbpkmdb3YZSp1730trcU';
-const VMG_BRANDNAME = process.env.VMG_BRANDNAME || 'TTDK 29-14D';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.1239asdlkasdl123.iQ9FdtyX2R-bntxDXsyKsMHmbpkmdb3YZSp1730trcU';
+const VMG_BRANDNAME = process.env.VMG_BRANDNAME || 'BRANDNAME';
 const REPORT_URL_SMS_VMG = process.env.REPORT_URL_SMS_VMG || 'http://report-api.brandsms.vn/api';
 const VMG_OTT_HOST_URL = process.env.VMG_OTT_HOST_URL || 'https://api-ott.brandsms.vn';
 
-// sendSMSMessage('0343902960', 'TTDK 2914D kinh bao: Xe 30A999999 het han kiem dinh ngay 2022/04/05. Quy khach can ho tro vui long lien he 0343902960');
+// sendSMSMessage('0343908391982', 'Tin nhan test');
 // "000" NoError Không lỗi
 // "001" InputNotValid
 // Có lỗi giá trị không phù hợp với

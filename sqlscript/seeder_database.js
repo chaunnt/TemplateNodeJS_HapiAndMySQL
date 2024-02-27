@@ -1,7 +1,8 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
+const Logger = require('../utils/logging');
 
 async function _seedStations() {
-  console.log('_seedStations');
+  Logger.info('_seedStations');
   const StationsResource = require('../API/Stations/resourceAccess/StationsResourceAccess');
   for (let i = 0; i < 10; i++) {
     let initialStation = {
@@ -18,7 +19,7 @@ async function _seedStations() {
 }
 
 async function _seedPaymentServicePackage() {
-  console.log('_seedPaymentServicePackage');
+  Logger.info('_seedPaymentServicePackage');
 
   const PaymentServicePackage = require('../API/PaymentServicePackage/resourceAccess/PaymentServicePackageResourceAccess');
   const { PACKAGE_TYPE } = require('../API/PaymentServicePackage/PaymentServicePackageConstant');
@@ -37,7 +38,7 @@ async function _seedPaymentServicePackage() {
 }
 
 async function seedDatabase() {
-  console.log('seedDatabase');
+  Logger.info('seedDatabase');
   // await _seedStations();
   await _seedPaymentServicePackage();
 }
