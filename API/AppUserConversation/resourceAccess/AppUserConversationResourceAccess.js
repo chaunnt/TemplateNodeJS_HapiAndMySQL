@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2023 Reminano */
+/* Copyright (c) 2021-2024 Reminano */
 
 /**
  * Created by Huu on 12/31/21.

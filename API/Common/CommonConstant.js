@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 module.exports = {
   UNKNOWN_ERROR: 'UNKNOWN_ERROR', //Hệ thống tạm ngưng, vui lòng thử lại sau

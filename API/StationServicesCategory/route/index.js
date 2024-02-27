@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const StationServicesCategory = require('./StationServicesCategoryRoute');
 const StationServicesCategory_User = require('./StationServicesCategory_UserRoute');

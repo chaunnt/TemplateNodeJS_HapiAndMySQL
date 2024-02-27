@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const GeneralInformation = require('./GeneralInformationRoute');
 const GeneralInformation_User = require('./GeneralInformation_UserRoute');

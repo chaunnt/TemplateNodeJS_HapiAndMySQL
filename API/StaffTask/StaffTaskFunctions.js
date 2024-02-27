@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const StaffResourceAccess = require('../Staff/resourceAccess/StaffResourceAccess');
 const StationsResourceAccess = require('../Stations/resourceAccess/StationsResourceAccess');

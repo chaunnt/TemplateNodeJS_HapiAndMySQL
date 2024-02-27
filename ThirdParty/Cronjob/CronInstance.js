@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 const cron = require('node-cron');
 const { spawn } = require('child_process');

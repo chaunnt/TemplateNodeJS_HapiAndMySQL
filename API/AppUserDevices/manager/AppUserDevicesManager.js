@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
+/* Copyright (c) 2022-2024 Reminano */
 
 'use strict';
 const AppUserDevicesResourceAccess = require('../resourceAccess/AppUserDevicesResourceAccess');

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const { ethers } = require('ethers');
 const FiNFT = require('../../../ThirdParty/Blockchain/contracts/FiNFT.json');

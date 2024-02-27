@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const CustomerSchedule = require('./CustomerScheduleRoute');
 const CustomerSchedule_User = require('./CustomerSchedule_UserRoute');

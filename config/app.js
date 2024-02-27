@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2023 Reminano */
+/* Copyright (c) 2020-2024 Reminano */
 
 'use strict';
 

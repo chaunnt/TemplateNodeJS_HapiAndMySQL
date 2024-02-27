@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 const utilFunctions = require('../../ApiUtils/utilFunctions');
 const { GAME_RECORD_UNIT_BO, BET_TYPE, BET_VALUE, GAME_ID } = require('../GamePlayRecordsConstant');
 const { checkIfNowisPlayGameRecord, botPlaceNewBet } = require('../GamePlayRecordsFunctions');

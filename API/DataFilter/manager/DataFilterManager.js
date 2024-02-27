@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Reminano */
 
 const AreaStreetResourceAccess = require('../../AreaStreet/resourceAccess/AreaStreetResourceAccess');
 const RealEstateViews = require('../../RealEstate/resourceAccess/RealEstateViews');

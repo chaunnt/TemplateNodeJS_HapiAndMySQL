@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 TORITECH LIMITED 2022 */
+/* Copyright (c) 2023-2024 Reminano */
 
 const DeviceDetector = require('node-device-detector');
 const AppUserDevicesResourceAccess = require('../AppUserDevices/resourceAccess/AppUserDevicesResourceAccess');

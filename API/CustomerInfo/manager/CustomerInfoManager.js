@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const { registerNewCustomerInfo, getDetailCustomerInfoById, updateFaceIdForCustomerInfoById } = require('../CustomerInfoFunctions');
 const { UNKNOWN_ERROR, POPULAR_ERROR } = require('../../Common/CommonConstant');

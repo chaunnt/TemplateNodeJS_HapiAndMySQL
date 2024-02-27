@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 const GameInfoRoute = require('./GameInfoRoute');
 const GameInfoRoute_User = require('./GameInfoRoute_User');

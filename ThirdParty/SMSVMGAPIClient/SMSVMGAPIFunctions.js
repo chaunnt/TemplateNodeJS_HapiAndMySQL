@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2024 Reminano */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -9,9 +9,7 @@ chai.use(chaiHttp);
 chai.use(chaiHttp);
 
 const VMG_HOST_URL = process.env.VMG_HOST_URL || 'https://api.brandsms.vn';
-const VMG_TOKEN =
-  process.env.VMG_TOKEN ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.1239asdlkasdl123.iQ9FdtyX2R-bntxDXsyKsMHmbpkmdb3YZSp1730trcU';
+const VMG_TOKEN = process.env.VMG_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.1239asdlkasdl123.iQ9FdtyX2R-bntxDXsyKsMHmbpkmdb3YZSp1730trcU';
 const VMG_BRANDNAME = process.env.VMG_BRANDNAME || 'BRANDNAME';
 const REPORT_URL_SMS_VMG = process.env.REPORT_URL_SMS_VMG || 'http://report-api.brandsms.vn/api';
 const VMG_OTT_HOST_URL = process.env.VMG_OTT_HOST_URL || 'https://api-ott.brandsms.vn';

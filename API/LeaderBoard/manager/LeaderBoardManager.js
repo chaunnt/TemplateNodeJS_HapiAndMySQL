@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 'use strict';
 const LeaderBoardResourAccess = require('../resourceAccess/LeaderBoardResourAccess');

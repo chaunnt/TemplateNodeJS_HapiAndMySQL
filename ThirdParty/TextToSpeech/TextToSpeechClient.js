@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Reminano */
 
 const textToSpeech = require('@google-cloud/text-to-speech');
 const fs = require('fs');

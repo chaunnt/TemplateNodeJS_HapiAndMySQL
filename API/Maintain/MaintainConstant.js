@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 let SYSTEM_STATUS = {
   all: true,
   liveGame: true,

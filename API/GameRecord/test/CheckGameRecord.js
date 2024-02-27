@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 const { _detectSingleResult, _detectBatchResult } = require('../GameRecordFunctions');
 const Logger = require('../../../utils/logging');

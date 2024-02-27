@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 
 const GamePlayRecordsResourceAccess = require('../GamePlayRecords/resourceAccess/GamePlayRecordsResourceAccess');
 const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransaction/PaymentDepositTransactionConstant');

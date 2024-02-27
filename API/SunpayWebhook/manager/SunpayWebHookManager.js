@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 const Logger = require('../../../utils/logging');
 const PaymentDepositTransactionResourceAccess = require('../../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionResourceAccess');
 const { approveDepositTransaction } = require('../../PaymentDepositTransaction/PaymentDepositTransactionFunctions');

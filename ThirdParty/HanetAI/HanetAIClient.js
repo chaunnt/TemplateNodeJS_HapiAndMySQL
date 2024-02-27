@@ -1,7 +1,6 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2024 Reminano */
 
 require('dotenv').config();
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');

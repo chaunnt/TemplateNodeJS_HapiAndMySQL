@@ -1,4 +1,4 @@
-/* Copyright (c) 2022-2023 Reminano */
+/* Copyright (c) 2022-2024 Reminano */
 const GameRecordResource = require('../../resourceAccess/GameRecordsResourceAccess');
 const GameRecordFunctions = require('../../GameRecordFunctions');
 const { BET_TYPE, BET_STATUS } = require('../../../GamePlayRecords/GamePlayRecordsConstant');

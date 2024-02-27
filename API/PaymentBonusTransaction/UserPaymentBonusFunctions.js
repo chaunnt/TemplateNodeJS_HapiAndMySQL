@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const REFERRAL_F1 = 'F1';
 const REFERRAL_F2 = 'F2';

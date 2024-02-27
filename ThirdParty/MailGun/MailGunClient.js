@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 const mg = require('mailgun-js');
 const mailgun = () =>
   mg({

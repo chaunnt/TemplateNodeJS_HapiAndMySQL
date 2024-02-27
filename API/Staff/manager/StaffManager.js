@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2023 Reminano */
+/* Copyright (c) 2021-2024 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -125,7 +125,7 @@ async function updateById(req) {
       if (!staff) {
         return reject(STAFF_ERROR.NOT_FOUND);
       }
-      if(isNotEmptyStringValue(staffData.referCode)){
+      if (isNotEmptyStringValue(staffData.referCode)) {
         if (staff.referCode !== staffData.referCode) {
           const staffByRefer = await StaffResourceAccess.find({ referCode: staffData.referCode });
           if (staffByRefer && staffByRefer.length > 0) {

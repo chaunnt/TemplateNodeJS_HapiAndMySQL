@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 TORITECH LIMITED 2022 */
+/* Copyright (c) 2023-2024 Reminano */
 
 module.exports = {
   DEVICE_TYPE: {

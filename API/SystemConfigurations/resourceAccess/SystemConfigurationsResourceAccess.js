@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2023 Reminano */
+/* Copyright (c) 2021-2024 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -72,7 +72,7 @@ async function createTable() {
           table.integer('approveWithdrawAmount').defaultTo(0); // tự động duyệt lệnh rút không vượt quá n tiền
           table.integer('minWithdrawTransaction').defaultTo(100000); // tự động duyệt lệnh rút không vượt quá n tiền
           table.integer('betAmountMax').defaultTo(20000000); // số tiền đặt cược tối đa
-          table.string('bankChanel').defaultTo('MB') // bank chanel của sunpay
+          table.string('bankChanel').defaultTo('MB'); // bank chanel của sunpay
           timestamps(table);
           table.index(`${primaryKeyField}`);
         })

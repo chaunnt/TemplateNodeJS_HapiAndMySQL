@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2023 Reminano */
+/* Copyright (c) 2021-2024 Reminano */
 require('dotenv').config();
 const Logger = require('../../utils/logging');
 const mqtt = require('mqtt');

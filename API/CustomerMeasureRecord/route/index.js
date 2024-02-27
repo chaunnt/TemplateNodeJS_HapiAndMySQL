@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const CustomerMeasureRecord_UserRoute = require('./CustomerMeasureRecord_UserRoute');
 

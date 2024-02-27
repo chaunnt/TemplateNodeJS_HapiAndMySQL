@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 Reminano */
+/* Copyright (c) 2023-2024 Reminano */
 
 const { TradingViewAPI } = require('tradingview-scraper');
 const { storeTradingViewData } = require('../../API/GameRecord/cronjob/binaryoption/BOTradingBinance');

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2023 Reminano */
+/* Copyright (c) 2021-2024 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -2014,14 +2014,14 @@ async function userViewsListMembership(req) {
       // }
       let promiseList = [];
 
-      let _userList =  AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      promiseList.push(_userList)
-      skip = skip + limit
-      let resultCount =  AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      promiseList.push(resultCount)
+      let _userList = AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      promiseList.push(_userList);
+      skip = skip + limit;
+      let resultCount = AppUserView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
+      promiseList.push(resultCount);
 
-      Promise.all(promiseList).then( async values => {
-        let _userList = values[0]
+      Promise.all(promiseList).then(async values => {
+        let _userList = values[0];
         if (_userList && _userList.length > 0) {
           for (let i = 0; i < _userList.length; i++) {
             _userList[i] = await AppUsersFunctions.retrieveUserDetail(_userList[i].appUserId);
@@ -2031,8 +2031,7 @@ async function userViewsListMembership(req) {
         } else {
           resolve({ data: [], total: 0 });
         }
-
-      })
+      });
     } catch (e) {
       Logger.error(__filename, e);
       reject('failed');

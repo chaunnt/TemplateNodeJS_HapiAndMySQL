@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2022 Reminano */
 
 module.exports = {
   subject: '[KiemDinhOto.vn] XÁC NHẬN LỊCH HẸN',

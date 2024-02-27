@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022 Reminano */
 
 const Stations = require('./StationsRoute');
 const Stations_User = require('./Stations_UserRoute');

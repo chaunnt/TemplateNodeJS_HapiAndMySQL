@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 var crypto = require('crypto');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -25,7 +27,6 @@ async function __checkOutPaymentByBankCode(bankCode, paymentIdString, paymentAmo
   // MD5(merchantNo+"|"+outTradeNo+"|"+type+"|"+code+"|"+amount+"|"+timestamp+"|"+key+"|" )
   let signature = `${reqBody.merchantNo}|${reqBody.outTradeNo}|${reqBody.type}|${reqBody.code}|${reqBody.amount}|${reqBody.timestamp}|${MERCHANT_KEY}|`;
 
-
   signature = crypto.createHash('md5').update(signature).digest('hex');
   reqBody.sign = signature;
 
@@ -43,24 +44,23 @@ async function __checkOutPaymentByBankCode(bankCode, paymentIdString, paymentAmo
 }
 
 async function createCheckoutPaymentBank(paymentIdString, paymentAmount) {
-  
   let _createCheckOutResult = undefined;
   //Tạo payment với bankcode hiện tại, không cần thiết phải loop toàn bộ bank
-  let bankChanelArr = ['SAC', 'MB', 'BIDV', 'VTB', 'ACB', 'EXB', 'VP', 'TCB', 'VCB', 'DAB', 'VIB', 'MSB', 'SHB']
+  let bankChanelArr = ['SAC', 'MB', 'BIDV', 'VTB', 'ACB', 'EXB', 'VP', 'TCB', 'VCB', 'DAB', 'VIB', 'MSB', 'SHB'];
   if (isNotEmptyStringValue(_currentWorkingBankCode) && bankChanelArr.includes(_currentWorkingBankCode)) {
     _createCheckOutResult = await __checkOutPaymentByBankCode(_currentWorkingBankCode, paymentIdString, paymentAmount);
     if (_createCheckOutResult && _createCheckOutResult.message === SUNPAY_SUCCESS_RESULT) {
-      return _createCheckOutResult
+      return _createCheckOutResult;
     }
   }
-  
+
   //Trường hợp thất bại hoặc bảo trì thì sẽ loop để tìm bank nào thành công
   for (let i = 0; i < bankChanelArr.length; i++) {
     const _bankChannel = bankChanelArr[i];
     _createCheckOutResult = await __checkOutPaymentByBankCode(_bankChannel, paymentIdString, paymentAmount);
 
     if (_createCheckOutResult && _createCheckOutResult.message === SUNPAY_SUCCESS_RESULT) {
-      return _createCheckOutResult
+      return _createCheckOutResult;
     }
   }
 

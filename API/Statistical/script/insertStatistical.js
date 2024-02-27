@@ -1,3 +1,5 @@
+/* Copyright (c) 2024 Reminano */
+
 'use strict';
 const { syncStatistical } = require('../StatisticalFunctions');
 const moment = require('moment');

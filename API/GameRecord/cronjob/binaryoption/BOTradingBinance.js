@@ -1,4 +1,4 @@
-/* Copyright (c) 2023 Reminano */
+/* Copyright (c) 2023-2024 Reminano */
 
 const { randomIntByMinMax, isNotEmptyStringValue, shuffleArrayRandom, randomFloatByMinMax } = require('../../../ApiUtils/utilFunctions');
 const {
