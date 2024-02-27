@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 'use strict';
 require('dotenv').config();
@@ -6,11 +6,10 @@ require('dotenv').config();
 const Logger = require('../../../utils/logging');
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
-const { MESSAGE_STATUS, MESSAGE_CATEGORY, MESSAGE_TOPIC, MESSAGE_TYPE, MESSAGE_RECEIVER } = require('../CustomerMessageConstant');
+const { MESSAGE_STATUS, MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
 const tableName = 'CustomerMessage';
 const primaryKeyField = 'customerMessageId';
 
-//user receive message schema
 async function createTable() {
   Logger.info('ResourceAccess', `createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
@@ -18,40 +17,16 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments('customerMessageId').primary();
-          table.string('customerMessageSendStatus').defaultTo(MESSAGE_STATUS.NEW);
           table.string('customerMessageCategories').defaultTo(MESSAGE_CATEGORY.EMAIL);
-          table.string('customerMessageTopic').defaultTo(MESSAGE_TOPIC.GENERAL);
-          table.string('customerMessageType').defaultTo(MESSAGE_TYPE.GENERAL);
-          table.string('customerMessagePhone');
-          table.string('customerMessageEmail');
-          table.string('customerMessageIdentity');
-          table.string('customerMessageNote');
-          table.string('customerMessageImage');
-          table.string('customerMessageContent', 2000);
+          table.integer('customerStationId');
+          table.string('customerMessageStatus').defaultTo(MESSAGE_STATUS.NEW);
+          table.string('customerMessageContent', 500);
           table.string('customerMessageTitle');
-          table.integer('isRead').defaultTo(0);
-          table.integer('customerStationId'); //tram
-          table.integer('customerScheduleId'); //lich hen
-          table.integer('receiverType').defaultTo(MESSAGE_RECEIVER.USER); //loai nguoi nhan
-          table.integer('customerId'); //id KH
-          table.integer('staffId'); //<< nguoi gui
-          table.integer('groupCustomerMessageId'); //id nhom (neu gui theo nhom)
-          table.integer('templateCustomerMessageId'); //id template (neu gui theo template)
+          table.string('customerMessageTemplateId');
           timestamps(table);
-          table.index('customerMessageSendStatus');
+          table.index('customerMessageId');
           table.index('customerMessageCategories');
-          table.index('customerMessageType');
-          table.index('customerMessageTopic');
-          table.index('customerMessagePhone');
-          table.index('customerMessageEmail');
-          table.index('customerMessageIdentity');
-          table.index('isRead');
-          table.index('customerStationId');
-          table.index('customerScheduleId');
-          table.index('customerId');
-          table.index('staffId');
-          table.index('groupCustomerMessageId');
-          table.index('templateCustomerMessageId');
+          table.index('customerMessageStatus');
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -66,7 +41,7 @@ async function initDB() {
 }
 
 async function insert(data) {
-  return await Common.insert(tableName, data);
+  return await Common.insert(tableName, data, primaryKeyField);
 }
 
 async function updateById(id, data) {
@@ -92,21 +67,30 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (searchText) {
+    searchText = searchText.trim();
     queryBuilder.where(function () {
       this.orWhere('customerMessageCategories', 'like', `%${searchText}%`)
         .orWhere('customerMessageContent', 'like', `%${searchText}%`)
         .orWhere('customerRecordPhone', 'like', `%${searchText}%`);
     });
+  } else {
+    if (filterData.customerMessageContent) {
+      queryBuilder.where('customerMessageContent', 'like', `%${filterData.customerMessageContent}%`);
+      delete filterData.customerMessageContent;
+    }
+
+    if (filterData.customerRecordPhone) {
+      queryBuilder.where('customerRecordPhone', 'like', `%${filterData.customerRecordPhone}%`);
+      delete filterData.customerRecordPhone;
+    }
   }
 
   if (startDate) {
-    const moment = require('moment');
-    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
+    queryBuilder.where('createdAt', '>=', startDate);
   }
 
   if (endDate) {
-    const moment = require('moment');
-    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
+    queryBuilder.where('createdAt', '<=', endDate);
   }
 
   queryBuilder.where(filterData);
@@ -124,7 +108,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
+    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -135,11 +119,32 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
+async function customCount(filter, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records[0].count);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
+async function customCountDistinct(fieldDistinct, filter, startDate, endDate, searchText) {
+  //override orderBy of default query
+  let order = {
+    key: `${fieldDistinct}`,
+    value: 'asc',
+  };
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+  return new Promise((resolve, reject) => {
+    try {
+      query.count(`${primaryKeyField} as count`).select(`${fieldDistinct}`).groupBy(`${fieldDistinct}`);
+      query.then(records => {
         resolve(records);
       });
     } catch (e) {
@@ -150,8 +155,10 @@ async function customCount(filter, startDate, endDate, searchText) {
   });
 }
 
-async function updateAll(data, filter) {
-  return await Common.updateAll(tableName, data, filter);
+async function permanentlyDelete(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.permanentlyDelete(tableName, dataId);
 }
 
 module.exports = {
@@ -164,5 +171,6 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
-  updateAll,
+  customCountDistinct,
+  permanentlyDelete,
 };

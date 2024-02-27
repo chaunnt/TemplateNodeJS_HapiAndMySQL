@@ -23,14 +23,27 @@ let APIs = [
   //FEATURE 2023020601 Improve Security of APIs
   {
     method: 'GET',
+    path: '/HealthCheck',
+    handler: function (request, reply) {
+      return reply(`Hi`).code(200);
+    },
+  },
+  //FEATURE 2023020601 Improve Security of APIs
+  {
+    method: 'GET',
     path: '/{path*}',
-    handler: function (request, h) {
+    handler: function (request, reply) {
       if (request.url.path.indexOf('uploads/') >= 0) {
-        return h.file(`${request.params.path}`);
+        return reply.file(`${request.params.path}`);
       } else {
-        Logger.info(`!! Some one is trying to discover project ${process.env.PROJECT_NAME} using ${request.url.path}`);
-        bot.sendMessage(chatId, `!! Some one is trying to discover project ${process.env.PROJECT_NAME} using ${request.url.path}`);
-        return h.redirect(`https://google.com`);
+        // !!FEATURE 20230221 Tracking hacker IPs
+        //store IP & last login
+        const requestIp = require('request-ip');
+        const clientIp = requestIp.getClientIp(request);
+        const warningMsg = `SECURITY LEAKS!! Some one from ${clientIp} is trying to discover project ${process.env.PROJECT_NAME} using ${request.url.path}`;
+        console.info(warningMsg);
+        reportToTelegram(warningMsg);
+        return reply.redirect(`https://google.com`);
       }
     },
   },

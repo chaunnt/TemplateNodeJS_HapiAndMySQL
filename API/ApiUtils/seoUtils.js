@@ -168,10 +168,7 @@ function _getFacebookMetadata(title, description, url, imageUrl, keywords, creat
     content: description.substring(0, SEO_SHORT_DESC_LENGTH),
   });
 
-  metatags.push({
-    property: 'article:tag',
-    content: 'Website đọc truyện tranh',
-  });
+  metatags.push({ property: 'article:tag', content: 'Website đọc truyện tranh' });
   metatags.push({ property: 'article:tag', content: SITE_NAME });
 
   for (let i = 0; i < keywords.length; i++) {

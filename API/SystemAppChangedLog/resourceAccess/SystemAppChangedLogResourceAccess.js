@@ -15,13 +15,14 @@ async function createTable() {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments('systemAppChangedLogId').primary();
-          table.string('dataValueBefore');
-          table.string('dataValueAfter');
-          table.string('dataTableName');
-          table.string('dataFieldName');
-          table.string('dataPICName');
-          table.string('dataPICId');
-          table.string('dataPICTable');
+          table.text('dataValueBefore').nullable();
+          table.text('dataValueAfter').nullable();
+          table.string('dataTableName').nullable();
+          table.string('dataFieldName').nullable();
+          table.string('dataPICName').nullable();
+          table.string('dataPICId').nullable();
+          table.string('dataPICTable').nullable();
+          table.integer('dataRecordId'); // record change id
           timestamps(table);
           table.index('dataTableName');
           table.index('dataFieldName');

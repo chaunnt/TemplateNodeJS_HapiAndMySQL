@@ -1,5 +1,5 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
-require('./GroupCustomerMessage.spec');
-require('./CustomerMessage_User.spec');
-require('./CustomerMessage_Staff.spec');
+// require('./CustomerMessage.spec');
+require('./CustomerMessage_Admin.spec');
+require('./CustomerMessage_AdvanceUser.spec');

@@ -4,7 +4,11 @@
  * Created by A on 7/18/17.
  */
 const dotenv = require('dotenv').config();
-
+console.info({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  database: process.env.DB_NAME,
+});
 const knex = require('knex')({
   client: 'mysql',
   connection: {

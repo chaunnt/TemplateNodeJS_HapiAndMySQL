@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -9,7 +9,7 @@ const CustomerAutoProcess = require('./CustomerRecordAutoUpdateProcess');
 const CustomerAutoComplete = require('./CustomerRecordAutoCompleteProcess');
 
 async function autoUpdateProcessForStation() {
-  console.log(`autoUpdateProcessForStation`);
+  console.info(`autoUpdateProcessForStation`);
   if (process.env.ENABLE_AUTOPROCESS === 0) {
     return;
   }
@@ -34,13 +34,13 @@ async function autoUpdateProcessForStation() {
     }
 
     Promise.all(promiseList).then(values => {
-      console.log(`autoUpdateProcessForStation ${values}`);
+      console.info(`autoUpdateProcessForStation ${values}`);
     });
   }
 }
 
 async function autoCompleteProcessForAllStation() {
-  console.log(`autoUpdateProcessForStation`);
+  console.info(`autoUpdateProcessForStation`);
   if (process.env.ENABLE_AUTOPROCESS === 0) {
     return;
   }
@@ -59,7 +59,7 @@ async function autoCompleteProcessForAllStation() {
     }
 
     await Promise.all(promiseList).then(values => {
-      console.log(`autoCompleteProcessForAllStation ${values}`);
+      console.info(`autoCompleteProcessForAllStation ${values}`);
     });
   }
 }

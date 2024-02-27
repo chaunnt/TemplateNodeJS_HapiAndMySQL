@@ -10,7 +10,7 @@ const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAcce
 const SystemAppLogAppUserResource = require('./resourceAccess/SystemAppLogAppUserResourceAccess');
 const Logger = require('../../utils/logging');
 const moment = require('moment');
-async function logAppDataChanged(dataBefore, dataAfter, picUser, tableName) {
+async function logAppDataChanged(dataBefore, dataAfter, picUser, tableName, recordId) {
   console.log('dataAfter: ', dataAfter);
   console.log('dataBefore: ', dataBefore);
   if (dataBefore.gameConfigWinRate || dataAfter.gameConfigWinRate) {
@@ -69,8 +69,8 @@ async function logAppDataChanged(dataBefore, dataAfter, picUser, tableName) {
   }
 }
 
-async function logCustomerRecordChanged(dataBefore, dataAfter, picUser) {
-  await logAppDataChanged(dataBefore, dataAfter, picUser, CustomerRecordResource.modelName);
+async function logCustomerRecordChanged(dataBefore, dataAfter, picUser, recordId) {
+  await logAppDataChanged(dataBefore, dataAfter, picUser, CustomerRecordResource.modelName, recordId);
 }
 
 async function logAppUserMembershipChanged(dataBefore, dataAfter, picUser) {

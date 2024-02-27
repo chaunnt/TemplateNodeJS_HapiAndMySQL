@@ -8,7 +8,7 @@ var pjson = require('.././package.json');
 module.exports = {
   jwt: {
     secret: process.env.SECRET || 'thisismysecret',
-    expiresIn: process.env.EXPIRESIN || '24h',
+    expiresIn: process.env.EXPIRESIN || '30d',
   },
   documentation: {
     enable: true,

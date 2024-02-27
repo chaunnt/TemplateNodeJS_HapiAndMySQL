@@ -5,11 +5,11 @@ require('dotenv').config();
 
 const Logger = require('../../../utils/logging');
 const { DB } = require('../../../config/database');
+const { isValidValue, isNotEmptyStringValue, executeBatchPromise } = require('../../ApiUtils/utilFunctions');
 
-const redisCache = undefined;
-if (process.env.REDIS_ENABLE) {
-  const redisCache = require('../../../ThirdParty/Redis/RedisInstance');
-  redisCache.initRedis();
+let RedisInstance;
+if (process.env.REDIS_ENABLE * 1 === 1) {
+  RedisInstance = require('../../../ThirdParty/Redis/RedisInstance');
 }
 
 function createOrReplaceView(viewName, viewDefinition) {
@@ -28,12 +28,15 @@ async function insert(tableName, data) {
     }
     data.createdAtTimestamp = new Date() * 1;
     result = await DB(tableName).insert(data);
-    if (result) {
-      let id = result[0];
-      let dataTable = await find(tableName, undefined, 0, 1);
-      let dataCache = dataTable[0];
-      if (process.env.REDIS_ENABLE) {
-        await redisCache.setWithExpire(`${tableName}_${id.toString()}`, JSON.stringify(dataCache));
+    if (process.env.REDIS_ENABLE * 1 === 1) {
+      if (result) {
+        let _newId = result[0];
+        if (_newId && _newId > 0) {
+          let _insertedData = await findById(tableName, primaryKey, _newId);
+          if (_insertedData) {
+            await RedisInstance.setWithExpire(`${primaryKey}_${_newId}`, JSON.stringify(_insertedData));
+          }
+        }
       }
     }
   } catch (e) {
@@ -47,7 +50,7 @@ async function sum(tableName, field, filter, order) {
   if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
     Logger.info(`tableName : ${tableName}, Query: sum ${field}`);
   }
-  let queryBuilder = makeBasicQueryBuilder(tableName, filter);
+  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, undefined, undefined, order);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.sum(`${field} as sumResult`).then(records => {
@@ -179,13 +182,10 @@ async function updateById(tableName, id, data) {
   let result = undefined;
   try {
     result = await DB(tableName).where(id).update(data);
-    if (result) {
-      if (process.env.REDIS_ENABLE) {
-        var keys = Object.keys(id);
-        let idValue = id[keys[0]];
-        let dataUpdate = await DB(tableName).select().where(id);
-        await redisCache.deleteByKey(`${tableName}_${idValue.toString()}`);
-        await redisCache.setWithExpire(`${tableName}_${idValue.toString()}`, JSON.stringify(dataUpdate[0]));
+    if (process.env.REDIS_ENABLE * 1 === 1) {
+      if (result !== undefined) {
+        let _updatedData = await DB(tableName).where(id);
+        await RedisInstance.setWithExpire(`${id[Object.keys(id)[0]]}_${id[Object.keys(id)[1]]}`, JSON.stringify(_updatedData[0]));
       }
     }
   } catch (e) {
@@ -271,31 +271,52 @@ function _makeQueryBuilderByFilterAllDelete(tableName, filter, skip, limit, orde
     queryBuilder.offset(skip);
   }
 
+  queryBuilder.where({ isDeleted: 0 });
+
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
-  } else {
-    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
 }
-async function find(tableName, filter, skip, limit, order, fields) {
-  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
-    Logger.info(`tableName : ${tableName}, Query: find ${filter}`);
-  }
-  let queryBuilder = makeBasicQueryBuilder(tableName, filter, skip, limit, order);
+
+async function executeSelectQuery(queryBuilder, tableName, primaryKey) {
   return new Promise((resolve, reject) => {
     try {
-      queryBuilder.select(fields).then(records => {
-        resolve(records);
-      });
+      //neu data can optimize query select theo primary key (danh cho cac table co luong record nhieu)
+      if (process.env.ENABLE_OPTIMIZE_QUERYDB * 1 === 1 && isNotEmptyStringValue(primaryKey)) {
+        //lấy ra danh sách id của các record
+        queryBuilder.select(primaryKey).then(records => {
+          const _queryPromiseList = [];
+          let skipCache = true;
+
+          //lấy thông tin chi tiết từng record theo id
+          for (const recordId of records) {
+            _queryPromiseList.push(findById(tableName, primaryKey, recordId[primaryKey], skipCache));
+          }
+          Promise.all(_queryPromiseList).then(queryResultList => {
+            resolve(queryResultList);
+          });
+        });
+      } else {
+        //nếu không cần tối ưu thì xử lý như bình thường
+        queryBuilder.select().then(records => {
+          resolve(records);
+        });
+      }
     } catch (e) {
-      Logger.error('ResourceAccess', `DB FIND ERROR: ${tableName} : ${JSON.stringify(filter)} - ${skip} - ${limit} ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', `DB FIND ERROR: ${queryBuilder.toString()}`);
       Logger.error('ResourceAccess', e);
-      reject(undefined);
+      resolve(undefined);
     }
   });
 }
+
+async function find(tableName, filter, skip, limit, order, primaryKey) {
+  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, skip, limit, order);
+  return executeSelectQuery(queryBuilder, tableName, primaryKey);
+}
+
 
 async function findAllDelete(tableName, filter, skip, limit, order) {
   if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
@@ -314,31 +335,68 @@ async function findAllDelete(tableName, filter, skip, limit, order) {
     }
   });
 }
-async function findById(tableName, key, id) {
-  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
-    Logger.info(`tableName : ${tableName}, Query: findById, key:${key}`);
-  }
-  let result = undefined;
-  //enable redis cache
-  if (process.env.REDIS_ENABLE) {
-    result = await redisCache.getJson(`${tableName}_${id}`);
+async function findById(tableName, key, id, skipCache = false) {
+  if (skipCache === false || process.env.REDIS_ENABLE * 1 === 1) {
+    let _cacheItem = await RedisInstance.getJson(`${tableName}_${id}`);
+
+    if (isValidValue(_cacheItem)) {
+      return _cacheItem;
+    }
   }
   return new Promise((resolve, reject) => {
     try {
-      if (result) {
-        resolve(result);
-      } else {
-        DB(tableName)
-          .select()
-          .where(key, id)
-          .then(records => {
-            if (records && records.length > 0) {
-              resolve(records[0]);
+      DB(tableName)
+        .select()
+        .where(key, id)
+        .where('isDeleted', 0)
+        .then(records => {
+          if (records && records.length > 0) {
+            if (skipCache === false && process.env.REDIS_ENABLE * 1 === 1) {
+              if (isValidValue(records[0])) {
+                RedisInstance.setWithExpire(`${key}_${id}`, JSON.stringify(records[0])).then(() => {
+                  resolve(records[0]);
+                });
+              } else {
+                resolve(undefined);
+              }
             } else {
-              resolve(undefined);
+              resolve(records[0]);
             }
-          });
-      }
+          } else {
+            resolve(undefined);
+          }
+        });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB FIND ERROR: findById ${tableName} : ${key} - ${id}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
+async function findOne(tableName, filter) {
+  return new Promise((resolve, reject) => {
+    try {
+      DB(tableName)
+        .select()
+        .where(filter)
+        .then(records => {
+          if (records && records.length > 0) {
+            if (process.env.REDIS_ENABLE * 1 === 1) {
+              if (isValidValue(records[0])) {
+                RedisInstance.setWithExpire(`${tableName}_findone_${JSON.stringify(filter)}`, JSON.stringify(records[0])).then(() => {
+                  resolve(records[0]);
+                });
+              } else {
+                resolve(undefined);
+              }
+            } else {
+              resolve(records[0]);
+            }
+          } else {
+            resolve(undefined);
+          }
+        });
     } catch (e) {
       Logger.error('ResourceAccess', `DB FIND ERROR: findById ${tableName} : ${key} - ${id}`);
       Logger.error('ResourceAccess', e);
@@ -522,8 +580,10 @@ async function decrementFloat(tableName, key, id, field, amount) {
 }
 module.exports = {
   insert,
+  executeSelectQuery,
   find,
   findById,
+  findOne,
   findAllDelete,
   updateById,
   updateAllById,

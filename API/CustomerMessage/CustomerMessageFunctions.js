@@ -1,46 +1,110 @@
-/* Copyright (c) 2021-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const Handlebars = require('handlebars');
-
+const moment = require('moment');
 const CustomerMessageResourceAccess = require('./resourceAccess/CustomerMessageResourceAccess');
-const GroupCustomerMessageResourceAccess = require('./resourceAccess/GroupCustomerMessageResourceAccess');
-// const MessageCustomerResourceAccess = require('./resourceAccess/MessageCustomerResourceAccess');
-
+const MessageCustomerResourceAccess = require('./resourceAccess/MessageCustomerResourceAccess');
+const MessageTemplateResourceAccess = require('../MessageTemplate/resourceAccess/MessageTemplateResourceAccess');
+const StationsResource = require('../Stations/resourceAccess/StationsResourceAccess');
+const CustomerRecord = require('../CustomerRecord/resourceAccess/CustomerRecordResourceAccess');
+const CustomerSchedule = require('../CustomerSchedule/resourceAccess/CustomerScheduleResourceAccess');
 const ApiUtilsFunctions = require('../ApiUtils/utilFunctions');
-const { MESSAGE_STATUS, MESSAGE_TYPE, MESSAGE_TOPIC, MESSAGE_CATEGORY, MESSAGE_RECEIVER } = require('./CustomerMessageConstant');
-const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
+const EmailClient = require('../../ThirdParty/Email/EmailClient');
+const CustomerStatisticalFunction = require('../CustomerStatistical/CustomerStatisticalFunctions');
+const AppUserResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 
-const Logger = require('../../utils/logging');
-
+const {
+  MESSAGE_CATEGORY,
+  MESSAGE_SEND_STATUS,
+  MESSAGE_PRICES,
+  MESSAGE_STATUS,
+  SMS_PROVIDER,
+  MESSAGE_TYPE,
+  MESSAGE_REJECT,
+} = require('../CustomerMessage/CustomerMessageConstant');
 const FUNC_SUCCESS = 1;
 const FUNC_FAILED = undefined;
 
-const messageTemplate = [
+const Logger = require('../../utils/logging');
+// const MessageCustomerMarketingResourceAccess = require('./resourceAccess/MessageCustomerMarketingResourceAccess');
+const MessageCustomerMarketingResourceAccess = require('../MessageCustomerMarketing/resourceAccess/MessageCustomerMarketingResourceAccess');
+const { CRIMINAL } = require('../AppUserVehicle/AppUserVehicleConstant');
+const { MARKETING_MESSAGE_SEND_STATUS } = require('../MessageCustomerMarketing/MessageCustomerMarketingConstant');
+
+let messageTemplate = [
+  // {
+  //   messageTemplateId: 1,
+  //   messageTemplateContent: "{{stationsBrandname}} mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}",
+  //   messageTemplateName: "CSKH",
+  //   messageTemplateScope: [CustomerRecord.modelName],
+  //   messageZNSTemplateId: null, //chua dang ky
+  // },
   {
     messageTemplateId: 1,
-    messageTemplateContent: 'Mời bạn đăng ký đăng kiểm tại {{stationsAddress}} cho ô tô BKS số {{customerRecordPlatenumber}}',
-    messageTemplateName: 'CSKH',
-    // messageTemplateScope: [CustomerRecord.modelName]
+    messageTemplateName: 'Nhắc đăng kiểm mẫu 1',
+    messageTemplateContent:
+      '{{stationsBrandname}} {{stationsAddress}} kinh bao: Xe {{customerRecordPlatenumber}} het han kiem dinh ngay {{customerRecordCheckExpiredDate}}. Quy khach can ho tro vui long lien he {{stationsHotline}}',
+    messageTemplateScope: [CustomerRecord.modelName],
+    messageZNSTemplateId: 227966,
   },
+  // {
+  //   messageTemplateId: 2,
+  //   messageTemplateName: "Nhắc đăng kiểm mẫu 2",
+  //   messageTemplateContent: "{{stationsBrandname}} {{stationsAddress}} t/t thong bao: oto bien so {{customerRecordPlatenumber}} het han kiem dinh ngay {{customerRecordCheckExpiredDate}}. Lien he dat lich kiem dinh tai {{stationUrl}}. T/t cam on",
+  //   messageTemplateScope: [CustomerRecord.modelName],
+  //   messageZNSTemplateId: 227967,
+  // },
+  // {
+  //   messageTemplateId: 4,
+  //   messageTemplateName: "Nhắc đăng kiểm mẫu 3",
+  //   messageTemplateContent: "{{stationsBrandname}} {{stationsAddress}} Thong bao: Xe {{customerRecordPlatenumber}} het han dang kiem ngay {{customerRecordCheckExpiredDate}}. Rat han hanh duoc phuc vu. LH: {{stationsHotline}}",
+  //   messageTemplateScope: [CustomerRecord.modelName],
+  //   messageZNSTemplateId: 227928
+  // },
+  // {
+  //   messageTemplateId: 5,
+  //   messageTemplateName: "Nhắc đăng kiểm mẫu 4",
+  //   messageTemplateContent: "Xe {{customerRecordPlatenumber}} het han dang kiem ngay {{customerRecordCheckExpiredDate}}. Chung toi thong bao den quy khach kiem dinh dung thoi han. {{stationsBrandname}} {{stationsAddress}} han hanh duoc phuc vu. LH: {{stationsHotline}}",
+  //   messageTemplateScope: [CustomerRecord.modelName],
+  //   messageZNSTemplateId: null, //chua dang ky
+  // },
   {
     messageTemplateId: 2,
-    messageTemplateName: 'Nhắc đăng kiểm',
+    messageTemplateName: 'Nhắc đăng kiểm mẫu 2',
     messageTemplateContent:
-      'Ô tô BKS số {{customerRecordPlatenumber}} hết hạn đăng kiểm vào {{customerRecordCheckExpiredDate}}. Mời bạn đăng ký đăng kiểm tại {{stationsAddress}}',
-    // messageTemplateScope: [CustomerRecord.modelName]
+      'TT Dang kiem 29-02V Phu Thi-Gia Lam-HN kinh bao: Xe {{customerRecordPlatenumber}} het han kiem dinh ngay {{customerRecordCheckExpiredDate}}. Quy khach can ho tro vui long lien he 0888939836/0936310333',
+    messageTemplateScope: [CustomerRecord.modelName],
+    messageZNSTemplateId: 227967,
+    stationsId: 290,
+  },
+  {
+    messageTemplateId: 3,
+    messageTemplateName: 'Nhắc đăng kiểm mẫu 2',
+    messageTemplateContent:
+      'TTDK Cau Giay t/t thong bao: oto bien so {{customerRecordPlatenumber}} het han kiem dinh ngay {{customerRecordCheckExpiredDate}}. Quy khach co the lien he dat lich kiem chuan tai ttdk2903v.com. T/t cam on.',
+    messageTemplateScope: [CustomerRecord.modelName],
+    messageZNSTemplateId: 227967,
+    stationsId: 162,
   },
 ];
 
+async function _fetchTemplate() {
+  console.info(`_fetchTemplate ${new Date()}`);
+  let _messageList = await MessageTemplateResourceAccess.find({}, 0, 100);
+  messageTemplate = _messageList;
+  console.info(`messageTemplate: ${messageTemplate.length}`);
+}
+
 function _importDataForMessage(customer) {
   return {
-    customerMessageEmail: customer.customerRecordEmail,
-    customerMessagePhone: customer.customerRecordPhone,
+    customerMessageEmail: customer.customerMessageEmail,
+    customerMessagePhone: customer.customerMessagePhone,
     customerMessagePlateNumber: customer.customerRecordPlatenumber,
-    customerId: customer.customerRecordId,
+    customerId: customer.customerId,
   };
 }
 
@@ -48,13 +112,7 @@ async function checkValidTemplateMessage(messageTemplateId) {
   //check if using template and template is valid
   let templateData = undefined;
   if (messageTemplateId) {
-    for (let i = 0; i < messageTemplate.length; i++) {
-      const template = messageTemplate[i];
-      if (messageTemplateId * 1 === template.messageTemplateId * 1) {
-        templateData = template;
-        break;
-      }
-    }
+    templateData = await MessageTemplateResourceAccess.findById(messageTemplateId);
 
     if (templateData === undefined) {
       Logger.error(`there is no template with id ${messageTemplateId}`);
@@ -77,17 +135,25 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
     return FUNC_FAILED;
   }
 
+  customer.customerRecordCheckExpiredDate = moment(customer.customerRecordCheckExpiredDate).format('DD/MM/YYYY');
+  customer.customerRecordPlatenumber = customer.customerRecordPlatenumber.toUpperCase();
+  let _smsConfig = undefined;
+  try {
+    _smsConfig = JSON.parse(station.stationCustomSMSBrandConfig);
+  } catch (error) {
+    console.error(`parse error 131`);
+  }
+
   //generate content by template & customer data
   let templateParams = {
     ...customer,
     ...station,
+    stationsBrandname: _smsConfig ? _smsConfig.smsBrand : '',
   };
-
-  const CustomerSchedule = require('../CustomerSchedule/resourceAccess/CustomerScheduleResourceAccess');
 
   //if this message is "REMIND SCHEDULE" message
   //else default is "CUSTOMER SERVICE" message
-  if (templateData.messageTemplateScope.indexOf(CustomerSchedule.modelName) > -1) {
+  if (templateData.messageTemplateScope && templateData.messageTemplateScope.indexOf(CustomerSchedule.modelName) > -1) {
     let scheduleData = CustomerSchedule.find({
       licensePlates: customer.customerRecordPlatenumber,
     });
@@ -104,15 +170,13 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
   return customerMessageContent;
 }
 
-async function _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId) {
+async function _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, customerMessageTemplateId) {
   let _enableUsingTemplate = false;
 
-  let templateContent = await checkValidTemplateMessage(templateCustomerMessageId);
+  let templateContent = await checkValidTemplateMessage(customerMessageTemplateId);
   if (templateContent) {
     _enableUsingTemplate = true;
   }
-
-  const StationsResource = require('../Stations/resourceAccess/StationsResourceAccess');
 
   //get station info
   let station = await StationsResource.findById(stationsId);
@@ -130,7 +194,7 @@ async function _createNewMessage(stationsId, customerMessageContent, customerMes
 
   if (_enableUsingTemplate) {
     dataMessage.customerMessageContent = templateContent.messageTemplateContent;
-    dataMessage.templateCustomerMessageId = templateCustomerMessageId;
+    dataMessage.customerMessageTemplateId = customerMessageTemplateId;
   }
 
   let messageId = await CustomerMessageResourceAccess.insert(dataMessage);
@@ -142,45 +206,163 @@ async function _createNewMessage(stationsId, customerMessageContent, customerMes
   }
 }
 
+async function createNewUserMessageByStation(phoneNumber, stationsId, messageContent, plateNumber, appUserId, scheduleId, appUserVehicleId) {
+  let _newCustomerList = [
+    {
+      customerRecordEmail: null,
+      customerRecordPhone: phoneNumber,
+      customerRecordPlatenumber: plateNumber,
+      customerRecordId: appUserId,
+    },
+  ];
+  await sendMessageToManyCustomer(_newCustomerList, stationsId, messageContent, MESSAGE_CATEGORY.SMS, undefined, scheduleId, appUserVehicleId);
+
+  return true;
+}
+
+//otherData: appUserVehicleId, customerRecordId, customerScheduleId
+async function createMessageForCustomerOnly(messageTitle, messageContent, customerId, phoneNumber, email, otherData) {
+  const messageCustomerData = {
+    messageTitle: messageTitle,
+    customerId: customerId || 0,
+    messageContent: messageContent,
+    customerMessageEmail: email || '',
+    customerMessagePhone: phoneNumber || '',
+  };
+  if (otherData) {
+    if (otherData.appUserVehicleId) {
+      messageCustomerData.appUserVehicleId = otherData.appUserVehicleId;
+    }
+
+    if (otherData.customerScheduleId) {
+      messageCustomerData.customerScheduleId = otherData.customerScheduleId;
+    }
+
+    if (otherData.customerRecordId) {
+      messageCustomerData.customerRecordId = otherData.customerRecordId;
+    }
+  }
+
+  return await MessageCustomerResourceAccess.insert(messageCustomerData);
+}
+
+async function addWarningTicketMessageCustomer(plateNumber, customerId, email, appUserVehicleId, customerRecordId, customerScheduleId) {
+  let messageTitle = 'Thông báo kiểm tra phạt nguội từ hệ thống';
+  let messageContent = `TTDK thông báo: phương tiện biển số ${plateNumber} của quý khách có phạt nguội, vui lòng kiểm tra xử lý phạt nguội trước khi đăng kiểm.`;
+  let messageType = MESSAGE_TYPE.VR_VEHICLE_CRIMINAL_WARNING;
+  return await addMessageCustomer(
+    messageTitle,
+    null,
+    messageContent,
+    plateNumber,
+    customerId,
+    email,
+    appUserVehicleId,
+    customerRecordId,
+    customerScheduleId,
+    messageType,
+  );
+}
+
+async function addMessageCustomer(
+  messageTitle,
+  stationsId,
+  messageContent,
+  plateNumber,
+  customerId,
+  email,
+  appUserVehicleId,
+  customerRecordId,
+  customerScheduleId,
+  messageType,
+) {
+  const messageCustomerData = {
+    messageTitle: messageTitle,
+    customerId: customerId || 0,
+    customerStationId: stationsId || null, // null => có gửi thông báo push đến user
+    customerMessagePlateNumber: plateNumber || '',
+    messageContent: messageContent,
+    customerMessageEmail: email || '',
+    // customerMessagePhone: phoneNumber || '',
+  };
+  if (appUserVehicleId) {
+    messageCustomerData.appUserVehicleId = appUserVehicleId;
+  }
+  if (customerRecordId) {
+    messageCustomerData.customerRecordId = customerRecordId;
+  }
+
+  if (customerScheduleId) {
+    messageCustomerData.customerScheduleId = customerScheduleId;
+  }
+  if (messageType) {
+    messageCustomerData.messageType = messageType;
+  }
+  return await MessageCustomerResourceAccess.insert(messageCustomerData);
+}
+
 //Send message to many customer
-async function sendMessageToManyCustomer(customerList, stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId) {
+async function sendMessageToManyCustomer(
+  customerList,
+  stationsId,
+  customerMessageContent,
+  customerMessageCategories,
+  customerMessageTemplateId,
+  scheduleId,
+  appUserVehicleId,
+) {
   if (customerList.length <= 0) {
     return FUNC_SUCCESS;
   }
 
   //create new MessageCustomer object
-  let messageId = await _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId);
+  let messageId = await _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, customerMessageTemplateId);
   if (messageId === undefined) {
     Logger.error(`can not create new message`);
     return FUNC_FAILED;
   }
 
   let messageList = [];
-  let listTopicUser = [];
-  let listUserToken = [];
+
+  let stationData = await StationsResource.findById(stationsId);
 
   //get Message content and split into 1 message for each customer
+  const baseMessage = {
+    messageId: messageId,
+    customerStationId: stationsId,
+  };
+
+  if (scheduleId) {
+    baseMessage.customerScheduleId = scheduleId;
+  }
+
+  if (appUserVehicleId) {
+    baseMessage.appUserVehicleId = appUserVehicleId;
+  }
+
   for (var i = 0; i < customerList.length; i++) {
     const customer = customerList[i];
-    let customerMessage = {
-      ..._importDataForMessage(customer),
-      messageId: messageId,
-      customerStationId: stationsId,
-    };
-    // let customerMessage = {
-    //   customerId: customerList[i].appUserId,
-    //   messageId: customerMessageId,
-    //   messageNote: messageNote,
-    //   messageTimeReceive: new Date().toISOString(),
-    //   messageCustomerData: data ? JSON.stringify(data) : null,
-    //   isRead: 0,
-    //   messageType: messageType
-    // }
-    // messageList.push(customerMessage);
-    // listTopicUser.push(`USER_${customerList[i].appUserId}`);
-    // if(customerList[i].firebaseToken) {
-    //   listUserToken.push(customerList[i].firebaseToken);
-    // }
+    let customerMessage = Object.assign(_importDataForMessage(customer), baseMessage);
+
+    let temp = Handlebars.compile(customerMessageContent);
+    if (stationData) {
+      customerMessage.messageContent = temp({
+        stationsBrandname: stationData.stationsName,
+        stationsAddress: stationData.stationsAddress,
+        customerRecordPlatenumber: customer.customerRecordPlatenumber,
+        customerRecordCheckExpiredDate: customer.customerRecordCheckExpiredDate,
+        stationsHotline: stationData.stationsHotline,
+      });
+    } else {
+      customerMessage.messageContent = temp({
+        stationsBrandname: '',
+        stationsAddress: '',
+        customerRecordPlatenumber: '',
+        customerRecordCheckExpiredDate: '',
+        stationsHotline: '',
+      });
+    }
+    messageList.push(customerMessage);
   }
 
   //Chunk messageList array into multiple batches of 100 to prevent DB Crash
@@ -193,269 +375,493 @@ async function sendMessageToManyCustomer(customerList, stationsId, customerMessa
     await MessageCustomerResourceAccess.insert(messageList);
   }
 
-  let sendMessageResult;
-  const { pushNotificationByTopic, pushNotificationByTokens } = require('../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
-
-  if (customerMessageCategories === MESSAGE_TYPE.GENERAL) {
-    sendMessageResult = await pushNotificationByTopic(customerMessageCategories, customerMessageTitle, customerMessageContent, data, messageType);
+  if (messageList.length > 0) {
+    return messageList.length;
   } else {
-    for (let i = 0; i < listTopicUser.length; i++) {
-      await pushNotificationByTopic(listTopicUser[i], customerMessageTitle, customerMessageContent, data, messageType);
-    }
-  }
-  await pushNotificationByTokens(listUserToken, customerMessageTitle, customerMessageContent, data, messageType);
-  if (sendMessageResult) {
-    await CustomerMessageResourceAccess.updateById(customerMessageId, {
-      customerMessageSendStatus: MESSAGE_STATUS.COMPLETED,
-      customerMessageTimeSent: new Date().toISOString(),
-      isHidden: hiddenAfterSend ? 1 : 0,
-    });
     return FUNC_SUCCESS;
+  }
+}
+async function sendSMSMessageToManyCustomer(
+  customerList,
+  stationsId,
+  // customerMessageContent,
+  customerMessageCategories,
+  messagePrice,
+) {
+  if (customerList.length <= 0) {
+    return FUNC_SUCCESS;
+  }
+
+  let messageList = [];
+  let stationData = await StationsResource.findById(stationsId);
+
+  //get Message content and split into 1 message for each customer
+  if (messagePrice < 0) {
+    throw MESSAGE_REJECT.PRICE_NEGATIVE;
+  }
+  const baseMessage = {
+    customerStationId: stationsId,
+    messageTitle: `Thông báo hệ thống từ TTDK ${stationData.stationCode}`,
+    customerMessageCategories: customerMessageCategories,
+    messagePrice: messagePrice,
+  };
+
+  for (var i = 0; i < customerList.length; i++) {
+    const customer = customerList[i];
+    let customerMessage = Object.assign(_importDataForSMSMessage(customer), baseMessage);
+    customerMessage.messageContent = customer.customerMessageContent;
+
+    messageList.push(customerMessage);
+  }
+  await MessageCustomerResourceAccess.insert(messageList);
+  await MessageCustomerMarketingResourceAccess.insert(messageList);
+
+  if (messageList.length > 0) {
+    return messageList.length;
   } else {
-    await CustomerMessageResourceAccess.updateById(customerMessageId, {
-      customerMessageSendStatus: MESSAGE_STATUS.FAILED,
-      customerMessageTimeSent: new Date().toISOString(),
-      isHidden: hiddenAfterSend ? 1 : 0,
-    });
-    return FUNC_FAILED;
+    return FUNC_SUCCESS;
   }
 }
+async function sendMessageAPNSCustomer(userReciveMessageList, stationsId, customerMessageCategories, stationData, messagePrice) {
+  let messageList = [];
+  let messageMarketingList = [];
+  for (let i = 0; i < userReciveMessageList.length; i++) {
+    const customer = userReciveMessageList[i];
 
-async function getTemplateMessages() {
-  return messageTemplate;
-}
+    // Kiểm tra tin nhắn cho khách hàng này ngày hôm nay đã có chưa
+    const existedMessage = await MessageCustomerMarketingResourceAccess.customSearch(
+      {
+        customerMessagePhone: customer.customerRecordPhone,
+        customerMessagePlateNumber: customer.customerRecordPlatenumber,
+        customerStationId: stationsId,
+        customerMessageCategories: customerMessageCategories,
+      },
+      0,
+      1,
+      moment().startOf('day').format(),
+      moment().endOf('day').format(),
+    );
 
-async function handleSendMessage(appUserId, POST, data, messageType) {
-  return new Promise(async resolve => {
-    try {
-      let listUserId = [];
-      if (!appUserId) {
-        return;
-      }
-      if (typeof appUserId === 'number') {
-        listUserId = [appUserId];
-      }
-      if (typeof appUserId === 'object') {
-        listUserId = appUserId;
-      }
-      let insertMessage = await CustomerMessageResourceAccess.insert(POST);
-      let customerList = [];
-      if (insertMessage) {
-        //retrieve info for customer list
-        for (var i = 0; i < listUserId.length; i++) {
-          let customer = await AppUsersResourceAccess.findById(listUserId[i]);
-          if (customer) {
-            customerList.push(customer);
-          }
-        }
-        const HIDDEN_AFTER_SEND = 1;
-        sendMessageToManyCustomer(customerList, 'Hệ thống tự động', insertMessage[0], messageType, data, HIDDEN_AFTER_SEND);
-      }
-      resolve();
-    } catch (e) {
-      Logger.error('error', e);
-      resolve();
+    // Ngày hôm nay đã tạo tin nhắn cho khách hàng thì bỏ qua
+    if (existedMessage && existedMessage.length > 0) {
+      continue;
     }
-  });
-}
 
-async function handleSendMessageUser(messageData, data, receiverId, moreData) {
-  let msg = messageData;
-  if (data) {
-    const template = Handlebars.compile(JSON.stringify(messageData));
-    msg = JSON.parse(template(data));
-  }
-  await handleSendMessage(receiverId, msg, moreData, MESSAGE_TYPE.USER);
-}
-
-async function _handleFirebasePushMessage(messageData, messageType, additionData) {
-  let messageDataList = [];
-
-  let userMessageData = {
-    ...messageData,
-    receiverType: MESSAGE_RECEIVER.USER,
-  };
-
-  //luon luon co 1 thong bao vi danh sach thong bao dang chay theo firebase push (cho du ko push)
-  userMessageData.customerMessageCategories = MESSAGE_CATEGORY.FIREBASE_PUSH;
-
-  //neu co agency thi gui them message cho agency
-  if (additionData.agencyId) {
-    let agencyMessageData = {
-      ...userMessageData,
-      receiverType: MESSAGE_RECEIVER.AGENCY,
-      customerId: additionData.agencyId,
+    let customerMessage = _importDataForAPNSMessage(customer, stationsId, customer.customerMessageContent, customerMessageCategories);
+    customerMessage.messageTitle = `Thông báo hệ thống từ ${stationData.stationsName}`;
+    customerMessage.messageSendStatus = MESSAGE_STATUS.COMPLETED;
+    customerMessage.messageFCMStatus = MESSAGE_SEND_STATUS.SKIP;
+    messageList.push(customerMessage);
+    if (messagePrice < 0) {
+      throw MESSAGE_REJECT.PRICE_NEGATIVE;
+    }
+    let customerMessageMarketing = {
+      ...customerMessage,
+      messageFCMStatus: MARKETING_MESSAGE_SEND_STATUS.NEW,
+      messageSendStatus: MARKETING_MESSAGE_SEND_STATUS.COMPLETED,
+      messagePrice: messagePrice,
     };
-    messageDataList.push(agencyMessageData);
+    messageMarketingList.push(customerMessageMarketing);
   }
 
-  messageDataList.push(userMessageData);
-
-  //store message into database
-  let storeFirebasePushResult = await CustomerMessageResourceAccess.insert(messageDataList);
-  if (!storeFirebasePushResult) {
-    Logger.error(`can not storeFirebasePushResult _handleFirebasePushMessage`);
-    return FUNC_FAILED;
+  if (messageList.length > 0) {
+    await MessageCustomerResourceAccess.insert(messageList);
+    await MessageCustomerMarketingResourceAccess.insert(messageMarketingList);
   }
 
-  let GOOGLE_FIREBASE_PUSH_ENABLE = process.env.GOOGLE_FIREBASE_PUSH_ENABLE;
-  if (GOOGLE_FIREBASE_PUSH_ENABLE) {
-    //push cho user
-    if (userMessageData.appUserId) {
-      let pushUserNotificationResult = await pushNotificationByTopic(
-        `${MESSAGE_TOPIC.USER}_${userMessageData.appUserId}`,
-        userMessageData.customerMessageContent,
-        userMessageData.customerMessageTitle,
-        additionData,
-        messageType,
-      );
-      if (pushUserNotificationResult === undefined) {
-        Logger.error(`can not send pushNotificationResult for ${MESSAGE_TOPIC.USER}_${userMessageData.appUserId}`);
-      }
-    }
-
-    if (additionData.agencyId) {
-      //push notification cho agency
-      let pushUserNotificationResult = await pushNotificationByTopic(
-        `${MESSAGE_TOPIC.AGENCY}_${additionData.agencyId}`,
-        userMessageData.customerMessageContent,
-        userMessageData.customerMessageTitle,
-        additionData,
-        messageType,
-      );
-      if (pushUserNotificationResult === undefined) {
-        Logger.error(`can not send pushNotificationResult ${MESSAGE_TOPIC.AGENCY}_${additionData.agencyId}`);
-      }
-    }
+  if (messageList && messageList.length > 0) {
+    return messageList;
+  } else {
+    return FUNC_SUCCESS;
   }
-  return FUNC_SUCCESS;
+}
+function _importDataForSMSMessage(customer) {
+  return {
+    customerMessageEmail: customer.customerMessageEmail,
+    customerMessagePhone: customer.customerMessagePhone,
+    customerMessagePlateNumber: customer.customerRecordPlatenumber,
+  };
+}
+function _importDataForAPNSMessage(customer, customerStationId, messageContent, customerMessageCategories) {
+  return {
+    customerMessageEmail: customer.customerMessageEmail,
+    customerMessagePhone: customer.customerMessagePhone,
+    customerId: customer.customerId,
+    customerStationId: customerStationId,
+    messageContent: messageContent,
+    customerMessagePlateNumber: customer.customerRecordPlatenumber,
+    customerMessageCategories: customerMessageCategories,
+  };
 }
 
-async function _handleSMSMessage(messageData, additionData) {
-  let SMS_ENABLE = process.env.SMS_ENABLE;
-  if (SMS_ENABLE) {
-    messageData.customerMessageCategories = MESSAGE_CATEGORY.SMS;
+async function getTemplateMessages(stationId, filter, skip, limit) {
+  let _usableTemplate = [];
+  let _messageTemplates = await MessageTemplateResourceAccess.find(filter, skip, limit);
+  let _count = await MessageTemplateResourceAccess.count(filter);
+  for (let i = 0; i < _messageTemplates.length; i++) {
+    const _template = _messageTemplates[i];
+    if (_template.stationsId && stationId && _template.stationsId === stationId) {
+      _usableTemplate.push(_template);
+    }
 
-    //store message into database
-    let storeSMSResult = await CustomerMessageResourceAccess.insert(messageData);
+    if (_template.stationsId === undefined || _template.stationsId === null) {
+      _usableTemplate.push(_template);
+    }
+  }
+  let dataResult = {
+    templates: _usableTemplate,
+    total: _count,
+  };
+  return dataResult;
+}
 
-    if (!storeSMSResult) {
-      Logger.error(`can not storeSMSResult _handleSMSMessage`);
+async function initEmailClientForStation(station) {
+  //Skip TEST station
+  if (station.stationsId === 0) {
+    return undefined;
+  }
+
+  const ENABLED = 1;
+  //default - no custom client
+  let customEmailClient = undefined;
+  let _smtpConfig = undefined;
+
+  //check if Station have email config
+  if (station.stationCustomSMTPConfig && station.stationCustomSMTPConfig.trim() !== '' && station.stationCustomSMTPConfig !== null) {
+    //try to parse smtp config
+    try {
+      _smtpConfig = JSON.parse(stationConfigs.stationCustomSMTPConfig);
+    } catch (error) {
+      Logger.error(`Station ${station.stationsId} can not convert stationCustomSMTPConfig`);
+      return undefined;
+    }
+  } else {
+    return undefined;
+  }
+
+  //init email client for station
+  if (station.stationUseCustomSMTP === ENABLED) {
+    customEmailClient = await EmailClient.createNewClient(
+      _smtpConfig.smtpHost,
+      _smtpConfig.smtpPort,
+      _smtpConfig.smtpSecure,
+      _smtpConfig.smtpAuth.user,
+      _smtpConfig.smtpAuth.pass,
+    );
+  } else {
+    customEmailClient = await EmailClient.createNewThirdpartyClient(
+      _smtpConfig.smtpAuth.user,
+      _smtpConfig.smtpAuth.pass,
+      _smtpConfig.smtpServiceName,
+      _smtpConfig.smtpHost,
+    );
+  }
+
+  return customEmailClient;
+}
+
+async function sumCustomerSMS(stationId, startDate, endDate) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Total succeed message was sent.
+      const totalSucceedSMSCount = await CustomerStatisticalFunction.countMessagebyDate(
+        {
+          customerStationId: stationId,
+          customerMessageCategories: MESSAGE_CATEGORY.SMS,
+          messageSendStatus: MESSAGE_SEND_STATUS.COMPLETED,
+        },
+        startDate,
+        endDate,
+      );
+
+      const totalSMSCount = {
+        total: await CustomerStatisticalFunction.countMessagebyDate(
+          {
+            customerStationId: stationId,
+            customerMessageCategories: MESSAGE_CATEGORY.SMS,
+          },
+          startDate,
+          endDate,
+        ),
+        cost: totalSucceedSMSCount * MESSAGE_PRICES.SMS,
+        completed: totalSucceedSMSCount,
+        sending: await CustomerStatisticalFunction.countMessagebyDate(
+          {
+            customerStationId: stationId,
+            customerMessageCategories: MESSAGE_CATEGORY.SMS,
+            messageSendStatus: MESSAGE_SEND_STATUS.SENDING,
+          },
+          startDate,
+          endDate,
+        ),
+        failed: await CustomerStatisticalFunction.countMessagebyDate(
+          {
+            customerStationId: stationId,
+            customerMessageCategories: MESSAGE_CATEGORY.SMS,
+            messageSendStatus: MESSAGE_SEND_STATUS.FAILED,
+          },
+          startDate,
+          endDate,
+        ),
+        new: await CustomerStatisticalFunction.countMessagebyDate(
+          {
+            customerStationId: stationId,
+            customerMessageCategories: MESSAGE_CATEGORY.SMS,
+            messageSendStatus: MESSAGE_SEND_STATUS.NEW,
+          },
+          startDate,
+          endDate,
+        ),
+      };
+
+      totalSMSCount.canceled = totalSMSCount.total - (totalSMSCount.completed + totalSMSCount.failed + totalSMSCount.sending + totalSMSCount.new);
+
+      return resolve(totalSMSCount);
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function countMonthlySMSByStation(stationId) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const numberOfMonth = 6;
+      let monthBegin = moment().subtract({ months: numberOfMonth }).date(1);
+      let monthEnd = moment().subtract({ months: numberOfMonth }).endOf('M');
+      let smsCount, month;
+      let _startDate, _endDate;
+      let monthlySMSCount = [];
+      let monthlySucceedCount = 0;
+
+      for (let i = 0; i <= numberOfMonth; i++) {
+        _startDate = monthBegin.format('DD/MM/YYYY');
+        _endDate = monthEnd.format('DD/MM/YYYY');
+
+        // Total succeed message was sent by month.
+        monthlySucceedCount = await CustomerStatisticalFunction.countMessagebyDate(
+          {
+            customerStationId: stationId,
+            customerMessageCategories: MESSAGE_CATEGORY.SMS,
+            messageSendStatus: MESSAGE_SEND_STATUS.COMPLETED,
+          },
+          _startDate,
+          _endDate,
+        );
+
+        smsCount = {
+          total: await CustomerStatisticalFunction.countMessagebyDate(
+            {
+              customerStationId: stationId,
+              customerMessageCategories: MESSAGE_CATEGORY.SMS,
+            },
+            _startDate,
+            _endDate,
+          ),
+          cost: monthlySucceedCount * MESSAGE_PRICES.SMS,
+          completed: monthlySucceedCount,
+          sending: await CustomerStatisticalFunction.countMessagebyDate(
+            {
+              customerStationId: stationId,
+              customerMessageCategories: MESSAGE_CATEGORY.SMS,
+              messageSendStatus: MESSAGE_SEND_STATUS.SENDING,
+            },
+            _startDate,
+            _endDate,
+          ),
+          failed: await CustomerStatisticalFunction.countMessagebyDate(
+            {
+              customerStationId: stationId,
+              customerMessageCategories: MESSAGE_CATEGORY.SMS,
+              messageSendStatus: MESSAGE_SEND_STATUS.FAILED,
+            },
+            _startDate,
+            _endDate,
+          ),
+          new: await CustomerStatisticalFunction.countMessagebyDate(
+            {
+              customerStationId: stationId,
+              customerMessageCategories: MESSAGE_CATEGORY.SMS,
+              messageSendStatus: MESSAGE_SEND_STATUS.NEW,
+            },
+            _startDate,
+            _endDate,
+          ),
+        };
+
+        smsCount.canceled = smsCount.total - (smsCount.completed + smsCount.failed + smsCount.sending + smsCount.new);
+
+        // Only add numberOfMonth
+        if (i > 0) {
+          month = monthBegin.format('YYYY/MM');
+          monthlySMSCount.push({
+            month,
+            smsCount,
+          });
+        }
+
+        // Go to next month
+        if (i !== numberOfMonth) {
+          monthBegin = monthBegin.add({ months: 1 });
+          monthEnd = monthEnd.add({ months: 1 }).endOf('M');
+        }
+      }
+
+      resolve(monthlySMSCount);
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+function _mappingResponseSMSVivas(responseSMS) {
+  const SMSAPIFunctions = require('./../../ThirdParty/SMSAPIClient/SMSAPIClientFunctions');
+
+  let mappedStatusSendSMS = {
+    externalResult: '0: Request được tiếp nhận thành công',
+  };
+
+  let code = responseSMS.code;
+
+  if (code !== undefined) {
+    mappedStatusSendSMS.externalStatus = responseSMS.code;
+
+    if (code !== 0) {
+      let responseError = SMSAPIFunctions.responseReceiveValidSMSVivas[code];
+      mappedStatusSendSMS.externalResult = responseError ? responseError.errorMessage : `error ${code}`;
+
+      if (code === 4) {
+        mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.CANCELED;
+      } else if (code === 1 || code === 2 || code === 5) {
+        mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.SENDING;
+      } else {
+        mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.FAILED;
+      }
     } else {
-      const SMSClientFunctions = require('../../ThirdParty/SMSAPIClient/SMSAPIClientFunctions');
+      let responseMessage = SMSAPIFunctions.responseReceiveValidSMSVivas[code];
 
-      let smsResult = await SMSClientFunctions.sendSMS(messageData.customerMessageContent, messageData.customerMessagePhone);
-      if (smsResult === undefined) {
-        Logger.error(`can not send sms to ${messageData.customerMessagePhone}`);
-      }
+      mappedStatusSendSMS.externalResult = responseMessage ? responseMessage.errorMessage : `error ${code}`;
+      mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.COMPLETED;
+      mappedStatusSendSMS.customerReceiveDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
     }
+  } else {
+    mappedStatusSendSMS.externalStatus = '-1';
   }
-  return FUNC_SUCCESS;
+
+  if (responseSMS.transactionid) {
+    mappedStatusSendSMS.externalInfo = responseSMS.transactionid;
+  }
+
+  mappedStatusSendSMS.messageNote = JSON.stringify(responseSMS);
+  mappedStatusSendSMS.externalProvider = SMS_PROVIDER.VIVAS;
+
+  return mappedStatusSendSMS;
 }
 
-//xu ly tao thong tin message theo tat ca cac phuong thuc gui message
-async function _sendMessage(scheduleData, messageTitle, messageContent, messageType) {
-  let userMessageData = {
-    customerMessageCategories: MESSAGE_CATEGORY.EMAIL,
-    receiverType: MESSAGE_RECEIVER.USER,
-    customerMessageType: messageType,
-    customerMessagePhone: scheduleData.customerPhone,
-    customerMessageEmail: scheduleData.customerEmail,
-    customerMessageIdentity: scheduleData.customerIdentity,
-    customerMessageImage: '',
-    customerMessageContent: messageContent,
-    customerMessageTitle: messageTitle,
-    customerStationId: scheduleData.stationsId,
-    customerScheduleId: scheduleData.customerScheduleId,
-    customerId: scheduleData.appUserId,
-    staffId: scheduleData.staffId,
+function _mappingResponseSMSVMG(responseSMS) {
+  const SMSVMGAPIFunctions = require('./../../ThirdParty/SMSVMGAPIClient/SMSVMGAPIFunctions');
+  let mappedStatusSendSMS = {
+    messageSendStatus: MESSAGE_STATUS.SENDING,
+    externalResult: '- NoError Không lỗi',
   };
 
-  //xu ly tao thong bao trong DB va gui qua push notification
-  await _handleFirebasePushMessage(userMessageData, messageType, scheduleData);
+  let code = responseSMS.errorCode;
+  if (code !== undefined) {
+    mappedStatusSendSMS.externalStatus = code;
+    if (code !== '000') {
+      console.info(`sendSMS error code : ${responseSMS.errorMessage}`);
+      let responseError = SMSVMGAPIFunctions.responseSMSVMG[code];
+      mappedStatusSendSMS.externalResult = responseError ? responseError.errorMessage : `error ${code}`;
+      mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.FAILED;
+    } else {
+      console.info(`sendSMS: ${responseSMS.errorMessage}`);
+      let responseMessage = SMSVMGAPIFunctions.responseSMSVMG[code];
+      let data = responseSMS.data ? responseSMS.data : {};
+      console.info(data);
+      mappedStatusSendSMS.externalResult = responseMessage ? responseMessage.errorMessage : `error ${code}`;
+      mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.COMPLETED;
+      mappedStatusSendSMS.customerReceiveDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+    }
+  } else {
+    mappedStatusSendSMS.externalStatus = '-1';
+  }
 
-  //xu ly gui thong bao qua sms
-  await _handleSMSMessage(userMessageData, userMessageData);
+  if (responseSMS.referentId) {
+    mappedStatusSendSMS.externalInfo = responseSMS.referentId;
+  }
 
-  return FUNC_SUCCESS;
+  mappedStatusSendSMS.messageNote = JSON.stringify(responseSMS);
+
+  mappedStatusSendSMS.externalProvider = SMS_PROVIDER.VMG;
+  return mappedStatusSendSMS;
 }
 
-async function sendNotificationUser(appUserId, notifiTitle, notifiContent, staffId, customerMessageImage) {
-  let customerMessageData = {
-    customerId: appUserId,
-    isRead: 0,
-    customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
-    customerMessageTopic: MESSAGE_TOPIC.USER,
-    receiverType: MESSAGE_RECEIVER.USER,
-    customerMessageContent: notifiContent,
-    customerMessageTitle: notifiTitle,
+function _mappingResponseSMSViettel(responseSMS) {
+  const SMSSOAPFunctions = require('./../../ThirdParty/SMSSoapClient/SMSClientFunctions');
+  let mappedStatusSendSMS = {
+    messageSendStatus: MESSAGE_STATUS.SENDING,
+    externalResult: 'Insert MT_QUEUE: OK',
   };
-  if (staffId) {
-    customerMessageData.staffId = staffId;
+  let code = responseSMS.result;
+  let errorMessageResponse = responseSMS.errorMessageResponse;
+
+  if (code !== 0) {
+    console.info(`sendSMS error : ${errorMessageResponse}`);
+    let responseError = SMSSOAPFunctions.responseSMSViettel(errorMessageResponse);
+    mappedStatusSendSMS.externalStatus = responseError.errorCode;
+    mappedStatusSendSMS.externalResult = responseError ? responseError.errorMessage : `error ${code}`;
+    mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.FAILED;
+  } else {
+    console.info(`sendSMS: Insert MT_QUEUE: OK`);
+    mappedStatusSendSMS.messageSendStatus = MESSAGE_STATUS.COMPLETED;
+    mappedStatusSendSMS.externalStatus = code;
+    mappedStatusSendSMS.customerReceiveDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
   }
-  if (customerMessageImage) {
-    customerMessageData.customerMessageImage = customerMessageImage;
-  }
-  return await CustomerMessageResourceAccess.insert(customerMessageData);
+
+  mappedStatusSendSMS.externalInfo = mappedStatusSendSMS.externalResult;
+  mappedStatusSendSMS.messageNote = JSON.stringify(responseSMS);
+  mappedStatusSendSMS.externalProvider = SMS_PROVIDER.VIETTEL;
+  return mappedStatusSendSMS;
 }
 
-async function sendNotificationAllUser(notifiTitle, notifiContent, staffId, groupCustomerMessageImage) {
-  let groupCustomerMessageData = {
-    groupCustomerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
-    groupCustomerMessageType: MESSAGE_TYPE.GENERAL,
-    groupCustomerMessageContent: notifiContent,
-    groupCustomerMessageTitle: notifiTitle,
-  };
-  if (staffId) {
-    groupCustomerMessageData.staffId = staffId;
-  }
-  if (groupCustomerMessageImage) {
-    groupCustomerMessageData.groupCustomerMessageImage = groupCustomerMessageImage;
-  }
-  return await GroupCustomerMessageResourceAccess.insert(groupCustomerMessageData);
-}
-
-async function createMessageToUserById(appUserId, title, content) {
-  let _messageData = {};
-  if (appUserId) {
-    _messageData.customerMessageTitle = title;
-    _messageData.customerMessageContent = content;
-    _messageData.customerId = appUserId;
+function mappingResponseSMS(responseSMS, smsProvider) {
+  let mappedResponseResult = {};
+  if (smsProvider === SMS_PROVIDER.VIVAS) {
+    mappedResponseResult = _mappingResponseSMSVivas(responseSMS);
+  } else if (smsProvider === SMS_PROVIDER.VMG) {
+    mappedResponseResult = _mappingResponseSMSVMG(responseSMS);
+  } else {
+    mappedResponseResult = _mappingResponseSMSViettel(responseSMS);
   }
 
-  return await CustomerMessageResourceAccess.insert(_messageData);
+  return mappedResponseResult;
 }
 
-async function userReadGroupMessage(appUserId, groupCustomerMessageId) {
-  const UserGroupCustomerMessageResourceAccess = require('./resourceAccess/UserGroupCustomerMessageResourceAccess');
-  await UserGroupCustomerMessageResourceAccess.insert({
-    appUserId: appUserId,
-    groupCustomerMessageId: groupCustomerMessageId,
-  });
-}
+async function createCrimeNotification(crime, appUserId, appUserVehicleId) {
+  if (crime.status === 'Chưa xử phạt' && appUserId) {
+    const customerInfo = await AppUserResourceAccess.findById(appUserId);
+    const messageTitle = `Cảnh báo ! BSX ${crime.licenseNumber} có vé phạt nguội`;
+    const message = `Phương tiện có biển số ${crime.licenseNumber} có vé phạt nguội, vui lòng kiểm tra và xử lý trước khi đăng kiểm`;
 
-async function getUserReadStatusForGroupMessage(appUserId, groupCustomerMessageId) {
-  const UserGroupCustomerMessageResourceAccess = require('./resourceAccess/UserGroupCustomerMessageResourceAccess');
-  let _result = await UserGroupCustomerMessageResourceAccess.find({
-    appUserId: appUserId,
-    groupCustomerMessageId: groupCustomerMessageId,
-  });
-
-  if (_result && _result.length > 0) {
-    const ALREADY_READ = 1;
-    return ALREADY_READ;
+    await addMessageCustomer(messageTitle, undefined, message, undefined, appUserId, customerInfo ? customerInfo.email : '', appUserVehicleId);
   }
-  return 0;
 }
+
 module.exports = {
+  createNewUserMessageByStation,
   getTemplateMessages,
-  getUserReadStatusForGroupMessage,
   sendMessageToManyCustomer,
   getMessageContentByTemplate,
-  handleSendMessage,
-  handleSendMessageUser,
-  sendNotificationUser,
-  sendNotificationAllUser,
-  userReadGroupMessage,
-  createMessageToUserById,
+  initEmailClientForStation,
+  countMonthlySMSByStation,
+  sumCustomerSMS,
+  mappingResponseSMS,
+  addMessageCustomer,
+  addWarningTicketMessageCustomer,
+  createMessageForCustomerOnly,
+  createCrimeNotification,
+  sendSMSMessageToManyCustomer,
+  sendMessageAPNSCustomer,
 };

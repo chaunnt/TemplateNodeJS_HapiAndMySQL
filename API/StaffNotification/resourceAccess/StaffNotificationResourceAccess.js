@@ -32,7 +32,7 @@ async function createTable() {
           table.integer('stationsId').unsigned().notNullable();
           table.integer('staffTaskId').unsigned(); // link toi task neu la thong bao ve task
           table.boolean('isRead').defaultTo(0);
-          table.string('notificationImage');
+          table.string('notificationImageUrl', 500);
           table.string('notificationNote');
           table.string('notificationTitle');
           table.string('notificationContent', 2000);

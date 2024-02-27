@@ -5,8 +5,9 @@
  */
 'use strict';
 const moment = require('moment');
+const geoip = require('geoip-lite');
 const crypto = require('crypto');
-
+const Joi = require('joi');
 function nonAccentVietnamese(str) {
   if (!str) {
     return str;
@@ -27,6 +28,16 @@ function nonAccentVietnamese(str) {
   str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
   str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
   str = str.replace(/đ/g, 'd');
+
+  //upper cases
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+  str = str.replace(/Đ/g, 'D');
+
   // Some system encode vietnamese combining accent as individual utf-8 characters
   str = str.replace(/\u0300|\u0301|\u0303|\u0309|\u0323/g, ''); // Huyền sắc hỏi ngã nặng
   str = str.replace(/\u02C6|\u0306|\u031B/g, ''); // Â, Ê, Ă, Ơ, Ư
@@ -38,13 +49,23 @@ function replaceAll(str, find, replace) {
 }
 
 function removeSpecialChars(str) {
-  let outString = str.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '');
+  // Loại bỏ tất cả các ký tự đặc biệt, trừ chữ số và chữ cái (hoa và thường)
+  let outString = str.replace(/[^a-zA-Z0-9]/g, '');
   return outString;
 }
 
-function convertToURLFormat(str) {
+function convertToURIFormat(str) {
   let outString = removeSpecialChars(str);
-  return '/' + encodeURI(replaceAll(outString, ' ', '-'));
+  return encodeURI(replaceAll(outString, ' ', '-'));
+}
+
+function convertToURLFormat(str) {
+  return '/' + convertToURIFormat(str);
+}
+
+function randomInt(min, max) {
+  // min and max included
+  return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 async function chunkArray(arrData, chunkSize) {
@@ -121,12 +142,72 @@ function isNotEmptyStringValue(stringValue) {
   return true;
 }
 
+function isInvalidStringValue(stringValue) {
+  return Joi.string().min(1).validate(stringValue) === null ? true : false;
+}
+
 function makeHashFromData(data) {
   const hashData = crypto
     .createHmac('sha256', 'ThisIsSecretKey')
     .update(data + '')
     .digest('hex');
   return hashData;
+}
+
+function checkingValidPlateNumber(plateNumber) {
+  return !/[^A-Z0-9]/g.test(plateNumber);
+}
+
+function tryJsonParse(data) {
+  if (data) {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      return {};
+    }
+  }
+  return data;
+}
+
+function tryStringify(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (error) {
+    return {};
+  }
+}
+
+function getValidValueArray(constantData) {
+  return Object.values(constantData);
+}
+
+async function executeBatchPromise(promiseList, batchSize = 30) {
+  let _executingPromiseList = chunkArray(promiseList, batchSize);
+  for (let i = 0; i < _executingPromiseList.length; i++) {
+    await Promise.all(_executingPromiseList[i]);
+  }
+}
+
+function getGeoInfoFromClientIP(clientIp) {
+  const geoInfo = geoip.lookup(clientIp);
+  return geoInfo;
+}
+
+function mapRegionToArea(region) {
+  switch (region) {
+    case 'HN':
+      return 'Hà Nội';
+    case 'DN':
+      return 'Đà Nẵng';
+    case 'SG':
+      return 'Hồ Chí Minh';
+    case '57':
+      return 'Bình Dương';
+    case '26':
+      return 'Thừa Thiên - Huế';
+    default:
+      return null;
+  }
 }
 
 function replaceCharactersFirstLast(str, startLength = 1, endLength = 1) {
@@ -213,20 +294,29 @@ module.exports = {
   nonAccentVietnamese,
   executeBatchPromise,
   replaceAll,
-  shuffleArrayRandom,
+  removeSpecialChars,
   convertToURLFormat,
   generateFakerUsername,
   randomInt,
   randomIntByMinMax,
   randomFloatByMinMax,
   chunkArray,
+  executeBatchPromise,
   FormatDate,
+  getValidValueArray,
   padLeadingZeros,
   convertStringToHex,
   isNotEmptyStringValue,
   isNotValidValue,
   isValidValue,
+  isInvalidStringValue,
   makeHashFromData,
+  checkingValidPlateNumber,
+  tryJsonParse,
+  tryStringify,
+  getGeoInfoFromClientIP,
+  mapRegionToArea,
+  shuffleArrayRandom,
   formatCurrency,
   replaceCharactersFirstLast,
   replaceCharactersToHide,

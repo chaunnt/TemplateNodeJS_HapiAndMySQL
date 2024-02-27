@@ -5,8 +5,9 @@ const GroupNotification = require('./GroupStaffNotificationRoute');
 
 module.exports = [
   { method: 'POST', path: '/StaffNotification/insert', config: StaffNotification.insert },
-  { method: 'POST', path: '/StaffNotification/find', config: StaffNotification.find },
   { method: 'POST', path: '/StaffNotification/findById', config: StaffNotification.findById },
+  { method: 'POST', path: '/StaffNotification/find', config: StaffNotification.find },
+  { method: 'POST', path: '/StaffNotification/updateById', config: StaffNotification.updateById },
   { method: 'POST', path: '/StaffNotification/deleteById', config: StaffNotification.deleteById },
 
   { method: 'POST', path: '/GroupNotification/insert', config: GroupNotification.insert },

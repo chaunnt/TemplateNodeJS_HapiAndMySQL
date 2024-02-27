@@ -7,7 +7,7 @@
 const SystemAppLogResource = require('../resourceAccess/SystemAppChangedLogResourceAccess');
 const SystemAppLogAppUserResource = require('../resourceAccess/SystemAppLogAppUserResourceAccess');
 const Logger = require('../../../utils/logging');
-
+const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -19,7 +19,7 @@ async function insert(req) {
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -41,7 +41,7 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -58,7 +58,7 @@ async function updateById(req) {
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -69,7 +69,7 @@ async function findById(req) {
       resolve('success');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }

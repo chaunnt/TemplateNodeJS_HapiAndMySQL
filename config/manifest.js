@@ -8,7 +8,24 @@
 const AppConfig = require('../config/app');
 
 const manifest = {
-  server: {},
+  server: {
+    connections: {
+      routes: {
+        cors: {
+          origin: [
+            'http://localhost:3000', //CORS cua local web
+            'http://localhost:3001', //CORS cua local web
+            'http://localhost:3002', //CORS cua local web
+            'http://127.0.0.1:3000', //CORS cua local web
+            '*.zdn.vn',
+            'localhost:3000', //CORS cua local web
+            'https://h5.zdn.vn', //CORS cua Zalo Mini App
+            'zbrowser://h5.zdn.vn', //CORS cua Zalo Mini App
+          ],
+        },
+      },
+    },
+  },
   connections: [
     {
       router: {

@@ -3,6 +3,9 @@
 module.exports = {
   UNKNOWN_ERROR: 'UNKNOWN_ERROR', //Hệ thống tạm ngưng, vui lòng thử lại sau
   NO_DATA: 'NO_DATA', //Không có dữ liệu
+  NOT_FOUND: 'NOT_FOUND',
+  API_FAILED: 'API_FAILED',
+  MISSING_AUTHORITY: 'MISSING_AUTHORITY', //không có quyền
   NOT_ENOUGH_AUTHORITY: 'NOT_ENOUGH_AUTHORITY', //Người dùng không có quyền thực hiện thao tác
   POPULAR_ERROR: {
     INSERT_FAILED: 'INSERT_FAILED', //Tạo mới thất bại
@@ -10,6 +13,14 @@ module.exports = {
     UPDATE_FAILED: 'UPDATE_FAILED', //Cập nhật dữ liệu thất bại
     DELETE_FAILED: 'DELETE_FAILED', //Xóa dữ liệu thất bại
     DUPLICATE_DATA: 'DUPLICATE_DATA', //Dữ liệu trùng lặp
+  },
+IP_LOCK_LIST: ['127.0.0.2'],
+  DATE_DATA_FORMAT: 'YYYY/MM/DD',
+  DATE_DB_FORMAT: 'DD/MM/YYYY',
+  DATE_DB_SORT_FORMAT: 'YYYYMMDD',
+  SETTING: {
+    ENABLE: 1,
+    DISABLE: 0,
   },
   MAINTAIN_ERROR: {
     MAINTAIN_ALL: 'MAINTAIN_ALL', //hệ thống bảo trì

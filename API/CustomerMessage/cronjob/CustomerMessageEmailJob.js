@@ -1,18 +1,21 @@
-/* Copyright (c) 2021-2024 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const Joi = require('joi');
-// const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
-// const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
+const moment = require('moment');
+const MessageCustomerView = require('../resourceAccess/MessageCustomerView');
+const MessageCustomer = require('../resourceAccess/MessageCustomerResourceAccess');
 const CustomerMessage = require('../resourceAccess/CustomerMessageResourceAccess');
 const CustomerRecord = require('../../CustomerRecord/resourceAccess/CustomerRecordResourceAccess');
 const { MESSAGE_STATUS, MESSAGE_CATEGORY } = require('../CustomerMessageConstant');
 const EmailClient = require('../../../ThirdParty/Email/EmailClient');
 const MessageFunction = require('../CustomerMessageFunctions');
 const Logger = require('../../../utils/logging');
+const CustomerMessageResourceAccess = require('../resourceAccess/CustomerMessageResourceAccess');
+const StaffResourceAccess = require('../../Staff/resourceAccess/StaffResourceAccess');
 
 async function _cancelAllEmailMessage(station) {
   let messageList = await CustomerMessage.find({
@@ -40,47 +43,21 @@ async function _cancelAllEmailMessage(station) {
 }
 
 async function sendMessageEmailToCustomer(station) {
-  Logger.info(`sendMessageEmailToCustomer ${station.stationsId}`);
+  console.info(`sendMessageEmailToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
-    //Skip TEST station
-    if (station.stationsId === 0) {
+    //init email client for station
+    let customEmailClient = await MessageFunction.initEmailClientForStation(station);
+
+    if (!process.env.SMTP_ENABLE || process.env.SMTP_ENABLE * 1 === 0) {
+      await _cancelAllEmailMessage(station);
+      return resolve('OK');
+    }
+    //if there is no email client then mark all task are failed
+    if (customEmailClient === undefined || customEmailClient === null) {
+      await _cancelAllEmailMessage(station);
+      Logger.error(`Station ${station.stationsId} can not create new smtp client`);
       resolve('OK');
       return;
-    }
-
-    const ENABLED = 1;
-    //default - no custom client
-    let customEmailClient = undefined;
-    if (station.stationUseCustomSMTP === ENABLED) {
-      //check if use custom smtp but wrong smtp info
-      if (station.stationCustomSMTPConfig && station.stationCustomSMTPConfig !== '' && station.stationCustomSMTPConfig !== null) {
-        try {
-          let _smtpConfig = JSON.parse(stationConfigs.stationCustomSMTPConfig);
-          customEmailClient = await EmailClient.createNewClient(
-            _smtpConfig.smtpHost,
-            _smtpConfig.smtpPort,
-            _smtpConfig.smtpSecure,
-            _smtpConfig.smtpAuth.user,
-            _smtpConfig.smtpAuth.pass,
-          );
-          if (customEmailClient === undefined || customEmailClient === null) {
-            await _cancelAllEmailMessage(station);
-            Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not create new smtp client`);
-            resolve('OK');
-            return;
-          }
-        } catch (error) {
-          await _cancelAllEmailMessage(station);
-          Logger.error(`Station ${station.stationsId} enable use Custom SMTP but can not convert stationCustomSMTPConfig`);
-          resolve('OK');
-          return;
-        }
-      } else {
-        await _cancelAllEmailMessage(station);
-        Logger.error(`Station ${station.stationsId} enable use Custom SMTP but do not have stationCustomSMTPConfig`);
-        resolve('OK');
-        return;
-      }
     }
 
     let messageList = await MessageCustomerView.find(
@@ -96,7 +73,7 @@ async function sendMessageEmailToCustomer(station) {
     if (messageList && messageList.length > 0) {
       for (let i = 0; i < messageList.length; i++) {
         const _customerMessage = messageList[i];
-        let _templateId = _customerMessage.templateCustomerMessageId;
+        let _templateId = _customerMessage.customerMessageTemplateId;
         let messageContent = _customerMessage.customerMessageContent;
 
         //if using template, then generate content based on template
@@ -121,6 +98,7 @@ async function sendMessageEmailToCustomer(station) {
             _customerMessage.customerMessageEmail,
             _customerMessage.customerMessageTitle,
             messageContent,
+            '',
             customEmailClient,
           );
 
@@ -148,6 +126,20 @@ async function sendMessageEmailToCustomer(station) {
   });
 }
 
+async function sendCountSMSToEmailMonthly() {
+  let startDate = moment().startOf('month').add(-1, 'month').format();
+  let endDate = moment().endOf('month').add(-1, 'month').format();
+  let count = await CustomerMessageResourceAccess.customCount(undefined, startDate, endDate, undefined);
+  let emalilList = await StaffResourceAccess.find({ roleId: 1 }, undefined, 100, undefined);
+  let subject = 'Báo cáo số lượng SMS hàng tháng';
+  let mailBody =
+    'Hệ thông VTSS gửi thông báo' + '\r\n\r\n' + `Xin chào, trong tháng ${moment().format('MM') - 1} có tất cả ${count} SMS được tạo. Xin cảm ơn!!`;
+  for (let i = 0; i < emalilList.length; i++) {
+    await EmailClient.sendEmail(emalilList[i].email, subject, mailBody, undefined, undefined);
+  }
+}
+
 module.exports = {
   sendMessageEmailToCustomer,
+  sendCountSMSToEmailMonthly,
 };

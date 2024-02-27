@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 const faker = require('faker');
 const chai = require('chai');
@@ -150,7 +150,7 @@ describe(`Tests ${Model.modelName}`, function () {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 500);
+        checkResponseStatus(res, 200);
         done();
       });
   });
@@ -192,7 +192,7 @@ describe(`Tests ${Model.modelName}`, function () {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 500);
+        checkResponseStatus(res, 200);
         done();
       });
   });
@@ -239,7 +239,7 @@ describe(`Tests ${Model.modelName}`, function () {
     });
   });
 
-  it('import CuntomerRecord failse', done => {
+  it('import CuntomerRecord false', done => {
     fs.readFile('uploads/exportExcel/file_mau_import.xlsx', function read(err, data) {
       if (err) {
         return null;
@@ -325,7 +325,7 @@ describe(`Tests ${Model.modelName}`, function () {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 500);
+        checkResponseStatus(res, 200);
         done();
       });
   });
@@ -516,7 +516,7 @@ describe(`Tests ${Model.modelName}`, function () {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 200);
+        checkResponseStatus(res, 500);
         done();
       });
   });
@@ -534,7 +534,7 @@ describe(`Tests ${Model.modelName}`, function () {
         if (err) {
           console.error(err);
         }
-        checkResponseStatus(res, 200);
+        checkResponseStatus(res, 500);
         done();
       });
   });

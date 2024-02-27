@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -10,7 +10,7 @@ const RecordResource = require('../resourceAccess/CustomerRecordResourceAccess')
 const CustomerRecordFunctions = require('../CustomerRecordFunctions');
 
 async function updateProcessForAllRecord(station) {
-  console.log(`updateProcessForAllRecord ${station.stationsId}`);
+  console.info(`updateProcessForAllRecord ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
     if (station === undefined) {
       return undefined;
@@ -80,7 +80,7 @@ async function updateProcessForAllRecord(station) {
             //update state and notify it
             let result = await CustomerRecordFunctions.updateCustomerRecordById(customerRecordId, customerRecordData);
             if (result) {
-              console.log(`Auto update success ${customerRecordId}`);
+              console.info(`Auto update success ${customerRecordId}`);
             } else {
               console.error(`Auto update error ${customerRecordId}`);
             }

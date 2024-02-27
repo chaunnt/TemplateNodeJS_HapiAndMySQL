@@ -1,118 +1,35 @@
-/* Copyright (c) 2022-2024 Reminano */
+/* Copyright (c) 2023 TORITECH LIMITED 2022 */
 
-const CustomerMessage_User = require('./CustomerMessage_UserRoute');
-const CustomerMessage_Staff = require('./CustomerMessage_StaffRoute');
-const GroupCustomerMessage = require('../route/GroupCustomerMessageRoute');
-const CustomerMessageRoute = require('./CustomerMessageRoute');
+const CustomerMessage = require('./CustomerMessageRoute');
 
 module.exports = [
-  //Api CustomerSchedule
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/insert',
-    config: GroupCustomerMessage.insert,
-  },
-  // { method: 'POST', path: '/GroupCustomerMessage/updateById', config: GroupCustomerMessage.updateById },
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/findById',
-    config: GroupCustomerMessage.findById,
-  },
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/find',
-    config: GroupCustomerMessage.find,
-  },
-  { method: 'POST', path: '/GroupCustomerMessage/deleteById', config: GroupCustomerMessage.deleteById },
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/user/getList',
-    config: GroupCustomerMessage.userGetListGroupCustomerMessage,
-  },
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/user/readGroupCustomerMessage',
-    config: GroupCustomerMessage.userReadGroupCustomerMessage,
-  },
-  {
-    method: 'POST',
-    path: '/GroupCustomerMessage/user/getDetail',
-    config: GroupCustomerMessage.userGetDetailGroupCustomerMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/getListNotification',
-    config: CustomerMessage_User.userGetListNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/getDetailMessage',
-    config: CustomerMessage_User.userGetDetailMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/getUnreadNotificationCount',
-    config: CustomerMessage_User.userGetUnreadNotificationMessageCount,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/readAllNotification',
-    config: CustomerMessage_User.userReadAllNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/readNotification',
-    config: CustomerMessage_User.userReadNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/deleteAllNotification',
-    config: CustomerMessage_User.userDeleteAllNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/user/deleteNotification',
-    config: CustomerMessage_User.userDeleteNotificationMessage,
-  },
+  { method: 'POST', path: '/CustomerMessage/getList', config: CustomerMessage.find },
+  { method: 'POST', path: '/CustomerMessage/getDetailById', config: CustomerMessage.findById },
+  { method: 'POST', path: '/CustomerMessage/reportTotalSMSByStation', config: CustomerMessage.reportTotalSMSByStation },
 
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/getListNotification',
-    config: CustomerMessage_Staff.staffGetListNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/getDetailMessage',
-    config: CustomerMessage_Staff.staffGetDetailMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/getUnreadNotificationCount',
-    config: CustomerMessage_Staff.staffGetUnreadNotificationMessageCount,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/readAllNotification',
-    config: CustomerMessage_Staff.staffReadAllNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/readNotification',
-    config: CustomerMessage_Staff.staffReadNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/deleteAllNotification',
-    config: CustomerMessage_Staff.staffDeleteAllNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/staff/deleteNotification',
-    config: CustomerMessage_Staff.staffDeleteNotificationMessage,
-  },
-  {
-    method: 'POST',
-    path: '/CustomerMessage/insertNotification',
-    config: CustomerMessageRoute.insertNotification,
-  },
+  { method: 'POST', path: '/CustomerMessage/sendScheduleMessage', config: CustomerMessage.sendScheduleMessage },
+  { method: 'POST', path: '/CustomerMessage/updateById', config: CustomerMessage.updateById },
+  { method: 'POST', path: '/CustomerMessage/sendsms', config: CustomerMessage.sendsms }, //only open this API for testing
+  { method: 'POST', path: '/CustomerMessage/sendMessageByFilter', config: CustomerMessage.sendMessageByFilter },
+  { method: 'POST', path: '/CustomerMessage/sendMessageByCustomerList', config: CustomerMessage.sendMessageByCustomerList },
+  { method: 'POST', path: '/CustomerMessage/findTemplates', config: CustomerMessage.findTemplates },
+  { method: 'POST', path: '/CustomerMessage/sendTestEmail', config: CustomerMessage.sendTestEmail },
+  { method: 'POST', path: '/CustomerMessage/sendTestSMS', config: CustomerMessage.sendTestSMS },
+  { method: 'POST', path: '/CustomerMessage/receiveVMGResult', config: CustomerMessage.receiveVMGResult },
+  { method: 'POST', path: '/CustomerMessage/user/getListMessage', config: CustomerMessage.userGetListMessage },
+  { method: 'POST', path: '/CustomerMessage/user/getDetailMessage', config: CustomerMessage.userGetDetailMessageById },
+
+  { method: 'POST', path: '/CustomerMessage/advanceUser/sendSMS', config: CustomerMessage.advanceUserSendSMS },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/updateById', config: CustomerMessage.advanceUserUpdateById },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/getDetail', config: CustomerMessage.advanceUserGetDetail },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/sendMessageByFilter', config: CustomerMessage.advanceUserSendMessageByFilter },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/findTemplates', config: CustomerMessage.advanceUserFindTemplates },
+  // { method: 'POST', path: '/CustomerMessage/advanceUser/sendMessageByCustomerList', config: CustomerMessage.advanceUserSendMessage },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/sendMessageToCustomerList', config: CustomerMessage.advanceUserSendMessageToCustomerList },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/getList', config: CustomerMessage.advanceUserGetList },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/getReportList', config: CustomerMessage.advanceUserGetReport },
+  { method: 'POST', path: '/CustomerMessage/advanceUser/sendMessage', config: CustomerMessage.advanceUserSendMessageToCustomer },
+
+  { method: 'POST', path: '/CustomerMessage/sendVinaphoneSMS', config: CustomerMessage.sendVinaphoneSMS },
+  { method: 'POST', path: '/CustomerMessage/createVinaphoneSMSTemplate', config: CustomerMessage.createVinaphoneSMSTemplate },
 ];

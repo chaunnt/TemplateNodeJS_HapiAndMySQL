@@ -4,7 +4,7 @@ const cron = require('node-cron');
 const { spawn } = require('child_process');
 const Logger = require('../../utils/logging');
 
-function executeJob(jobLocation, args) {
+function executeJob(jobLocation, args, onDoneJob) {
   Logger.info('Cron Instance', 'execute job : ' + jobLocation);
   const ls = spawn('node', [jobLocation, args]);
 
@@ -18,6 +18,7 @@ function executeJob(jobLocation, args) {
 
   ls.on('close', code => {
     Logger.info('Cron Instance', `child process exited with code ${code}`);
+    onDoneJob && onDoneJob(code);
   });
 }
 

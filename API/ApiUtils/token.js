@@ -32,6 +32,17 @@ function decodeToken(token) {
   return decoded;
 }
 
+function decodeTokenWithoutExpired(token) {
+  token = token.replace('Bearer ', '');
+  var decoded = undefined;
+  try {
+    decoded = jwt.verify(token, AppConfig.jwt.secret, { ignoreExpiration: true });
+  } catch (err) {
+    Logger.error('Token', err);
+  }
+  return decoded;
+}
+
 function hashPassword(password, cb) {
   // Generate a salt at level 10 strength
   bcrypt.genSalt(10, (err, salt) => {
@@ -42,4 +53,4 @@ function hashPassword(password, cb) {
     }
   });
 }
-module.exports = { createToken, decodeToken, hashPassword };
+module.exports = { createToken, decodeToken, hashPassword, decodeTokenWithoutExpired };

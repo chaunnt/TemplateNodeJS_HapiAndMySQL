@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Reminano */
+/* Copyright (c) 2022-2023 TORITECH LIMITED 2022 */
 
 /**
  * Created by A on 7/18/17.
@@ -6,104 +6,77 @@
 'use strict';
 const moment = require('moment');
 const CustomerRecordResourceAccess = require('../resourceAccess/CustomerRecordResourceAccess');
+const CustomerScheduleResourceAccess = require('../../CustomerSchedule/resourceAccess/CustomerScheduleResourceAccess');
+const { SCHEDULE_STATUS, LICENSE_PLATE_COLOR } = require('../../CustomerSchedule/CustomerScheduleConstants');
 const Logger = require('../../../utils/logging');
 const CustomerFuntion = require('../CustomerRecordFunctions');
+const CrimeFunction = require('../../CustomerCriminalRecord/CustomerCriminalRecordFunctions');
+const Station = require('../../Stations/resourceAccess/StationsResourceAccess');
 const CustomerRecordModel = require('../model/CustomerRecordModel');
-const excelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
+const excelFunction = require('../../../ThirdParty/Excel/excelFunction');
 const UploadFunctions = require('../../Upload/UploadFunctions');
 const StationResource = require('../../Stations/resourceAccess/StationsResourceAccess');
-const { CHECKING_STATUS } = require('../CustomerRecordConstants');
+const SystemAppLogFunctions = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
+const CustomerMessageFunctions = require('../../CustomerMessage/CustomerMessageFunctions');
+const AppUserVehicleResourceAccess = require('../../AppUserVehicle/resourceAccess/AppUserVehicleResourceAccess');
+const FirebaseNotificationFunctions = require('../../../ThirdParty/FirebaseNotification/FirebaseNotificationFunctions');
 
-function _checkCustomerRecordDate(customerRecordData, autoFill = true) {
-  let current = new Date();
-  //Add default values for checkDate = today
-  if (customerRecordData.customerRecordCheckDate === undefined) {
-    customerRecordData.customerRecordCheckDate = moment().toDate();
-  } else {
-    let checkDate = moment(customerRecordData.customerRecordCheckDate, 'DD/MM/YYYY').toDate();
-    checkDate.setHours(current.getHours());
-    checkDate.setMinutes(current.getMinutes());
-    customerRecordData.customerRecordCheckDate = checkDate;
-  }
-
-  //Add default value for check duration = 12 months
-  if (customerRecordData.customerRecordCheckDuration === undefined) {
-    if (autoFill) {
-      customerRecordData.customerRecordCheckDuration = 12;
-    }
-  }
-
-  //Add default value for expired date = check date + check duration
-  if (customerRecordData.customerRecordCheckExpiredDate === undefined) {
-    if (autoFill) {
-      customerRecordData.customerRecordCheckExpiredDate = moment().add(customerRecordData.customerRecordCheckDuration, 'M').toDate();
-    }
-  } else {
-    let checkExpiredDate = moment(customerRecordData.customerRecordCheckExpiredDate, 'DD/MM/YYYY').toDate();
-    checkExpiredDate.setHours(current.getHours());
-    checkExpiredDate.setMinutes(current.getMinutes());
-    customerRecordData.customerRecordCheckExpiredDate = checkExpiredDate;
-  }
-
-  return customerRecordData;
-}
-async function _addNewCustomerRecord(customerRecordData) {
-  let customerRecordPlatenumber = customerRecordData.customerRecordPlatenumber;
-
-  //check and validate date of record is having right format
-  //do not auto fill if field is missing
-  const NO_AUTO_FILL = false;
-  _checkCustomerRecordDate(customerRecordData, NO_AUTO_FILL);
-
-  //Fill customer data based on history data
-  let resultPlate = await CustomerRecordResourceAccess.find({
-    customerRecordPlatenumber: customerRecordPlatenumber,
-  });
-  if (resultPlate !== undefined && resultPlate.length > 0) {
-    if (customerRecordData.customerRecordFullName === undefined) {
-      customerRecordData.customerRecordFullName = resultPlate[0].customerRecordFullName;
-    }
-    if (customerRecordData.customerRecordPhone === undefined) {
-      customerRecordData.customerRecordPhone = resultPlate[0].customerRecordPhone;
-    }
-    if (customerRecordData.customerRecordEmail === undefined) {
-      customerRecordData.customerRecordEmail = resultPlate[0].customerRecordEmail;
-    }
-
-    //mark if this customer comeback
-    customerRecordData.returnNumberCount = resultPlate.length;
-  }
-
-  let result = await CustomerRecordResourceAccess.insert(customerRecordData);
-  if (result) {
-    //get inserted data
-    let newRecord = await CustomerRecordResourceAccess.find({
-      customerRecordId: result[0],
-    });
-
-    //notify to realtime data
-    if (newRecord && newRecord.length > 0) {
-      await CustomerFuntion.notifyCustomerStatusAdded(newRecord[0]);
-    }
-    return result;
-  }
-
-  return undefined;
-}
+const {
+  CHECKING_STATUS,
+  CUSTOMER_RECORD_PLATE_COLOR,
+  CUSTOMER_RECORD_ERROR,
+  DATE_DB_FORMAT,
+  DATE_DISPLAY_FORMAT,
+} = require('../CustomerRecordConstants');
+const { UNKNOWN_ERROR, NOT_FOUND } = require('../../Common/CommonConstant');
+const { isInvalidStringValue } = require('../../ApiUtils/utilFunctions');
+const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
+const { checkValidVehicleIdentity } = require('../../AppUserVehicle/AppUserVehicleFunctions');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
     try {
       let customerRecordData = req.payload;
-      let addResult = await _addNewCustomerRecord(customerRecordData);
+      let staffId = req.currentUser.staffId;
+      if (staffId) {
+        customerRecordData.staffId = staffId;
+      }
+
+      customerRecordData.customerRecordCheckTime = CustomerFuntion.getCheckTime();
+      //phan nay phai lam giong nhu FE dang submit de tranh bi sai format
+      if (isInvalidStringValue(customerRecordData.customerRecordCheckDate)) {
+        // customerRecordData.customerRecordCheckDate = moment().format(DATE_DB_FORMAT);
+      }
+
+      const customerPhoneNumber = customerRecordData.customerRecordPhone;
+      if (customerPhoneNumber) {
+        const appUser = await AppUsersResourceAccess.find({ phoneNumber: customerPhoneNumber }, 0, 1);
+        if (appUser && appUser.length > 0) {
+          customerRecordData.appUserId = appUser[0].appUserId;
+        }
+      }
+
+      let addResult = await CustomerFuntion.addNewCustomerRecord(customerRecordData);
+
       if (addResult) {
+        const CriminalRecordFunctions = require('../../CustomerCriminalRecord/CustomerCriminalRecordFunctions');
+
+        // Crawl criminals
+        CriminalRecordFunctions.bulkInsertCriminalRecords(customerRecordData.customerRecordPlatenumber, addResult);
+
         resolve(addResult);
       } else {
         reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      if (Object.keys(CUSTOMER_RECORD_ERROR).indexOf(e) >= 0) {
+        console.error(`error AppUserManage can not registerUser: ${e}`);
+        reject(e);
+      } else {
+        console.error(`error AppUserManage can not registerUser: ${UNKNOWN_ERROR}`);
+        reject(UNKNOWN_ERROR);
+      }
     }
   });
 }
@@ -125,6 +98,7 @@ async function find(req) {
       let customerRecord = await CustomerRecordResourceAccess.customSearchByExpiredDate(filter, skip, limit, startDate, endDate, searchText, order);
       for (let i = 0; i < customerRecord.length; i++) {
         customerRecord[i] = CustomerRecordModel.fromData(customerRecord[i]);
+        customerRecord[i].hasCrime = await CrimeFunction.hasCrime(customerRecord[i].customerRecordPlatenumber);
       }
       let customerRecordCount = await CustomerRecordResourceAccess.customCountByExpiredDate(filter, startDate, endDate, searchText, order);
       if (customerRecord && customerRecordCount) {
@@ -134,7 +108,7 @@ async function find(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -153,10 +127,13 @@ async function findToday(req) {
       if (filter && req.currentUser.stationsId !== undefined) {
         filter.customerStationId = req.currentUser.stationsId;
       }
-      filter.customerRecordCheckStatus = CHECKING_STATUS.NEW;
+      filter.customerRecordCheckDate = moment().format(DATE_DB_FORMAT);
+
       let customerRecord = await CustomerRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
       for (let i = 0; i < customerRecord.length; i++) {
         customerRecord[i] = CustomerRecordModel.fromData(customerRecord[i]);
+        customerRecord[i].hasCrime = await CrimeFunction.hasCrime(customerRecord[i].customerRecordPlatenumber);
+        customerRecord[i].crimeIds = await CrimeFunction.getistCrimeCustomerRecord(customerRecord[i].customerRecordId);
       }
       let customerRecordCount = await CustomerRecordResourceAccess.customCount(filter, startDate, endDate, searchText, order);
       if (customerRecord && customerRecordCount) {
@@ -166,7 +143,7 @@ async function findToday(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -177,10 +154,11 @@ async function updateById(req) {
       let customerRecordId = req.payload.id;
       let customerRecordData = req.payload.data;
 
-      //check and validate date of record is having right format
-      //do not auto fill if field is missing
-      const NO_AUTO_FILL = false;
-      _checkCustomerRecordDate(customerRecordData, NO_AUTO_FILL);
+      CustomerFuntion.checkCustomerRecordDate(customerRecordData);
+
+      if (customerRecordData.customerRecordPlatenumber && !checkValidVehicleIdentity(customerRecordData.customerRecordPlatenumber)) {
+        return reject(CUSTOMER_RECORD_ERROR.INVALID_PLATE_NUMBER);
+      }
 
       //if user update record info manually, then we note it
       if (
@@ -192,18 +170,117 @@ async function updateById(req) {
       ) {
         customerRecordData.customerRecordModifyDate = new Date();
       }
+      let customerRecordBefore = await CustomerRecordResourceAccess.findById(customerRecordId);
+      if (!customerRecordBefore) {
+        return reject(NOT_FOUND);
+      }
+
+      // find appUserVehicleId
+      let appUserVehicleId;
+      const userVehicle = await AppUserVehicleResourceAccess.find({ vehicleIdentity: customerRecordBefore.customerRecordPlatenumber }, 0, 1);
+      if (userVehicle && userVehicle.length > 0) {
+        appUserVehicleId = userVehicle[0].appUserVehicleId;
+      }
+
+      // if update customerRecordCheckStatus is Completed then update customerRecordCheckExpiredDate
+      if (customerRecordData.customerRecordCheckStatus === CHECKING_STATUS.COMPLETED && customerRecordBefore.customerRecordCheckDuration > 0) {
+        const expiredDate = moment().add(customerRecordBefore.customerRecordCheckDuration, 'months').subtract(1, 'day').format(DATE_DB_FORMAT);
+        customerRecordData.customerRecordCheckExpiredDate = expiredDate;
+      }
 
       let result = await CustomerFuntion.updateCustomerRecordById(customerRecordId, customerRecordData);
       if (result) {
+        await SystemAppLogFunctions.logCustomerRecordChanged(customerRecordBefore, customerRecordData, req.currentUser, customerRecordId);
+        // notify checking status to customer
+        if (customerRecordBefore.appUserId && customerRecordData.customerRecordCheckStatus) {
+          await _notifyRecordStatusToCustomer(
+            customerRecordData.customerRecordCheckStatus,
+            customerRecordBefore.appUserId,
+            customerRecordBefore.customerRecordEmail,
+            customerRecordBefore.customerRecordPlatenumber,
+            appUserVehicleId,
+            customerRecordId,
+          );
+        }
+        // notify checking step to customer
+        if (customerRecordBefore.appUserId && customerRecordData.customerRecordState >= 0) {
+          await _notifyCheckingStep(
+            customerRecordData.customerRecordState,
+            customerRecordBefore.appUserId,
+            customerRecordBefore.customerRecordEmail,
+            customerRecordBefore.customerStationId,
+            customerRecordBefore.customerRecordPlatenumber,
+            appUserVehicleId,
+            customerRecordId,
+          );
+        }
         resolve(result);
       } else {
         reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
+}
+
+async function _notifyRecordStatusToCustomer(checkingStatus, appUserId, appUserEmail, plateNumber, appUserVehicleId, customerRecordId) {
+  let title = 'Thông báo trạng thái đăng kiểm';
+  let message;
+  switch (checkingStatus) {
+    case CHECKING_STATUS.COMPLETED:
+      message = `Phương tiện BSX ${plateNumber} của bạn đã đăng kiểm thành công. Vui lòng cập nhật lại ngày hết hạn của phương tiện để được tự động theo dõi hạn đăng kiểm và hỗ trợ đặt lịch tốt nhất`;
+      break;
+    case CHECKING_STATUS.FAILED:
+      message = `Phương tiện BSX ${plateNumber} đã đăng kiểm thất bại. Vui lòng kiểm tra lại thông tin phương tiện. Mọi thắc mắc xin liên hệ trung tâm đăng kiểm để được hỗ trợ`;
+      break;
+    case CHECKING_STATUS.CANCELED:
+      message = 'Lịch khám xe của bạn đã bị hủy. Vui lòng liên hệ trung tâm để được hỗ trợ';
+      break;
+    default:
+      return;
+  }
+
+  await CustomerMessageFunctions.addMessageCustomer(
+    title,
+    undefined,
+    message,
+    undefined,
+    appUserId,
+    appUserEmail,
+    appUserVehicleId,
+    customerRecordId,
+  );
+
+  // Gửi thông báo nổi đến user
+  await FirebaseNotificationFunctions.pushNotificationByTopic(`USER_${appUserId}`, title, message);
+}
+
+async function _notifyCheckingStep(checkState, appUserId, appUserEmail, stationId, plateNumber, appUserVehicleId, customerRecordId) {
+  const currentStation = await StationResource.findById(stationId);
+  if (currentStation) {
+    const checkingStep = JSON.parse(currentStation.stationCheckingConfig);
+    let updatedStep = checkingStep.find(step => step.stepIndex === checkState);
+    if (updatedStep) {
+      const title = 'Thông báo khám xe';
+      const message = `Phương tiện BSX ${plateNumber} :${updatedStep.stepLabel}`;
+
+      await CustomerMessageFunctions.addMessageCustomer(
+        title,
+        undefined,
+        message,
+        undefined,
+        appUserId,
+        appUserEmail,
+        appUserVehicleId,
+        customerRecordId,
+      );
+
+      // Gửi thông báo nổi đến user
+      await FirebaseNotificationFunctions.pushNotificationByTopic(`USER_${appUserId}`, title, message);
+    }
+  }
 }
 
 async function findById(req) {
@@ -214,12 +291,13 @@ async function findById(req) {
 
       if (result) {
         result = CustomerRecordModel.fromData(result);
+        result.hasCrime = await CrimeFunction.hasCrime(result.customerRecordPlatenumber);
         resolve(result);
       }
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -244,32 +322,56 @@ async function deleteById(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
 
-async function _exportRecordToExcel(records, filepath) {
+async function _exportRecordToExcel(records, filepath, startDate, endDate, station) {
   let count = 0;
-  const workSheetColumnNames = ['STT', 'Họ & Tên', 'BSX', 'SDT', 'Email', 'Ngày kiêm định'];
 
   const workSheetName = 'Danh sách khách hàng';
-  const data = [];
+  const dataRows = [];
+
+  //worksheet title
+  const workSheetTitle = [
+    'Trung tâm đăng kiểm',
+    '', //break 1 columns
+    '', //break 1 columns
+    'Danh sách phương tiện đăng kiểm',
+  ];
+  dataRows.push(workSheetTitle);
+
+  const stationCode = station ? `Mã: ${station.stationsName}` : '';
+  let reportTime = ``;
+  if (startDate || endDate) {
+    reportTime = `Thời gian ${startDate ? 'từ ngày ' + startDate : ''} ${endDate ? 'đến ngày ' + endDate : ''}`;
+  }
+  const workSheetInfo = [
+    `${stationCode}`,
+    '', //break 1 columns
+    '', //break 1 columns
+    reportTime,
+  ];
+  dataRows.push(workSheetInfo);
+  dataRows.push(['']); //break 1 rows
+
+  //table headers
+  const workSheetColumnNames = ['Số TT', 'Biển kiểm soát', 'Chủ phương tiện', 'Địa chỉ', 'Số điện thoại', 'Hết hạn'];
+  dataRows.push(workSheetColumnNames);
+
+  //Table data
   records.forEach(record => {
-    var newDate = moment(record.customerRecordCheckDate, 'DD-MM-YYYY');
-    var newDateFormat = newDate.format('DD/MM/YYYY');
+    var newDate = moment(record.customerRecordCheckExpiredDate, 'DD-MM-YYYY');
+    var newDateFormat =
+      record.customerRecordCheckExpiredDate !== null && record.customerRecordCheckExpiredDate !== '' ? newDate.format('DD/MM/YYYY') : '';
+
     count += 1;
-    data.push([
-      count,
-      record.customerRecordFullName,
-      record.customerRecordPlatenumber,
-      record.customerRecordPhone,
-      record.customerRecordEmail,
-      newDateFormat,
-    ]);
+    dataRows.push([count, record.customerRecordPlatenumber, record.customerRecordFullName, undefined, record.customerRecordPhone, newDateFormat]);
   });
-  excelFunction.exportExcel(data, workSheetColumnNames, workSheetName, filepath);
-  return data;
+
+  excelFunction.exportExcelOldFormat(dataRows, workSheetName, filepath);
+  return 'OK';
 }
 
 async function exportCustomerRecord(req) {
@@ -285,21 +387,31 @@ async function exportCustomerRecord(req) {
       let skip = undefined;
       let limit = undefined;
       let order = undefined;
+      //make sure startDate alwasy < endDate
+      if (startDate && endDate) {
+        if (new Date(startDate) - 1 - (new Date(endDate) - 1) > 0) {
+          reject('INVALID_START_END_DATE');
+          return;
+        }
+      }
       //only export for current station, do not export data of other station
       if (filter && req.currentUser.stationsId !== undefined) {
         filter.customerStationId = req.currentUser.stationsId;
       }
       let customerRecord = await CustomerRecordResourceAccess.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let newData = await _exportRecordToExcel(customerRecord, filepath);
+
+      let station = await Station.findById(req.currentUser.stationsId);
+
+      let newData = await _exportRecordToExcel(customerRecord, filepath, startDate, endDate, station);
       if (newData) {
         let newExcelUrl = 'https://' + process.env.HOST_NAME + '/' + filepath;
         resolve(newExcelUrl);
       } else {
-        reject('failse');
+        reject('false');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -318,7 +430,7 @@ async function importCustomerRecord(req) {
       let newExcel = await UploadFunctions.uploadExcel(originaldata, fileFormat);
       if (newExcel) {
         let path = 'uploads/importExcel/' + newExcel;
-        let excelData = await excelFunction.importExcel(path);
+        let excelData = await excelFunction.importExcelOldformat(path);
 
         if (excelData === undefined) {
           reject('failed to import');
@@ -342,8 +454,9 @@ async function importCustomerRecord(req) {
           }
 
           let importSuccessCount = 0;
+          const IS_ADD_SERIALNUMBER = true;
           for (var i = 0; i < needToImportRecords.length; i++) {
-            let addResult = await _addNewCustomerRecord(needToImportRecords[i]);
+            let addResult = await CustomerFuntion.addNewCustomerRecord(needToImportRecords[i], IS_ADD_SERIALNUMBER);
             if (addResult) {
               importSuccessCount++;
             }
@@ -363,41 +476,23 @@ async function importCustomerRecord(req) {
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
 
-//BEWARE !! This API is use for robot
-async function robotInsert(req) {
+async function _storePlateNumberImage(station, payload) {
   return new Promise(async (resolve, reject) => {
-    try {
-      let payload = req.payload;
-      var hostname = req.headers.host;
-      let station = await StationResource.find({ stationUrl: hostname }, 0, 1);
-      if (station === undefined || station.length < 1) {
-        console.log(`can not find station by Url ${hostname} for robotInsert`);
-        station = await StationResource.find({ stationWebhookUrl: hostname }, 0, 1);
-        if (station === undefined || station.length < 1) {
-          console.log(`can not find station by WebhookUrl ${hostname} for robotInsert`);
-          reject('failed');
-          return;
-        }
-      }
-      station = station[0];
-
-      const fs = require('fs');
-      let today = new Date();
-      let dirName = `uploads/media/plate/${today.getFullYear()}${today.getMonth()}${today.getDate()}`;
-      if (payload.image === undefined && payload.image.path === undefined) {
-        console.error('payload do not have image');
-        reject('failed');
-      }
+    const fs = require('fs');
+    let today = new Date();
+    let dirName = `uploads/media/plate/${today.getFullYear()}${today.getMonth()}${today.getDate()}`;
+    if (payload.image !== undefined && payload.image.path !== undefined) {
       fs.readFile(payload.image.path, (err, data) => {
         if (err) {
           console.error('writeFile error');
           console.error(err);
-          reject('failed');
+          resolve(undefined);
+          return;
         }
 
         // check if upload directory exists
@@ -418,43 +513,164 @@ async function robotInsert(req) {
           if (writeErr) {
             console.error('writeFile error');
             console.error(writeErr);
-            reject('failed');
+            resolve(undefined);
+            return;
           }
-
-          let customerRecordPlateColor = 'white';
-          if (payload.color === 'T') {
-            customerRecordPlateColor = 'white';
-          } else if (payload.color === 'V') {
-            customerRecordPlateColor = 'yellow';
-          } else if (payload.color === 'X') {
-            customerRecordPlateColor = 'blue';
-          }
-
-          let newCustomerRecordData = {
-            customerRecordPlatenumber: payload.bsx,
-            customerRecordPlateImageUrl: `https://${process.env.HOST_NAME}/${dirName}/${newFileName}`,
-            customerRecordPlateColor: customerRecordPlateColor,
-          };
-          if (station) {
-            newCustomerRecordData.customerStationId = station.stationsId;
-          }
-          if (newCustomerRecordData.customerRecordCheckDuration === undefined) {
-            newCustomerRecordData.customerRecordCheckDuration = null;
-          }
-          let addResult = await _addNewCustomerRecord(newCustomerRecordData);
-          if (addResult) {
-            resolve(addResult);
-          } else {
-            reject('failed');
-          }
-
-          resolve('ok');
+          resolve(`https://${process.env.HOST_NAME}/${dirName}/${newFileName}`);
+          return;
         });
       });
-      // resolve("ok");
+    } else {
+      resolve(undefined);
+    }
+  });
+}
+//BEWARE !! This API is use for robot
+async function robotInsert(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let payload = req.payload;
+      var hostname = req.headers.host;
+
+      let station = await StationResource.find({ stationUrl: hostname }, 0, 1);
+
+      //retry to find config with
+      if (!station || station.length <= 0) {
+        console.error(`can not find station by Url ${hostname} for robotInsert`);
+        station = await StationResource.find({ stationLandingPageUrl: hostname }, 0, 1);
+      }
+
+      if (station === undefined || station.length < 1) {
+        console.error(`can not find station by stationLandingPageUrl ${hostname} for robotInsert`);
+        station = await StationResource.find({ stationWebhookUrl: hostname }, 0, 1);
+        if (station === undefined || station.length < 1) {
+          console.error(`can not find station by WebhookUrl ${hostname} for robotInsert`);
+          reject('failed');
+          return;
+        }
+      }
+      station = station[0];
+
+      let storeResult = await _storePlateNumberImage(station, payload);
+
+      let customerRecordPlateColor = CUSTOMER_RECORD_PLATE_COLOR.WHITE;
+      if (payload.color === 'T') {
+        customerRecordPlateColor = CUSTOMER_RECORD_PLATE_COLOR.WHITE;
+      } else if (payload.color === 'V') {
+        customerRecordPlateColor = CUSTOMER_RECORD_PLATE_COLOR.YELLOW;
+      } else if (payload.color === 'X') {
+        customerRecordPlateColor = CUSTOMER_RECORD_PLATE_COLOR.BLUE;
+      } else if (payload.color === 'D') {
+        customerRecordPlateColor = CUSTOMER_RECORD_PLATE_COLOR.RED;
+      }
+
+      let newCustomerRecordData = {
+        customerRecordPlatenumber: payload.bsx,
+        customerRecordPlateImageUrl: storeResult ? storeResult : '',
+        customerRecordPlateColor: customerRecordPlateColor,
+      };
+      if (station) {
+        newCustomerRecordData.customerStationId = station.stationsId;
+      }
+      if (newCustomerRecordData.customerRecordCheckDuration === undefined) {
+        newCustomerRecordData.customerRecordCheckDuration = null;
+      }
+
+      newCustomerRecordData.customerRecordCheckTime = CustomerFuntion.getCheckTime();
+
+      //phan nay phai lam giong nhu FE dang submit de tranh bi sai format
+      newCustomerRecordData.customerRecordCheckDate = moment().format(DATE_DB_FORMAT);
+
+      let addResult = await CustomerFuntion.addNewCustomerRecord(newCustomerRecordData);
+      if (addResult) {
+        // Crawl criminals
+
+        const CriminalRecordFunctions = require('../../CustomerCriminalRecord/CustomerCriminalRecordFunctions');
+        CriminalRecordFunctions.bulkInsertCriminalRecords(newCustomerRecordData.customerRecordPlatenumber, addResult);
+
+        resolve(addResult);
+      } else {
+        reject('failed');
+      }
+
+      resolve('ok');
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function registerFromSchedule(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const customerScheduleId = req.payload.customerScheduleId;
+
+      const linkedBooking = await CustomerScheduleResourceAccess.findById(customerScheduleId);
+      if (!linkedBooking) {
+        return reject(CUSTOMER_RECORD_ERROR.INVALID_CUSTOMER_SCHEDULE);
+      }
+
+      // kiem tra lich hen da duoc tao record dang kiem truoc do chua
+      const existedLinkedRecord = await CustomerRecordResourceAccess.find({ customerScheduleId: customerScheduleId });
+      if (existedLinkedRecord && existedLinkedRecord.length > 0) {
+        return reject(CUSTOMER_RECORD_ERROR.DUPLICATE_LINKED_BOOKING_SCHEDULE);
+      }
+
+      let addResult = await CustomerFuntion.insertCustomerRecordFromSchedule(linkedBooking);
+      if (addResult) {
+        // update customerRecordId for Schedule
+        const customerRecordId = addResult[0];
+        await CustomerScheduleResourceAccess.updateById(customerScheduleId, { customerRecordId: customerRecordId });
+
+        resolve(addResult);
+      } else {
+        reject('failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function userGetList(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let order = req.payload.order;
+      let startDate = req.payload.startDate;
+      let endDate = req.payload.endDate;
+      let searchText = req.payload.searchText;
+
+      if (filter && req.currentUser.stationsId !== undefined) {
+        filter.customerStationId = req.currentUser.stationsId;
+      }
+
+      if (filter && filter.customerRecordCheckDate) {
+        filter.customerRecordCheckDate = moment(filter.customerRecordCheckDate, DATE_DISPLAY_FORMAT).format(DATE_DB_FORMAT);
+      }
+
+      if (filter && filter.customerRecordCheckExpiredDate) {
+        filter.customerRecordCheckExpiredDate = moment(filter.customerRecordCheckExpiredDate, DATE_DISPLAY_FORMAT).format(DATE_DB_FORMAT);
+      }
+
+      let customerRecord = await CustomerRecordResourceAccess.customSearchByExpiredDate(filter, skip, limit, startDate, endDate, searchText, order);
+      for (let i = 0; i < customerRecord.length; i++) {
+        customerRecord[i] = CustomerRecordModel.fromData(customerRecord[i]);
+        customerRecord[i].hasCrime = await CrimeFunction.hasCrime(customerRecord[i].customerRecordPlatenumber);
+      }
+      let customerRecordCount = await CustomerRecordResourceAccess.customCountByExpiredDate(filter, startDate, endDate, searchText, order);
+      if (customerRecord && customerRecordCount) {
+        resolve({ data: customerRecord, total: customerRecordCount });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -469,4 +685,6 @@ module.exports = {
   importCustomerRecord,
   robotInsert,
   findToday,
+  userGetList,
+  registerFromSchedule,
 };
