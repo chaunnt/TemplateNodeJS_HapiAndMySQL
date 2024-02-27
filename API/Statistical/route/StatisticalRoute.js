@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 const moduleName = 'Statistical';
@@ -11,6 +11,10 @@ const areaFilterSchema = {
   areaCountryId: Joi.number().min(0),
   areaProvinceId: Joi.number().min(0),
   areaDistrictId: Joi.number().min(0),
+};
+
+const filterUserDetailReport = {
+  appUserId: Joi.number(),
 };
 
 module.exports = {
@@ -26,12 +30,36 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        startDate: Joi.string().default(new Date().toISOString()),
-        endDate: Joi.string().default(new Date().toISOString()),
+        startDate: Joi.string().example(new Date().toISOString()),
+        endDate: Joi.string().example(new Date().toISOString()),
+        filter: Joi.object({
+          staffId: Joi.number(),
+        }),
       }),
     },
     handler: function (req, res) {
       Response(req, res, 'generalReport');
+    },
+  },
+  getUserDetailReport: {
+    tags: ['api', `${moduleName}`],
+    description: `statistical general report ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterUserDetailReport),
+        startDate: Joi.string().example(new Date().toISOString()),
+        endDate: Joi.string().example(new Date().toISOString()),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getUserDetailReport');
     },
   },
   summaryUserPayment: {
@@ -55,46 +83,6 @@ module.exports = {
       Response(req, res, 'summaryUserPayment');
     },
   },
-  userSummaryReferUser: {
-    tags: ['api', `${moduleName}`],
-    description: `userSummaryReferUser`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(5).max(20),
-      }),
-    },
-    handler: function (req, res) {
-      Response(req, res, 'userSummaryReferUser');
-    },
-  },
-  summaryCountUserFAC: {
-    tags: ['api', `${moduleName}`],
-    description: `summaryFAC ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        startDate: Joi.string().default(new Date().toISOString()),
-        endDate: Joi.string().default(new Date().toISOString()),
-      }),
-    },
-    handler: function (req, res) {
-      Response(req, res, 'summaryCountUserFAC');
-    },
-  },
   summaryUserReport: {
     tags: ['api', `${moduleName}`],
     description: `statistical general report ${moduleName}`,
@@ -112,9 +100,9 @@ module.exports = {
       Response(req, res, 'summaryUserReport');
     },
   },
-  summaryServicePackageReport: {
+  getPaymentStatisticCount: {
     tags: ['api', `${moduleName}`],
-    description: `statistical general report ${moduleName}`,
+    description: `getPaymentStatisticCount ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
     auth: {
       strategy: 'jwt',
@@ -126,7 +114,7 @@ module.exports = {
       payload: Joi.object({}),
     },
     handler: function (req, res) {
-      Response(req, res, 'summaryServicePackageReport');
+      Response(req, res, 'getPaymentStatisticCount');
     },
   },
 };

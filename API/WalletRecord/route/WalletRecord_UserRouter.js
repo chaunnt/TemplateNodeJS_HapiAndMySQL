@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -30,14 +30,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(filterUser),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -58,13 +58,13 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object({ appUserId: Joi.number() }),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },

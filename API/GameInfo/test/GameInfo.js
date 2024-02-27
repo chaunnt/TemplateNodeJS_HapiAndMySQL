@@ -1,10 +1,9 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const { _detectSingleResult, _detectBatchResult } = require('../GameInfoFunctions');
+const Logger = require('../../../utils/logging');
 
 function testRecultGame() {
-  console.log('ok');
-
   const existedGameInfoSingle = {
     gameRecordValue: '97;758;7144;2985;2893;4026;91612;47726;52720;30307;33661;70784;94115;86152;22364;64481;41786;511023',
   };
@@ -80,7 +79,7 @@ function testRecultGame() {
     });
 
     if (pointWin !== single[i].predict) {
-      console.log(single[i].errorMessage);
+      Logger.info(single[i].errorMessage);
     }
   }
 
@@ -108,7 +107,7 @@ function testRecultGame() {
     });
 
     if (pointWin !== batch[i].predict) {
-      console.log(`sai value ${batch[i].value} ${pointWin} !== ${batch[i].predict}`);
+      Logger.info(`sai value ${batch[i].value} ${pointWin} !== ${batch[i].predict}`);
     }
   }
 }

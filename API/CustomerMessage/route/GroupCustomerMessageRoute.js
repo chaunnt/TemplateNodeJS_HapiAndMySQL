@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -80,14 +80,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(filterSchema),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
-        searchText: Joi.string(),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
+        searchText: Joi.string().max(255),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -114,6 +114,26 @@ module.exports = {
       Response(req, res, 'findById');
     },
   },
+  userReadGroupCustomerMessage: {
+    tags: ['api', `${moduleName}`],
+    description: `userReadGroupCustomerMessage ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userReadGroupCustomerMessage');
+    },
+  },
+
   userGetListGroupCustomerMessage: {
     tags: ['api', `${moduleName}`],
     description: `user GetList  ${moduleName}`,
@@ -127,15 +147,53 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(10).max(10),
+        limit: Joi.number().default(10).max(10).min(1),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, 'find');
+      Response(req, res, 'userGetListGroupCustomerMessage');
+    },
+  },
+  userGetDetailGroupCustomerMessage: {
+    tags: ['api', `${moduleName}`],
+    description: `find by id ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'findById');
+    },
+  },
+  deleteById: {
+    tags: ['api', `${moduleName}`],
+    description: `delete ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'deleteById');
     },
   },
 };

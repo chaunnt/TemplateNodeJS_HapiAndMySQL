@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -17,6 +17,7 @@ async function createView() {
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.walletType`,
     `${rootTableName}.balance`,
     `${rootTableName}.walletBalanceUnitId`,
@@ -82,10 +83,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where(filterData);
@@ -101,7 +104,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
@@ -112,8 +115,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`${primaryKeyField} as count`);
 }
 

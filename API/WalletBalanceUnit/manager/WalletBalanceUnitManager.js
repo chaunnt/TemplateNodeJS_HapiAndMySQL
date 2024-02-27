@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -26,7 +26,7 @@ async function insert(req) {
         reject(`failed`);
       }
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
       reject('failed');
     }
   });
@@ -56,7 +56,7 @@ async function find(req) {
         reject(`failed`);
       }
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
       reject('failed');
     }
   });
@@ -132,7 +132,7 @@ async function getList(req) {
         });
       }
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
       reject('failed');
     }
   });

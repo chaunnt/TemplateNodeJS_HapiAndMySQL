@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -15,8 +15,9 @@ async function insert(req) {
       let result = await MembershipResourceAccess.insert(data);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
       reject('failed');
@@ -33,8 +34,9 @@ async function find(req) {
       let order = req.payload.order;
 
       let data = await MembershipResourceAccess.customSearch(filter, skip, limit, order);
-      let dataCount = await MembershipResourceAccess.customCount(filter, order);
-      if (data && dataCount) {
+
+      if (data && data.length > 0) {
+        let dataCount = await MembershipResourceAccess.customCount(filter, order);
         resolve({ data: data, total: dataCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
@@ -53,8 +55,9 @@ async function findById(req) {
       let result = await MembershipResourceAccess.findById(id);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
       reject('failed');
@@ -70,8 +73,9 @@ async function updateById(req) {
       let result = await MembershipResourceAccess.updateById(id, data);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
-      reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
       reject('failed');
@@ -86,6 +90,8 @@ async function deleteById(req) {
       let result = await MembershipResourceAccess.deleteById(id);
       if (result) {
         resolve(result);
+      } else {
+        reject('failed');
       }
     } catch (e) {
       Logger.error(__filename, e);

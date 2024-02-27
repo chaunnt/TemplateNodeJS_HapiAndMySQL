@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -6,9 +6,10 @@ const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'WalletBalanceUnit';
 const primaryKeyField = 'walletBalanceUnitId';
+const Logger = require('../../../utils/logging');
 
 async function createTable() {
-  console.log(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -24,9 +25,9 @@ async function createTable() {
           timestamps(table);
         })
         .then(() => {
-          console.log(`${tableName} table created done`);
+          Logger.info(`${tableName} table created done`);
           seeding().then(result => {
-            console.log(`${tableName} table seeding done`);
+            Logger.info(`${tableName} table seeding done`);
             resolve();
           });
         });
@@ -100,7 +101,7 @@ async function count(filter, order) {
 }
 
 async function incrementBalance(id, amount) {
-  return await Common.incrementFloat(tableName, primaryKeyField, id, 'balance', amount);
+  return await Common.incrementInt(tableName, primaryKeyField, id, 'balance', amount);
 }
 
 async function updateBalanceTransaction(walletBalanceUnitsDataList) {
@@ -118,7 +119,7 @@ async function updateBalanceTransaction(walletBalanceUnitsDataList) {
     });
     return 'ok';
   } catch (error) {
-    console.error(error);
+    Logger.error(error);
     return undefined;
   }
 }
@@ -131,7 +132,7 @@ async function findById(id) {
 async function decrementBalance(id, amount) {
   let dataId = {};
   dataId[primaryKeyField] = id;
-  return await Common.decrementFloat(tableName, primaryKeyField, id, 'balance', amount);
+  return await Common.decrementInt(tableName, primaryKeyField, id, 'balance', amount);
 }
 
 async function deleteById(id) {
@@ -163,10 +164,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -183,7 +186,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
@@ -194,8 +197,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`${primaryKeyField} as count`);
 }
 

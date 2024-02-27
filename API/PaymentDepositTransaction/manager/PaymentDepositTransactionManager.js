@@ -1,11 +1,11 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const moment = require('moment');
-
+require('dotenv').config();
 const DepositTransactionAccess = require('../resourceAccess/PaymentDepositTransactionResourceAccess');
 const PaymentDepositTransactionUserView = require('../resourceAccess/PaymentDepositTransactionUserView');
 const DepositTransactionMethodView = require('../resourceAccess/PaymentDepositMethodView');
@@ -14,15 +14,40 @@ const DepositFunction = require('../PaymentDepositTransactionFunctions');
 const Logger = require('../../../utils/logging');
 const StaffResourceAccess = require('../../Staff/resourceAccess/StaffResourceAccess');
 const PaymentMethodResourceAccess = require('../../PaymentMethod/resourceAccess/PaymentMethodResourceAccess');
-const { DEPOSIT_TRX_STATUS, DEPOSIT_TRX_TYPE, DEPOSIT_ERROR } = require('../PaymentDepositTransactionConstant');
+const {
+  MINIMUM_DEPOSIT_AMOUNT,
+  DEPOSIT_TRX_STATUS,
+  DEPOSIT_TRX_TYPE,
+  DEPOSIT_ERROR,
+  DEPOSIT_TRX_CATEGORY,
+  DEPOSIT_TRX_UNIT,
+} = require('../PaymentDepositTransactionConstant');
 // const ExcelFunction = require('../../../ThirdParty/Excel/ExcelFunction');
 const INVALID_WALLET = undefined;
 const INVALID_PAYMENT_REF = undefined;
 const INVALID_BANKINFOMATION = undefined;
 
-const { ERROR } = require('../../Common/CommonConstant');
+const ERROR = require('../../Common/CommonConstant');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
-const { publishJson } = require('../../../ThirdParty/MQTTBroker/MQTTBroker');
+
+const { DEPOSIT_REQUEST, USER_ERROR } = require('../../AppUsers/AppUserConstant');
+const { ROLE_NAME, PERMISSION_NAME } = require('../../StaffRole/StaffRoleConstants');
+const StaffUserResourceAccess = require('../../StaffUser/resourceAccess/StaffUserResourceAccess');
+const { verifyStaffUser } = require('../../Common/CommonFunctions');
+const PaymentDepositTransactionResourceAccess = require('../resourceAccess/PaymentDepositTransactionResourceAccess');
+const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
+const { updateTotalDepositForUser } = require('../../LeaderBoard/LeaderFunction');
+const { reportToTelegram, reportToTelegramByConfig } = require('../../../ThirdParty/TelegramBot/TelegramBotFunctions');
+const { publishJSONToClient } = require('../../../ThirdParty/SocketIO/SocketIOClient');
+const AppUserDevices = require('../../AppUserDevices/resourceAccess/AppUserDevicesResourceAccess');
+const { getUserDeviceFromUserAgent, saveUserDevice } = require('../../AppUserDevices/AppUserDevicesFunctions');
+const { ACTION } = require('../../AppUserDevices/AppUserDevicesConstants');
+const { replaceCharactersToHide, isNotEmptyStringValue } = require('../../ApiUtils/utilFunctions');
+const {
+  createCheckoutPaymentBank,
+  createCheckoutPaymentUSDT,
+  createCheckoutPaymentElecWallet,
+} = require('../../../ThirdParty/SunpayGateway/SunpayGatewayFunction');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -31,14 +56,20 @@ async function insert(req) {
       let staff = req.currentUser;
       let paymentAmount = req.payload.paymentAmount;
       if (!appUserId) {
-        console.error(`error payment deposit insert user is invalid`);
+        Logger.error(`error payment deposit insert user is invalid`);
         reject('user is invalid');
+        return;
+      }
+
+      const isAllowed = await verifyStaffUser(appUserId, req.currentUser);
+      if (!isAllowed) {
+        reject(ERROR.NO_PERMISSION);
         return;
       }
 
       let user = await UserResource.find({ appUserId: appUserId });
       if (!user || user.length < 1) {
-        console.error(`error payment deposit insert can not find user AppUserId:${appUserId}`);
+        Logger.error(`error payment deposit insert can not find user AppUserId:${appUserId}`);
         reject('can not find user');
         return;
       }
@@ -55,11 +86,11 @@ async function insert(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error payment deposit insert AppUserId:${appUserId} ${ERROR}`);
+        Logger.error(`error payment deposit insert AppUserId:${appUserId} `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error payment deposit insert AppUserId:${appUserId} ${ERROR}`);
+      Logger.error(`error payment deposit insert AppUserId:${appUserId} `);
       reject('failed');
     }
   });
@@ -79,24 +110,68 @@ async function find(req) {
       if (filter === undefined) {
         filter = {};
       }
+      let _permissions = [];
+      if (req.currentUser.permissions) {
+        _permissions = req.currentUser.permissions.split(',');
+      }
+
+      //neu la superadmin thi thay het, nguoc lai cac role khac thi khong, chi thay duoc user cua minh gioi thieu
+      if (req.currentUser.staffRoleId !== ROLE_NAME.SUPER_ADMIN) {
+        //neu staff co quyen xem tat ca thi tuong tu nhu superadmin
+        if (_permissions.length > 0 && !_permissions.includes(PERMISSION_NAME.VIEW_ALL_WITHDRAW)) {
+          filter.paymentStaffId = req.currentUser.staffId;
+        }
+      }
+
+      if (
+        (_permissions.includes(PERMISSION_NAME.VIEW_TRANSACTION_DEPOSIT_BANK) && filter.paymentCategory == DEPOSIT_TRX_CATEGORY.BANK) ||
+        (_permissions.includes(PERMISSION_NAME.VIEW_TRANSACTION_DEPOSIT_USDT) && filter.paymentCategory == DEPOSIT_TRX_CATEGORY.USDT)
+      ) {
+        if (filter.paymentStaffId) {
+          delete filter.paymentStaffId;
+        }
+      }
 
       let transactionList = await DepositTransactionMethodView.customSearch(filter, skip, limit, startDate, endDate, searchText, order);
-      let transactionCount = await DepositTransactionMethodView.customCount(filter, undefined, undefined, startDate, endDate, searchText, order);
+      let transactionCount = await DepositTransactionMethodView.customCount(filter, startDate, endDate, searchText);
+      let depositAmount = 0;
+      if (filter && filter.paymentUnit == DEPOSIT_TRX_UNIT.USDT) {
+        let _sumDepositAmount = await DepositTransactionMethodView.customSum(
+          'paymentRefAmount',
+          { ...filter, paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED },
+          searchText,
+          startDate,
+          endDate,
+        );
+        depositAmount = _sumDepositAmount[0].sumResult;
+      }
+      if (filter && filter.paymentUnit == DEPOSIT_TRX_UNIT.VND) {
+        let _sumDepositAmount = await DepositTransactionMethodView.customSum(
+          'paymentAmount',
+          { ...filter, paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED },
+          searchText,
+          startDate,
+          endDate,
+        );
+        depositAmount = _sumDepositAmount[0].sumResult;
+      }
 
       if (transactionList && transactionCount && transactionList.length > 0) {
         transactionList = await getDetailTransactionDeposit(transactionList);
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
+          totalPaymentAmount: depositAmount,
         });
       } else {
         resolve({
           data: [],
           total: 0,
+          totalPaymentAmount: 0,
         });
       }
     } catch (e) {
-      console.error(`error payment deposit find: ${ERROR}`);
+      Logger.error(`error payment deposit find: `);
       reject('failed');
     }
   });
@@ -105,6 +180,16 @@ async function find(req) {
 async function updateById(req) {
   return new Promise(async (resolve, reject) => {
     try {
+      let transaction = await DepositTransactionAccess.findById(req.payload.id);
+      if (transaction) {
+        const isAllowed = await verifyStaffUser(transaction.appUserId, req.currentUser);
+        if (!isAllowed) {
+          reject(ERROR.NO_PERMISSION);
+          return;
+        }
+      } else {
+        resolve({});
+      }
       let updateResult = await DepositTransactionAccess.updateById(req.payload.id, req.payload.data);
       if (updateResult) {
         resolve(updateResult);
@@ -112,7 +197,7 @@ async function updateById(req) {
         resolve({});
       }
     } catch (e) {
-      console.error(`error payment deposit updateById ${req.payload.id}: ${ERROR}`);
+      Logger.error(`error payment deposit updateById ${req.payload.id}: `);
       reject('failed');
     }
   });
@@ -121,15 +206,43 @@ async function updateById(req) {
 async function findById(req) {
   return new Promise(async (resolve, reject) => {
     try {
-      let transactionList = await DepositTransactionMethodView.find({ paymentDepositTransactionId: req.payload.id });
-      if (transactionList) {
-        transactionList = await getDetailTransactionDeposit(transactionList);
-        resolve(transactionList[0]);
+      let transaction = await PaymentDepositTransactionUserView.find({ paymentDepositTransactionId: req.payload.id });
+      if (transaction && transaction.length > 0) {
+        const isAllowed = await verifyStaffUser(transaction[0].appUserId, req.currentUser);
+        //kiem tra yeu cau nap tien co phai cua user minh tao ra hay khong
+        if (!isAllowed) {
+          //kiem tra xem co quyen nap / rut ALL ko (danh cho doi tac nap tien)
+          if (
+            req.currentUser.permissions &&
+            (req.currentUser.permissions.indexOf(PERMISSION_NAME.VIEW_ALL_DEPOSIT) < 0 ||
+              req.currentUser.permissions.indexOf(PERMISSION_NAME.VIEW_ALL_WITHDRAW) < 0)
+          ) {
+            reject(ERROR.NO_PERMISSION);
+            return;
+          }
+        }
+        transaction = await getDetailTransactionDeposit(transaction);
+        if (
+          req.currentUser.permissions &&
+          req.currentUser.permissions.indexOf(PERMISSION_NAME.VIEW_USERS) < 0 &&
+          req.currentUser.permissions.indexOf(PERMISSION_NAME.VIEW_ALL_USERS) < 0
+        ) {
+          let phoneNumber = transaction[0].phoneNumber;
+          if (isNotEmptyStringValue(phoneNumber)) {
+            transaction[0].phoneNumber = replaceCharactersToHide(transaction[0].phoneNumber);
+          }
+
+          let email = transaction[0].email;
+          if (isNotEmptyStringValue(email)) {
+            transaction[0].email = replaceCharactersToHide(transaction[0].email);
+          }
+        }
+        resolve(transaction[0]);
       } else {
         resolve({});
       }
     } catch (e) {
-      console.error(`error payment deposit findById with paymentDepositTransactionId:${req.payload.id}`, e);
+      Logger.error(`error payment deposit findById with paymentDepositTransactionId:${req.payload.id}`, e);
       reject('failed');
     }
   });
@@ -151,16 +264,25 @@ async function depositHistory(req) {
 
       if (req.currentUser.appUserId) {
         filter.appUserId = req.currentUser.appUserId;
-      } else {
-        console.error(`error payment deposit depositHistory: ${ERROR}`);
-        reject('failed');
-        return;
       }
 
       let transactionList = await PaymentDepositTransactionUserView.customSearch(filter, skip, limit, startDate, endDate, undefined, order);
-      let transactionCount = await PaymentDepositTransactionUserView.customCount(filter, undefined, undefined, startDate, endDate, undefined, order);
+      let transactionCount = await PaymentDepositTransactionUserView.customCount(filter);
 
       if (transactionList && transactionCount && transactionList.length > 0) {
+        for (let i = 0; i < transactionList.length; i++) {
+          const result = await DepositTransactionAccess.findById(transactionList[i].paymentDepositTransactionId);
+          const paymentMethod = await PaymentMethodResourceAccess.find({
+            paymentMethodId: result.paymentMethodId,
+          });
+          if (paymentMethod && paymentMethod.length > 0) {
+            transactionList[i].paymentMethodType = paymentMethod[0].paymentMethodType;
+            transactionList[i].paymentMethodName = paymentMethod[0].paymentMethodName;
+          } else {
+            transactionList[i].paymentMethodType = null;
+            transactionList[i].paymentMethodName = null;
+          }
+        }
         resolve({
           data: transactionList,
           total: transactionCount[0].count,
@@ -172,7 +294,7 @@ async function depositHistory(req) {
         });
       }
     } catch (e) {
-      console.error(`error payment deposit depositHistory:`, e);
+      Logger.error(`error payment deposit depositHistory:`, e);
       reject('failed');
     }
   });
@@ -181,15 +303,32 @@ async function depositHistory(req) {
 async function denyDepositTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
-      let denyResult = await DepositFunction.denyDepositTransaction(req.payload.id, req.currentUser, req.payload.paymentNote);
+      if (req.currentUser.staffRoleId != ROLE_NAME.SUPER_ADMIN) {
+        let transaction = await DepositTransactionAccess.findById(req.payload.id);
+        if (transaction) {
+          const isAllowed = await verifyStaffUser(transaction.appUserId, req.currentUser);
+          if (!isAllowed) {
+            //kiem tra xem co quyen nap / rut ALL ko (danh cho doi tac nap tien)
+            if (req.currentUser.permissions && req.currentUser.permissions.indexOf(PERMISSION_NAME.APPROVE_DEPOSIT) < 0) {
+              reject(ERROR.NO_PERMISSION);
+              return;
+            }
+          }
+        } else {
+          Logger.error('deposit transaction was not approved');
+          reject('failed');
+          return;
+        }
+      }
+      let denyResult = await DepositFunction.denyDepositTransaction(req.payload.id, req.currentUser, undefined);
       if (denyResult) {
         resolve('success');
       } else {
-        console.error('deposit transaction was not denied');
+        Logger.error('deposit transaction was not denied');
         reject('failed');
       }
     } catch (e) {
-      console.error(`error`, e);
+      Logger.error(`error`, e);
       reject('failed');
     }
   });
@@ -198,21 +337,42 @@ async function denyDepositTransaction(req, res) {
 async function approveDepositTransaction(req, res) {
   return new Promise(async (resolve, reject) => {
     try {
+      let transaction = await DepositTransactionAccess.findById(req.payload.id);
+      if (transaction) {
+        if (req.currentUser.staffRoleId != ROLE_NAME.SUPER_ADMIN) {
+          const isAllowed = await verifyStaffUser(transaction.appUserId, req.currentUser);
+          if (!isAllowed) {
+            //kiem tra xem co quyen nap / rut ALL ko (danh cho doi tac nap tien)
+            if (req.currentUser.permissions && req.currentUser.permissions.indexOf(PERMISSION_NAME.APPROVE_DEPOSIT) < 0) {
+              reject(ERROR.NO_PERMISSION);
+              return;
+            }
+          }
+        }
+      } else {
+        return reject(ERROR.NO_DATA);
+      }
+
       let approveResult = await DepositFunction.approveDepositTransaction(
         req.payload.id,
         req.currentUser,
-        req.payload.paymentNote,
+        undefined,
         req.payload.paymentMethodId,
         req.payload.paymentRef,
       );
-      if (approveResult) {
+      if (approveResult !== undefined) {
+        await DepositFunction.updateFirstDepositForUser(transaction.appUserId);
+
+        //update leader board
+        await updateTotalDepositForUser(transaction.appUserId);
+
         resolve('success');
       } else {
-        console.error('deposit transaction was not approved');
+        Logger.error('deposit transaction was not approved');
         reject('failed');
       }
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
       reject('failed');
     }
   });
@@ -230,11 +390,11 @@ async function summaryUser(req) {
       if (result) {
         resolve(result[0]);
       } else {
-        console.error(`error deposit transaction summaryUser: ${ERROR}`);
+        Logger.error(`error deposit transaction summaryUser: `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error deposit transaction summaryUser`, e);
+      Logger.error(`error deposit transaction summaryUser`, e);
       reject('failed');
     }
   });
@@ -251,11 +411,11 @@ async function summaryAll(req) {
       if (result) {
         resolve(result[0]);
       } else {
-        console.error(`error deposit transaction summaryAll: ${ERROR}`);
+        Logger.error(`error deposit transaction summaryAll: `);
         reject('failed');
       }
     } catch (e) {
-      console.error(e);
+      Logger.error(e);
       reject('failed');
     }
   });
@@ -268,11 +428,11 @@ async function addPointForUser(req) {
       if (rewardResult) {
         resolve('success');
       } else {
-        console.error('fail to add reward point for user');
+        Logger.error('fail to add reward point for user');
         reject('failed');
       }
     } catch (e) {
-      console.error(`error deposit transaction addPointForUser:`, e);
+      Logger.error(`error deposit transaction addPointForUser:`, e);
       reject('failed');
     }
   });
@@ -322,79 +482,333 @@ async function exportSalesToExcel(req) {
 async function userRequestDeposit(req) {
   return new Promise(async (resolve, reject) => {
     try {
+      if (!req.currentUser) {
+        return reject(USER_ERROR.NOT_AUTHORIZED);
+      }
+
       let appUserId = req.currentUser.appUserId;
       let paymentAmount = req.payload.paymentAmount;
+      let paymentSecondaryRef = req.payload.paymentSecondaryRef;
       let paymentMethodId = req.payload.paymentMethodId;
       let paymentRef = req.payload.paymentRef;
-      let walletId = req.payload.walletId;
-      let bankInfomation = {};
-
-      if (!appUserId) {
-        console.error(`deposit transaction userRequestDeposit user is invalid`);
-        reject('user is invalid');
-        return;
+      let paymentUnit = req.payload.paymentUnit;
+      let paymentCategory = req.payload.paymentCategory;
+      if (req.currentUser.isAllowedDeposit == DEPOSIT_REQUEST.NOT_ALLOWED) {
+        return reject(USER_ERROR.NOT_ALLOWED_DEPOSIT);
       }
-      let user = await UserResource.find({ appUserId: appUserId });
-      if (!user || user.length < 1) {
-        console.error(`deposit transaction userRequestDeposit can not find user:${appUserId}`);
-        reject('can not find user');
-        return;
-      }
-      user = user[0];
-
-      //  let paymentOwner = req.payload.paymentOwner ? req.payload.paymentOwner : user.tentaikhoan;
-      //  let paymentOriginSource = req.payload.paymentOriginSource ? req.payload.paymentOriginSource : user.tennganhang;
-      //  let paymentOriginName = req.payload.paymentOriginName ? req.payload.paymentOriginName : user.sotaikhoan;
-
-      // if (paymentOwner && paymentOriginSource && paymentOriginName) {
-      //   bankInfomation = {
-      //     paymentOwner: paymentOwner,
-      //     paymentOriginSource: paymentOriginSource,
-      //     paymentOriginName: paymentOriginName,
-      //   };
-      // } else {
-      //   let paymentMethods = await PaymentMethodResourceAccess.find({ paymentMethodId: paymentMethodId });
-      //   if (paymentMethods) {
-      //     bankInfomation = {
-      //       paymentOwner: paymentMethods[0].paymentMethodName, //USDT
-      //       paymentOriginSource: paymentMethods[0].paymentMethodType, // CRYPTO
-      //       paymentOriginName: paymentMethods[0].paymentMethodReceiverName, // dia chi vi
-      //     };
-      //   } else {
-      //     console.error(`error deposit transaction userRequestDeposit: ${DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION}`);
-      //     reject(DEPOSIT_ERROR.NO_BANK_ACCOUNT_INFORMATION);
-      //     return;
-      //   }
-      // }
-
-      let result = await DepositFunction.createDepositTransaction(
-        user,
+      // kiểm tra có lệnh nạp tiền nào đang pending không
+      const userAgent = req.headers['user-agent'];
+      console.log('userAgent: ', userAgent);
+      let userDeposit = await _createNewUserDepositRequest(
+        appUserId,
         paymentAmount,
+        paymentUnit,
         paymentRef,
-        walletId,
-        bankInfomation,
-        undefined,
-        req.payload.paymentSecondaryRef,
+        paymentSecondaryRef,
+        paymentMethodId,
+        req.currentUser.staffId,
+        paymentCategory,
+        userAgent,
       );
-      if (result) {
-        let transaction = await DepositTransactionAccess.findById(result[0]);
-        await publishJson('STAFF_GENERAL', transaction);
-        resolve(result);
-      } else {
-        console.error(`error deposit transaction userRequestDeposit: ${ERROR}`);
-        reject('failed');
+      if (process.env.SUNPAY_ENABLED * 1 === 1) {
+        //Tao thong tin ve cong thanh toan
+        let createCheckoutPaymentResult = await createCheckoutPaymentUSDT(
+          `${moment().format('YYYYMMDDHHmmSS')}_${userDeposit.paymentDepositTransactionId}`,
+          userDeposit.paymentRefAmount,
+        );
+        if (createCheckoutPaymentResult) {
+          return resolve(createCheckoutPaymentResult);
+        } else {
+          Logger.error(`createCheckoutPaymentResult failed`);
+          Logger.error(`${createCheckoutPaymentResult}`);
+          return reject(ERROR.POPULAR_ERROR.INSERT_FAILED);
+        }
       }
     } catch (e) {
-      console.error(`error deposit transaction userRequestDeposit`, e);
-      if (e === 'DUPLICATE_TRANSACTION_ID') {
-        console.error(`error deposit transaction userRequestDeposit: DUPLICATE_TRANSACTION_ID`);
-        reject('DUPLICATE_TRANSACTION_ID');
+      Logger.error(`error BetRecord userRequestDeposit`);
+      Logger.error(e);
+      if (Object.keys(DEPOSIT_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(USER_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(ERROR.POPULAR_ERROR).indexOf(e) >= 0) {
+        reject(e);
       } else {
-        console.error(`error deposit transaction userRequestDeposit: ${ERROR}`);
-        reject('failed');
+        reject(ERROR.UNKNOWN_ERROR);
       }
     }
   });
+}
+async function userRequestDepositByGateway(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!req.currentUser) {
+        return reject(USER_ERROR.NOT_AUTHORIZED);
+      }
+
+      let appUserId = req.currentUser.appUserId;
+      let paymentAmount = req.payload.paymentAmount;
+      let paymentUnit = req.payload.paymentUnit;
+      let paymentCategory = req.payload.paymentCategory;
+      if (req.currentUser.isAllowedDeposit == DEPOSIT_REQUEST.NOT_ALLOWED) {
+        return reject(USER_ERROR.NOT_ALLOWED_DEPOSIT);
+      }
+      // kiểm tra có lệnh nạp tiền nào đang pending không
+      const userAgent = req.headers['user-agent'];
+      let userDeposit = await _createNewUserDepositRequest(
+        appUserId,
+        paymentAmount,
+        paymentUnit,
+        undefined,
+        undefined,
+        undefined,
+        req.currentUser.staffId,
+        paymentCategory,
+        userAgent,
+      );
+
+      if (process.env.SUNPAY_ENABLED * 1 === 1) {
+        //Tao thong tin ve cong thanh toan
+        let createCheckoutPaymentResult = await createCheckoutPaymentBank(
+          `${moment().format('YYYYMMDDHHmmSS')}_${userDeposit.paymentDepositTransactionId}`,
+          userDeposit.paymentAmount,
+        );
+        if (createCheckoutPaymentResult) {
+          return resolve(createCheckoutPaymentResult);
+        } else {
+          Logger.error(`createCheckoutPaymentResult failed`);
+          Logger.error(`${createCheckoutPaymentResult}`);
+          return reject(ERROR.POPULAR_ERROR.INSERT_FAILED);
+        }
+      }
+    } catch (e) {
+      Logger.error(`error BetRecord userRequestDepositByGateway`);
+      Logger.error(e);
+      if (Object.keys(DEPOSIT_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(USER_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(ERROR.POPULAR_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else {
+        reject(ERROR.UNKNOWN_ERROR);
+      }
+    }
+  });
+}
+async function userRequestDepositByElecWallet(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!req.currentUser) {
+        return reject(USER_ERROR.NOT_AUTHORIZED);
+      }
+
+      let appUserId = req.currentUser.appUserId;
+      let paymentAmount = req.payload.paymentAmount;
+      let paymentUnit = req.payload.paymentUnit;
+      let paymentCategory = req.payload.paymentCategory;
+      if (req.currentUser.isAllowedDeposit == DEPOSIT_REQUEST.NOT_ALLOWED) {
+        return reject(USER_ERROR.NOT_ALLOWED_DEPOSIT);
+      }
+      const userAgent = req.headers['user-agent'];
+      let userDeposit = await _createNewUserDepositRequest(
+        appUserId,
+        paymentAmount,
+        paymentUnit,
+        undefined,
+        undefined,
+        undefined,
+        req.currentUser.staffId,
+        paymentCategory,
+        userAgent,
+      );
+      if (process.env.SUNPAY_ENABLED * 1 === 1) {
+        //Tao thong tin ve cong thanh toan
+        let category = '';
+        if (paymentCategory === DEPOSIT_TRX_CATEGORY.MOMO_QR) {
+          category = 'momo_qr';
+        } else if (paymentCategory === DEPOSIT_TRX_CATEGORY.ZALO_QR) {
+          category = 'zalo_qr';
+        } else if (paymentCategory === DEPOSIT_TRX_CATEGORY.VIETTEL_QR) {
+          category = 'viettel_qr';
+        }
+        let createCheckoutPaymentResult = await createCheckoutPaymentElecWallet(
+          `${moment().format('YYYYMMDDHHmmSS')}_${userDeposit.paymentDepositTransactionId}`,
+          userDeposit.paymentAmount,
+          category,
+        );
+        if (createCheckoutPaymentResult) {
+          return resolve(createCheckoutPaymentResult);
+        } else {
+          Logger.error(`createCheckoutPaymentResult failed`);
+          Logger.error(`${createCheckoutPaymentResult}`);
+          return reject(ERROR.POPULAR_ERROR.INSERT_FAILED);
+        }
+      }
+    } catch (e) {
+      Logger.error(`error BetRecord userRequestDeposit`);
+      Logger.error(e);
+      if (Object.keys(DEPOSIT_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(USER_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else if (Object.keys(ERROR.POPULAR_ERROR).indexOf(e) >= 0) {
+        reject(e);
+      } else {
+        reject(ERROR.UNKNOWN_ERROR);
+      }
+    }
+  });
+}
+async function getWaitingApproveCount(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!req.currentUser) {
+        return reject(USER_ERROR.NOT_AUTHORIZED);
+      }
+      let filter = {
+        paymentStatus: DEPOSIT_TRX_STATUS.NEW,
+        // paymentCategory: req.payload.paymentCategory,
+        paymentUnit: req.payload.paymentUnit,
+      };
+      let paymentCategory = req.payload.paymentCategory;
+      if (paymentCategory) {
+        filter.paymentCategory = paymentCategory;
+      }
+      let _permissions = [];
+      if (req.currentUser.permissions) {
+        _permissions = req.currentUser.permissions.split(',');
+      }
+
+      if (req.currentUser.staffRoleId != ROLE_NAME.SUPER_ADMIN) {
+        //neu staff co quyen xem tat ca thi tuong tu nhu superadmin
+        if (_permissions.length > 0 && !_permissions.includes(PERMISSION_NAME.VIEW_ALL_WITHDRAW)) {
+          filter.paymentStaffId = req.currentUser.staffId;
+        }
+      }
+
+      if (
+        (_permissions.includes(PERMISSION_NAME.VIEW_TRANSACTION_DEPOSIT_BANK) && filter.paymentCategory == DEPOSIT_TRX_CATEGORY.BANK) ||
+        (_permissions.includes(PERMISSION_NAME.VIEW_TRANSACTION_DEPOSIT_USDT) && filter.paymentCategory == DEPOSIT_TRX_CATEGORY.USDT)
+      ) {
+        if (filter.paymentStaffId) {
+          delete filter.paymentStaffId;
+        }
+      }
+
+      let _transaction = await PaymentDepositTransactionResourceAccess.count(filter);
+      if (_transaction && _transaction.length > 0) {
+        resolve(_transaction[0].count);
+      } else {
+        resolve(0);
+      }
+    } catch (e) {
+      Logger.error(e);
+      reject('failed');
+    }
+  });
+}
+async function _createNewUserDepositRequest(
+  appUserId,
+  paymentAmount,
+  paymentUnit,
+  paymentRef,
+  paymentSecondaryRef,
+  paymentMethodId,
+  staffId,
+  paymentCategory,
+  userAgent,
+) {
+  // kiểm tra có lệnh nạp tiền nào đang pending không
+  let userDeposit = await DepositTransactionAccess.customSearch({
+    appUserId: appUserId,
+    paymentStatus: [DEPOSIT_TRX_STATUS.NEW, DEPOSIT_TRX_STATUS.PENDING, DEPOSIT_TRX_STATUS.WAITING],
+    paymentCategory: paymentCategory,
+  });
+  if (!userDeposit || userDeposit.length <= 0) {
+    let paymentRefAmount = paymentAmount;
+    if (paymentUnit == DEPOSIT_TRX_UNIT.USDT) {
+      const SystemConfigurationsResourceAccess = require('../../SystemConfigurations/resourceAccess/SystemConfigurationsResourceAccess');
+      let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+      if (config && config.length > 0) {
+        paymentAmount = Math.round(paymentAmount * config[0].exchangeVNDPrice);
+        if (paymentAmount < MINIMUM_DEPOSIT_AMOUNT) {
+          throw DEPOSIT_ERROR.NOT_ENOUGH_DEPOSIT_AMOUNT;
+        }
+      }
+    }
+
+    let result = await DepositFunction.createDepositTransaction(
+      appUserId,
+      paymentAmount,
+      paymentRef,
+      undefined,
+      paymentSecondaryRef,
+      paymentMethodId,
+      paymentUnit,
+      staffId,
+      paymentRefAmount,
+      paymentCategory,
+    );
+    if (result) {
+      let transaction = await DepositTransactionAccess.findById(result[0]);
+      publishJSONToClient('USER_DEPOSIT', transaction);
+      let user = await AppUsersResourceAccess.findById(appUserId);
+      await saveUserDevice(appUserId, userAgent, ACTION.DEPOSIT);
+      let messageToTelegram = _createMessageToAdminTelegram(paymentCategory, user, paymentAmount);
+      reportToTelegramByConfig(
+        messageToTelegram,
+        process.env.TELEGRAM_BOT_DEPOSIT_TOKEN || '6010252793:AAFB8g3Vmc8lW-XiD5OEwY9pI6E1lbgq-7k',
+        process.env.TELEGRAM_CHAT_ID_DEPOSIT_NOTIFICATION || '@okeda_naptienbot',
+      );
+      userDeposit = transaction;
+      return userDeposit;
+    } else {
+      Logger.error(`error deposit transaction userRequestDeposit: `);
+      throw ERROR.POPULAR_ERROR.INSERT_FAILED;
+    }
+  } else {
+    let paymentRefAmount = paymentAmount;
+    if (paymentUnit == DEPOSIT_TRX_UNIT.USDT) {
+      const SystemConfigurationsResourceAccess = require('../../SystemConfigurations/resourceAccess/SystemConfigurationsResourceAccess');
+      let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+      if (config && config.length > 0) {
+        paymentAmount = Math.round(paymentAmount * config[0].exchangeVNDPrice);
+      }
+    }
+    let dataUpdate = {
+      paymentAmount: paymentAmount,
+      paymentRefAmount: paymentRefAmount,
+    };
+    let updateResult = await DepositTransactionAccess.updateById(userDeposit[0].paymentDepositTransactionId, dataUpdate);
+    if (updateResult) {
+      let transaction = await DepositTransactionAccess.findById(userDeposit[0].paymentDepositTransactionId);
+      let user = await AppUsersResourceAccess.findById(appUserId);
+      await saveUserDevice(appUserId, userAgent, ACTION.DEPOSIT);
+      let messageToTelegram = _createMessageToAdminTelegram(paymentCategory, user, paymentAmount);
+      reportToTelegramByConfig(
+        messageToTelegram,
+        process.env.TELEGRAM_BOT_DEPOSIT_TOKEN || '6010252793:AAFB8g3Vmc8lW-XiD5OEwY9pI6E1lbgq-7k',
+        process.env.TELEGRAM_CHAT_ID_DEPOSIT_NOTIFICATION || '@okeda_naptienbot',
+      );
+      userDeposit = transaction;
+      return userDeposit;
+    } else {
+      Logger.error(`error deposit transaction userRequestDeposit update: `);
+      throw ERROR.POPULAR_ERROR.UPDATE_FAILED;
+    }
+  }
+}
+function _createMessageToAdminTelegram(paymentCategory, user, paymentAmount) {
+  let messageToTelegram = '';
+  if (paymentCategory === DEPOSIT_TRX_CATEGORY.BANK) {
+    messageToTelegram = `Có yêu cầu nạp tiền qua ngân hàng vào Tài khoản: ${user.username}, Số tiền: ${paymentAmount} qua cổng thanh toán`;
+  } else if (paymentCategory === DEPOSIT_TRX_CATEGORY.USDT) {
+    messageToTelegram = `Có yêu cầu nạp tiền số USDT vào Tài khoản: ${user.username}, Số tiền:  ${paymentAmount}`;
+  } else {
+    messageToTelegram = `Có yêu cầu nạp tiền qua ${paymentCategory} vào Tài khoản: ${user.username}, Số tiền:  ${paymentAmount}`;
+  }
+  return messageToTelegram;
 }
 async function _addStaffNameInTransactionList(transactionList, storeStaffName = {}) {
   for (let transaction of transactionList) {
@@ -427,8 +841,8 @@ function _transactionsSetPaymentMethodTypeName(transactionList) {
 
 async function getDetailTransactionDeposit(transactionList) {
   let transactionListWithStaffName = await _addStaffNameInTransactionList(transactionList);
-  let result = _transactionsSetPaymentMethodTypeName(transactionListWithStaffName);
-  return result;
+  //let result = _transactionsSetPaymentMethodTypeName(transactionListWithStaffName);
+  return transactionListWithStaffName;
 }
 
 module.exports = {
@@ -441,8 +855,11 @@ module.exports = {
   summaryUser,
   denyDepositTransaction,
   userRequestDeposit,
+  userRequestDepositByGateway,
   depositHistory,
   addPointForUser,
   exportHistoryOfUser,
   exportSalesToExcel,
+  getWaitingApproveCount,
+  userRequestDepositByElecWallet,
 };

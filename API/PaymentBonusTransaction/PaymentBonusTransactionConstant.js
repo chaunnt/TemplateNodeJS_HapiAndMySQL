@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -14,12 +14,15 @@ module.exports = {
     DELETED: 'Deleted',
     CANCELED: 'Canceled',
   },
-  BONUS_TRX_UNIT: {
-    VND: 'VND',
-    USDT: 'USDT',
+  BONUS_TRX_CATEGORY: {
+    WITHDRAW_TO_EXTERNAL: 10,
+    WITHDRAW_TO_WALLET: 20,
   },
-  BONUS_TRX_UNIT: {
-    VND: 'VND',
+  BONUS_TRX_ERROR: {
+    INVALID_TRANSACTION: 'INVALID_TRANSACTION',
+    TRANSACTION_ALREADY_PROCESSED: 'TRANSACTION_ALREADY_PROCESSED',
+    TRANSACTION_FAILED: 'TRANSACTION_FAILED',
   },
-  INVALID_REFER_USER: undefined,
+  BONUS_PAYMENT_DATE_DISPLAY_FORMAT: 'DD/MM/YYYY',
+  BONUS_PAYMENT_DATE_DB_FORMAT: 'YYYYMMDD',
 };

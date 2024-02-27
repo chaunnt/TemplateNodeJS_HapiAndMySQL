@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -8,8 +8,11 @@ const moduleName = 'PaymentDepositTransaction';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
+const Maintain = require('../../Common/route/response').maintain();
 const CommonFunctions = require('../../Common/CommonFunctions');
-const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransactionConstant');
+const { DEPOSIT_TRX_STATUS, DEPOSIT_TRX_UNIT, DEPOSIT_TRX_CATEGORY } = require('../PaymentDepositTransactionConstant');
+const { MAINTAIN_ERROR } = require('../../Common/CommonConstant');
+const MaintainFunctions = require('../../Maintain/MaintainFunctions');
 
 const insertSchema = {
   appUserId: Joi.number().required(),
@@ -31,6 +34,7 @@ const filterSchema = {
   paymentStatus: Joi.string().max(255),
   paymentMethodId: Joi.number(),
   paymentCategory: Joi.string().max(255),
+  paymentUnit: Joi.string().max(255),
 };
 
 module.exports = {
@@ -84,14 +88,14 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         filter: Joi.object(filterSchema),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -133,14 +137,15 @@ module.exports = {
         filter: Joi.object({
           paymentStatus: Joi.string().allow([DEPOSIT_TRX_STATUS.NEW, DEPOSIT_TRX_STATUS.COMPLETED, DEPOSIT_TRX_STATUS.CANCELED]),
           paymentMethodId: Joi.number().min(0),
+          paymentUnit: Joi.string(),
         }),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -160,19 +165,125 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        paymentAmount: Joi.number().required().min(0),
-        paymentOwner: Joi.string(), //ten nguoi gui, ten tai khoan
-        paymentOriginSource: Joi.string(), //ten ngan hang
-        paymentOriginName: Joi.string(), //so tai khoan, dia chi vi
-        // //<< Cho nay la dia chi transaction, khong phai dia chi vi.
-        //paymentRef = ma hoa don / ma giao dich ben ngoai he thong
+        paymentAmount: Joi.number().required().min(5),
         paymentMethodId: Joi.number().min(0),
         paymentRef: Joi.string(),
         paymentSecondaryRef: Joi.string(),
+        paymentUnit: Joi.string().required().default(DEPOSIT_TRX_UNIT.VND),
+        paymentOwner: Joi.string(), //ten nguoi gui, ten tai khoan
+        paymentCategory: Joi.string().required(),
       }),
     },
     handler: function (req, res) {
+      if (MaintainFunctions.getSystemStatus().all === false || MaintainFunctions.getSystemStatus().deposit === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_DEPOSIT, res);
+        return;
+      }
       Response(req, res, 'userRequestDeposit');
+    },
+  },
+  userRequestDepositByGateway: {
+    tags: ['api', `${moduleName}`],
+    description: `userRequestDepositByGateway ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(5),
+        // paymentMethodId: Joi.number().required().min(0),
+        // paymentRef: Joi.string(),
+        // paymentSecondaryRef: Joi.string(),
+        paymentUnit: Joi.string().required().default(DEPOSIT_TRX_UNIT.VND),
+        paymentCategory: Joi.string().required(),
+        // paymentOwner: Joi.string(), //ten nguoi gui, ten tai khoan
+      }),
+    },
+    handler: function (req, res) {
+      if (MaintainFunctions.getSystemStatus().all === false || MaintainFunctions.getSystemStatus().deposit === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_DEPOSIT, res);
+        return;
+      }
+      Response(req, res, 'userRequestDepositByGateway');
+    },
+  },
+  userRequestDepositByElecMomo: {
+    tags: ['api', `${moduleName}`],
+    description: `userRequestDepositByElecWallet ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(5),
+        paymentUnit: Joi.string().required().default(DEPOSIT_TRX_UNIT.VND),
+        paymentCategory: Joi.string().required().allow([DEPOSIT_TRX_CATEGORY.MOMO_QR]),
+      }),
+    },
+    handler: function (req, res) {
+      if (MaintainFunctions.getSystemStatus().all === false || MaintainFunctions.getSystemStatus().deposit === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_DEPOSIT, res);
+        return;
+      }
+      Response(req, res, 'userRequestDepositByElecWallet');
+    },
+  },
+  userRequestDepositByZalo: {
+    tags: ['api', `${moduleName}`],
+    description: `userRequestDepositByElecWallet ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(5),
+        paymentUnit: Joi.string().required().default(DEPOSIT_TRX_UNIT.VND),
+        paymentCategory: Joi.string().required().allow([DEPOSIT_TRX_CATEGORY.ZALO_QR]),
+      }),
+    },
+    handler: function (req, res) {
+      if (MaintainFunctions.getSystemStatus().all === false || MaintainFunctions.getSystemStatus().deposit === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_DEPOSIT, res);
+        return;
+      }
+      Response(req, res, 'userRequestDepositByElecWallet');
+    },
+  },
+  userRequestDepositByViettel: {
+    tags: ['api', `${moduleName}`],
+    description: `userRequestDepositByElecWallet ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentAmount: Joi.number().required().min(5),
+        paymentUnit: Joi.string().required().default(DEPOSIT_TRX_UNIT.VND),
+        paymentCategory: Joi.string().required().allow([DEPOSIT_TRX_CATEGORY.VIETTEL_QR]),
+      }),
+    },
+    handler: function (req, res) {
+      if (MaintainFunctions.getSystemStatus().all === false || MaintainFunctions.getSystemStatus().deposit === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_DEPOSIT, res);
+        return;
+      }
+      Response(req, res, 'userRequestDepositByElecWallet');
     },
   },
   approveDepositTransaction: {
@@ -188,9 +299,6 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        paymentNote: Joi.string(),
-        paymentMethodId: Joi.number(),
-        paymentRef: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {
@@ -210,7 +318,6 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        paymentNote: Joi.string(),
       }),
     },
     handler: function (req, res) {
@@ -336,6 +443,26 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'exportSalesToExcel');
+    },
+  },
+  getWaitingApproveCount: {
+    tags: ['api', `${moduleName}`],
+    description: `get count waiting for approve deposit transaction ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentCategory: Joi.string().example(DEPOSIT_TRX_CATEGORY.BANK).valid(Object.values(DEPOSIT_TRX_CATEGORY)),
+        paymentUnit: Joi.string().required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getWaitingApproveCount');
     },
   },
 };

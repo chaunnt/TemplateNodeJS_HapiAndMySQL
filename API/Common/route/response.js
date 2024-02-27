@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -6,6 +6,7 @@
 'use strict';
 
 const Logger = require('../../../utils/logging');
+const { MAINTAIN_ERROR } = require('../CommonConstant');
 const errorCodes = {
   405: {
     statusCode: 405,
@@ -22,11 +23,21 @@ const errorCodes = {
     error: 'Unauthorized',
     message: 'An internal server unauthorized',
   },
+  599: {
+    statusCode: 599,
+    error: MAINTAIN_ERROR.MAINTAIN_ALL,
+    message: 'System maintenace',
+  },
   200: { statusCode: 200, error: null, message: 'Success', data: {} },
 };
 
 module.exports = {
   errorCodes,
+  maintain: function () {
+    return function (maintainCode, reply) {
+      reply({ statusCode: 599, error: maintainCode }).code(599);
+    };
+  },
   setup: function (manager) {
     return function (request, reply, method) {
       manager[method](request)

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -17,12 +17,17 @@ async function uploadMediaFile(fileData, fileFormat = 'png', folderPath = 'media
     try {
       if (fileData) {
         //fake name with 64 ASCII chars
-        let fileName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + `.${fileFormat}`;
-        let filePath = `uploads/${folderPath}${fileName}`;
+        let fileName =
+          Math.random().toString(36).substring(2, 15) +
+          Math.random().toString(36).substring(2, 15) +
+          '_' +
+          new Date().toISOString() +
+          `.${fileFormat}`;
+        const path = `uploads/${folderPath}${fileName}`;
         if (fs.existsSync(`uploads/${folderPath}`) === false) {
           fs.mkdirSync(`uploads/${folderPath}`, { recursive: true });
         }
-        fs.appendFile(filePath, fileData, err => {
+        fs.appendFile(path, fileData, err => {
           if (err) {
             throw err;
           }
@@ -30,7 +35,7 @@ async function uploadMediaFile(fileData, fileFormat = 'png', folderPath = 'media
 
           //Store uploadedInfo for further usages (ex: search file)
           let uploadedInfo = {
-            uploadFileName: filePath,
+            uploadFileName: path,
             uploadFileUrl: mediaUrl,
             uploadUnicodeName: '',
             uploadFileExtension: fileFormat,

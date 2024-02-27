@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 module.exports = {
   OTP_CONFIRM_STATUS: {
@@ -12,6 +12,25 @@ module.exports = {
     SEND_OTP_FAILED: 'SEND_OTP_FAILED',
     CONFIRM_OTP_FAILED: 'CONFIRM_OTP_FAILED',
     OTP_EXPIRED: 'OTP_EXPIRED',
+    MAX_COUNTER_FORGOT_PASSWORD: 'MAX_COUNTER_FORGOT_PASSWORD', //Vượt quá giới hạn OTP cho "Quên mật khẩu"
+    MAX_COUNTER_FORGOT_SECONDARY_PASSWORD: 'MAX_COUNTER_FORGOT_SECONDARY_PASSWORD', //Vượt quá giới hạn OTP cho "Quên mật khẩu giao dịch"
+    MAX_COUNTER_ADD_PAYMENT_METHOD_BANK: 'MAX_COUNTER_ADD_PAYMENT_METHOD_BANK', //Vượt quá giới hạn OTP cho "Thêm tài khoản ngân hàng"
+    MAX_COUNTER_ADD_PAYMENT_METHOD_CRYPTO: 'MAX_COUNTER_ADD_PAYMENT_METHOD_CRYPTO', //Vượt quá giới hạn OTP cho "Quên tài khoản tiền ảo"
   },
   DEFAULT_EXPIRED_MINUTE: 5, //5 minutes
+  OTP_MAX_CHARACTER: 4,
+  OTP_MAX_VALUE: 9999,
+  OTP_MAX_LIMITED_REQUEST: 100,
+  OTP_TYPE: {
+    FORGOT_PASSWORD: 1,
+    FORGOT_SECONDARY_PASSWORD: 2,
+    ADD_PAYMENT_METHOD_BANK: 3,
+    ADD_PAYMENT_METHOD_CRYPTO: 4,
+  },
+  OTP_TITLE: {
+    CHANGE_PASSWORD_LOGIN: 'Lấy lại mật khẩu đăng nhập',
+    CHANGE_PASSWORD_TRANSACTION: 'Lấy lại mật khẩu giao dịch',
+    ADD_BANK_ACCOUNT: 'Thêm tài khoản ngân hàng',
+    ADD_USDT_ACCOUNT: 'Thêm ví tiền số',
+  },
 };

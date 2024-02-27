@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -8,8 +8,11 @@ const moduleName = 'PaymentBonusTransaction';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
+const Maintain = require('../../Common/route/response').maintain();
 const CommonFunctions = require('../../Common/CommonFunctions');
-const { BONUS_TRX_STATUS } = require('../PaymentBonusTransactionConstant');
+const MaintainFunctions = require('../../Maintain/MaintainFunctions');
+const { BONUS_TRX_STATUS, BONUS_TRX_CATEGORY } = require('../PaymentBonusTransactionConstant');
+const { MAINTAIN_ERROR } = require('../../Common/CommonConstant');
 
 module.exports = {
   userGetBonusHistory: {
@@ -29,7 +32,7 @@ module.exports = {
           paymentMethodId: Joi.number().min(0),
         }),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         startDate: Joi.string(),
         endDate: Joi.string(),
         order: Joi.object({
@@ -40,6 +43,36 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'userGetBonusHistory');
+    },
+  },
+  userGetMissionBonusHistory: {
+    tags: ['api', `${moduleName}`],
+    description: `userGetMissionBonusHistory ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          paymentStatus: Joi.string().allow(Object.values(BONUS_TRX_STATUS)),
+          paymentMethodId: Joi.number().min(0),
+        }),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        order: Joi.object({
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userGetMissionBonusHistory');
     },
   },
   userSummaryBonusByStatus: {
@@ -62,9 +95,9 @@ module.exports = {
       Response(req, res, 'userSummaryBonusByStatus');
     },
   },
-  userRequestWithdrawBonus: {
+  userRequestWithdraw: {
     tags: ['api', `${moduleName}`],
-    description: `userRequestWithdrawBonus ${moduleName}`,
+    description: `userRequestWithdraw ${moduleName}`,
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
       strategy: 'jwt',
@@ -74,34 +107,17 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        paymentAmount: Joi.number().required().min(0).max(1000000000),
-        paymentOwner: Joi.string().required(), //ten nguoi gui, ten tai khoan
-        paymentOriginSource: Joi.string().required(), //ten ngan hang, ten mang (blockchain)
-        paymentOriginName: Joi.string().required(), //so tai khoan, dia chi vi
+        paymentAmount: Joi.number().required().min(0.00001).default(1000000),
+        paymentMethodId: Joi.number(),
+        paymentCategory: Joi.number().required().default(BONUS_TRX_CATEGORY.WITHDRAW_TO_WALLET),
       }),
     },
     handler: function (req, res) {
-      Response(req, res, 'userRequestWithdrawBonus');
-    },
-  },
-  userRequestExchangePoint: {
-    tags: ['api', `${moduleName}`],
-    description: `userRequestWithdrawBonus ${moduleName}`,
-    pre: [{ method: CommonFunctions.verifyToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object({
-        paymentAmount: Joi.number().required().min(0).max(1000000000),
-        walletId: Joi.number(), // id vi tien bonus
-      }),
-    },
-    handler: function (req, res) {
-      Response(req, res, 'userRequestExchangePoint');
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW_BONUS, res);
+        return;
+      }
+      Response(req, res, 'userRequestWithdraw');
     },
   },
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -35,7 +35,7 @@ module.exports = {
   maintainAll: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} all`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -52,7 +52,7 @@ module.exports = {
   maintainDeposit: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} deposit`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -69,7 +69,7 @@ module.exports = {
   maintainLiveGame: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} live game`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -83,27 +83,10 @@ module.exports = {
       Response(req, res, 'maintainLiveGame');
     },
   },
-  maintainTransfer: {
-    tags: ['api', `${moduleName}`],
-    description: `${moduleName} transfer`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
-    auth: {
-      strategy: 'jwt',
-    },
-    validate: {
-      headers: Joi.object({
-        authorization: Joi.string(),
-      }).unknown(),
-      payload: Joi.object(insertSchema),
-    },
-    handler: function (req, res) {
-      Response(req, res, 'maintainTransfer');
-    },
-  },
   maintainWithdraw: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} withdraw`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -120,7 +103,7 @@ module.exports = {
   maintainSignup: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} signup`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },
@@ -134,10 +117,61 @@ module.exports = {
       Response(req, res, 'maintainSignup');
     },
   },
+  maintainSignIn: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} signin`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(insertSchema),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'maintainSignIn');
+    },
+  },
+  maintainChangePassword: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} change password`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(insertSchema),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'maintainChangePassword');
+    },
+  },
+  maintainForgotPassword: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} forgot password`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object(insertSchema),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'maintainForgotPassword');
+    },
+  },
   maintainWarningMessage: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} warning message`,
-    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdminToken }],
     auth: {
       strategy: 'jwt',
     },

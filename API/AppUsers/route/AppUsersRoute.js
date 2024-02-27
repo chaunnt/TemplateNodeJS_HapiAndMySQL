@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -8,14 +8,17 @@ const moduleName = 'AppUsers';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
+const Maintain = require('../../Common/route/response').maintain();
 const CommonFunctions = require('../../Common/CommonFunctions');
 const AppUsersFunctions = require('../AppUsersFunctions');
-const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;
-const { USER_SEX, USER_TYPE } = require('../AppUserConstant');
+const { USER_SEX, USER_TYPE, USER_BLOCK_ACTION } = require('../AppUserConstant');
+const { MAINTAIN_ERROR } = require('../../Common/CommonConstant');
+const { OTP_MAX_CHARACTER } = require('../../OTPMessage/OTPMessageConstant');
+const { getSystemStatus } = require('../../Maintain/MaintainFunctions');
 const insertSchema = {
   lastName: Joi.string().max(255),
   firstName: Joi.string().max(255),
-  username: Joi.string().alphanum().min(6).max(30).required(),
+  username: Joi.string().alphanum().min(4).max(30).required(),
   email: Joi.string().email().max(255),
   referUser: Joi.string().allow('').max(100),
   password: Joi.string().required().min(6),
@@ -30,6 +33,7 @@ const insertSchema = {
   district: Joi.string(),
   ward: Joi.string(),
   address: Joi.string(),
+  referCode: Joi.string(),
 };
 const updateSchema = {
   lastName: Joi.string().allow(''),
@@ -38,6 +42,9 @@ const updateSchema = {
   email: Joi.string().email(),
   birthDay: Joi.string().allow(''),
   active: Joi.number().min(0).max(1),
+  blockedLogin: Joi.number().min(0).max(5),
+  blockedWithdrawBank: Joi.number().min(0).max(5),
+  blockedWithdrawCrypto: Joi.number().min(0).max(5),
   limitWithdrawDaily: Joi.number().min(0).max(1000000000),
   memberLevelName: Joi.string(),
   twoFACode: Joi.string(),
@@ -58,20 +65,18 @@ const updateSchema = {
   district: Joi.string(),
   ward: Joi.string(),
   address: Joi.string(),
+  isAllowedWithdraw: Joi.number(),
 };
 
 const filterSchema = {
   active: Joi.number().min(0).max(100),
-  username: Joi.string().alphanum(),
-  email: Joi.string(),
-  phoneNumber: Joi.string(),
-  referUser: Joi.string(),
-  name: Joi.string(),
-  userType: Joi.number().min(0).max(100),
-  isVerified: Joi.number().min(0).max(100),
-  isVerifiedEmail: Joi.number().min(0).max(100),
-  isVerifiedPhoneNumber: Joi.number().min(0).max(100),
-  memberLevelName: Joi.string(),
+  isExpert: Joi.number(),
+  appUserMembershipId: Joi.number(),
+  duplicatedIpAddress: Joi.number(),
+  duplicatedFirstLoginIp: Joi.number(),
+  blockedLogin: Joi.number(),
+  blockedWithdrawBank: Joi.number(),
+  isAllowedWithdraw: Joi.number(),
 };
 
 module.exports = {
@@ -98,7 +103,10 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        data: Joi.object(updateSchema),
+        data: Joi.object({
+          ...updateSchema,
+          appUserMembershipId: Joi.number().min(0),
+        }),
       }),
     },
     handler: function (req, res) {
@@ -119,11 +127,11 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -169,18 +177,75 @@ module.exports = {
       Response(req, res, 'deleteById');
     },
   },
+  adminUnblockLoginUser: {
+    tags: ['api', `${moduleName}`],
+    description: `unblock user login ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().required().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnblockLoginUser');
+    },
+  },
+  adminUnblockWithdrawBank: {
+    tags: ['api', `${moduleName}`],
+    description: `unblock user withdraw with bank ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().required().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnblockWithDrawBank');
+    },
+  },
+  adminUnblockWithdrawCrypto: {
+    tags: ['api', `${moduleName}`],
+    description: `unblock user withdraw with crypto ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().required().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnblockWithDrawCrypto');
+    },
+  },
   loginUser: {
     tags: ['api', `${moduleName}`],
     description: `login ${moduleName}`,
     validate: {
       payload: Joi.object({
-        username: Joi.string().alphanum().min(6).max(30).required(),
+        username: Joi.string().alphanum().min(4).max(30).required(),
         password: Joi.string().required(),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginUser');
@@ -196,8 +261,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginByPhone');
@@ -212,8 +277,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginByToken');
@@ -229,8 +294,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginByEmail');
@@ -248,8 +313,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginFacebook');
@@ -267,8 +332,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginGoogle');
@@ -286,8 +351,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginZalo');
@@ -305,8 +370,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signin === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGN_IN, res);
         return;
       }
       Response(req, res, 'loginApple');
@@ -321,11 +386,60 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'registerUser');
+    },
+  },
+  registerUserWithOTP: {
+    tags: ['api', `${moduleName}`],
+    description: `register ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        ...insertSchema,
+        otp: Joi.string().min(OTP_MAX_CHARACTER).required().max(10),
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
+        return;
+      }
+      Response(req, res, 'registerUserWithOTP');
+    },
+  },
+  checkUserName: {
+    tags: ['api', `${moduleName}`],
+    description: `register ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        username: Joi.string().min(4).max(30).required(),
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
+        return;
+      }
+      Response(req, res, 'checkUserName');
+    },
+  },
+  registerUserByStaffCode: {
+    tags: ['api', `${moduleName}`],
+    description: `register ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        ...insertSchema,
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
+        return;
+      }
+      Response(req, res, 'registerUserByStaffCode');
     },
   },
   registerUserByPhone: {
@@ -339,8 +453,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'registerUserByPhone');
@@ -360,8 +474,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'registerUserByEmail');
@@ -376,8 +490,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
         return;
       }
       Response(req, res, 'forgotPassword');
@@ -394,8 +508,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
         return;
       }
       Response(req, res, 'forgotPasswordEmailOTP');
@@ -407,16 +521,53 @@ module.exports = {
     validate: {
       payload: Joi.object({
         otpCode: Joi.string().required().max(6),
+        username: Joi.string().min(4).max(30).required(),
         phoneNumber: Joi.string().required(),
         newPassword: Joi.string().required().min(6),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
         return;
       }
       Response(req, res, 'forgotPasswordSMSOTP');
+    },
+  },
+  forgotSecondaryPasswordSMSOTP: {
+    tags: ['api', `${moduleName}`],
+    description: `user forgot ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        otpCode: Joi.string().required().max(6),
+        phoneNumber: Joi.string().required(),
+        newPassword: Joi.string().required().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
+        return;
+      }
+      Response(req, res, 'forgotSecondaryPasswordSMSOTP');
+    },
+  },
+  forgotSecondaryPasswordEmailOTP: {
+    tags: ['api', `${moduleName}`],
+    description: `forgotSecondaryPasswordEmailOTP ${moduleName}`,
+    validate: {
+      payload: Joi.object({
+        otpCode: Joi.string().required().max(6),
+        email: Joi.string().required(),
+        newPassword: Joi.string().required().min(6),
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
+        return;
+      }
+      Response(req, res, 'forgotSecondaryPasswordEmailOTP');
     },
   },
   verifyEmailUser: {
@@ -433,8 +584,8 @@ module.exports = {
       payload: Joi.object({}),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'verifyEmailUser');
@@ -457,6 +608,10 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
+      if (getSystemStatus().all === false || getSystemStatus().changePassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_CHANGE_PASSWORD, res);
+        return;
+      }
       Response(req, res, 'changePasswordUser');
     },
   },
@@ -470,8 +625,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'verify2FA');
@@ -530,9 +685,6 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object({
-        id: Joi.number().min(0),
-      }),
     },
     handler: function (req, res) {
       Response(req, res, 'userGetDetailById');
@@ -576,6 +728,26 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'rejectInfoUser');
+    },
+  },
+  blockUserBySupervisorId: {
+    tags: ['api', `${moduleName}`],
+    description: `blockUserBySupervisorId ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().min(0).required(),
+        block: Joi.number().allow([USER_BLOCK_ACTION.BLOCK, USER_BLOCK_ACTION.UNBLOCK]).required(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'blockUserBySupervisorId');
     },
   },
   getUsersByMonth: {
@@ -720,8 +892,8 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -784,8 +956,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().forgotPassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_FORGOT_PASSWORD, res);
         return;
       }
       Response(req, res, 'adminResetPassword');
@@ -808,8 +980,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().signup === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_SIGNUP, res);
         return;
       }
       Response(req, res, 'sendMailToVerifyEmail');
@@ -832,11 +1004,34 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().changePassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_CHANGE_PASSWORD, res);
         return;
       }
       Response(req, res, 'adminChangePasswordUser');
+    },
+  },
+  adminLockUser: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} adminLockUser`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(1).required(),
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
+        return;
+      }
+      Response(req, res, 'adminLockUser');
     },
   },
   adminChangeSecondaryPasswordUser: {
@@ -856,8 +1051,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().changePassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_CHANGE_PASSWORD, res);
         return;
       }
       Response(req, res, 'adminChangeSecondaryPasswordUser');
@@ -875,11 +1070,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
+        filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string(),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -906,11 +1105,11 @@ module.exports = {
           email: Joi.string(),
         }),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -927,10 +1126,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        username: Joi.string().alphanum(),
+        username: Joi.string(),
         email: Joi.string().email(),
         phoneNumber: Joi.string(),
         companyName: Joi.string(),
+        firstName: Joi.string(),
       }),
     },
     handler: function (req, res) {
@@ -947,8 +1147,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
         return;
       }
       Response(req, res, 'confirmEmailOTP');
@@ -963,8 +1163,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
         return;
       }
       Response(req, res, 'sendEmailOTP');
@@ -981,8 +1181,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
         return;
       }
       Response(req, res, 'changePasswordviaEmailOTP');
@@ -1005,8 +1205,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false || getSystemStatus().changePassword === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_CHANGE_PASSWORD, res);
         return;
       }
       Response(req, res, 'userChangeSecondaryPassword');
@@ -1021,8 +1221,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
         return;
       }
       Response(req, res, 'sendPhoneOTP');
@@ -1038,11 +1238,177 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.all === false) {
-        res('maintain').code(500);
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
         return;
       }
       Response(req, res, 'confirmPhoneOTP');
+    },
+  },
+  userRequestUpgradeUser: {
+    tags: ['api', `${moduleName}`],
+    description: `buy agent rights ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userRequestUpgradeUser');
+    },
+  },
+  adminCreateVirtualUser: {
+    tags: ['api', `${moduleName}`],
+    description: `insert ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    validate: {
+      payload: Joi.object({
+        ...insertSchema,
+      }),
+    },
+    handler: function (req, res) {
+      if (getSystemStatus().all === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_ALL, res);
+        return;
+      }
+      Response(req, res, 'adminCreateVirtualUser');
+    },
+  },
+  adminBlockWithdrawal: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminBlockWithdrawal');
+    },
+  },
+  adminUnblockWithdrawal: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnblockWithdrawal');
+    },
+  },
+  adminBlockDeposit: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminBlockDeposit');
+    },
+  },
+  adminUnblockDeposit: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnblockDeposit');
+    },
+  },
+  adminAssignExpert: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminAssignExpert');
+    },
+  },
+  adminUnassignExpert: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        appUserId: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'adminUnassignExpert');
+    },
+  },
+  resetWithdrawCountDay: {
+    tags: ['api', `${moduleName}`],
+    description: `resetWithdrawCountDay ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        id: Joi.number().min(0),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'resetWithdrawCountDay');
     },
   },
 };

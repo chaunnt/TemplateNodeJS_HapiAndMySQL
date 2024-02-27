@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 const moduleName = 'LeaderBoard';
@@ -13,9 +13,9 @@ const insertSchema = {
   appUserId: Joi.number().required(),
 };
 const filterSchema = {
-  appUserId: Joi.number(),
-  totalScore: Joi.number(),
-  ranking: Joi.number(),
+  // appUserId: Joi.number(),
+  // totalScore: Joi.number(),
+  // ranking: Joi.number(),
 };
 module.exports = {
   // insert: {
@@ -87,15 +87,44 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().allow(''),
         order: Joi.object({
-          key: Joi.string().default('ranking').allow(''),
+          key: Joi.string().default('totalPlayAmount').allow(''),
           value: Joi.string().default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
       Response(req, res, 'find');
+    },
+  },
+  getLeaderBoardDaily: {
+    tags: ['api', `${moduleName}`],
+    description: `getLeaderBoardDaily ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().allow(''),
+        order: Joi.object({
+          key: Joi.string().default('totalPlayAmount').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+        endDate: Joi.string(),
+        startDate: Joi.string(),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getLeaderBoardDaily');
     },
   },
 };

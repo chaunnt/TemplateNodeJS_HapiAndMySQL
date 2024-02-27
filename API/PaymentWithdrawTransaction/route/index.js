@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const PaymentWithdrawTransaction = require('./PaymentWithdrawTransactionRoute');
 module.exports = [
@@ -8,6 +8,11 @@ module.exports = [
   { method: 'POST', path: '/PaymentWithdrawTransaction/find', config: PaymentWithdrawTransaction.find },
   { method: 'POST', path: '/PaymentWithdrawTransaction/findById', config: PaymentWithdrawTransaction.findById },
   // { method: 'POST', path: '/PaymentWithdrawTransaction/deleteById', config: PaymentWithdrawTransaction.deleteById },
+  {
+    method: 'POST',
+    path: '/PaymentWithdrawTransaction/getWaitingApproveCount',
+    config: PaymentWithdrawTransaction.getWaitingApproveCount,
+  },
   {
     method: 'POST',
     path: '/PaymentWithdrawTransaction/user/requestWithdrawUSDT',

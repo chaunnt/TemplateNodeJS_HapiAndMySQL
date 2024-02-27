@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 const moduleName = 'SMSMessage';
@@ -102,7 +102,7 @@ module.exports = {
         endDate: Joi.string(),
         searchText: Joi.string(),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
           value: Joi.string().default('desc').allow(''),
@@ -148,7 +148,7 @@ module.exports = {
         startDate: Joi.string(),
         endDate: Joi.string(),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         searchText: Joi.string(),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),

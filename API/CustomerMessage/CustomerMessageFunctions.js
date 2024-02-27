@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -7,6 +7,7 @@
 const Handlebars = require('handlebars');
 
 const CustomerMessageResourceAccess = require('./resourceAccess/CustomerMessageResourceAccess');
+const GroupCustomerMessageResourceAccess = require('./resourceAccess/GroupCustomerMessageResourceAccess');
 // const MessageCustomerResourceAccess = require('./resourceAccess/MessageCustomerResourceAccess');
 
 const ApiUtilsFunctions = require('../ApiUtils/utilFunctions');
@@ -56,7 +57,7 @@ async function checkValidTemplateMessage(messageTemplateId) {
     }
 
     if (templateData === undefined) {
-      console.error(`there is no template with id ${messageTemplateId}`);
+      Logger.error(`there is no template with id ${messageTemplateId}`);
       return FUNC_FAILED;
     }
   }
@@ -72,7 +73,7 @@ async function getMessageContentByTemplate(messageTemplateId, station, customer)
   //check if using template and template is valid
   let templateData = await checkValidTemplateMessage(messageTemplateId);
   if (templateData === undefined) {
-    console.error(`there is no template with id ${messageTemplateId}`);
+    Logger.error(`there is no template with id ${messageTemplateId}`);
     return FUNC_FAILED;
   }
 
@@ -150,7 +151,7 @@ async function sendMessageToManyCustomer(customerList, stationsId, customerMessa
   //create new MessageCustomer object
   let messageId = await _createNewMessage(stationsId, customerMessageContent, customerMessageCategories, templateCustomerMessageId);
   if (messageId === undefined) {
-    console.error(`can not create new message`);
+    Logger.error(`can not create new message`);
     return FUNC_FAILED;
   }
 
@@ -252,7 +253,7 @@ async function handleSendMessage(appUserId, POST, data, messageType) {
       }
       resolve();
     } catch (e) {
-      console.log('error', e);
+      Logger.error('error', e);
       resolve();
     }
   });
@@ -265,82 +266,6 @@ async function handleSendMessageUser(messageData, data, receiverId, moreData) {
     msg = JSON.parse(template(data));
   }
   await handleSendMessage(receiverId, msg, moreData, MESSAGE_TYPE.USER);
-}
-
-async function handleSendMessageToFollower(messageData, data, realEstateData) {
-  if (realEstateData) {
-    let follwerData = await RealEstateUserSavedResourceAccess.find({
-      realEstateId: realEstateData.realEstateId,
-    });
-    if (follwerData && follwerData.length > 0) {
-      let arrayUserId = [];
-      for (let user of follwerData) {
-        arrayUserId.push(user.appUserIdSaved);
-      }
-      const template = Handlebars.compile(JSON.stringify(messageData));
-      const message = JSON.parse(template(data));
-      await handleSendMessage(
-        arrayUserId,
-        message,
-        {
-          realEstateId: realEstateData.realEstateId,
-          agency: realEstateData.agency,
-          systemRecordType: realEstateData.systemRecordType,
-          realEstatePostTypeId: realEstateData.realEstatePostTypeId,
-        },
-        MESSAGE_TYPE.REALESTATE,
-      );
-    }
-  }
-}
-
-async function handleSendMessageNewRealEstate(appUserId, messageData, realEstateData, filterUser) {
-  return new Promise(async resolve => {
-    try {
-      let insertMessage = await CustomerMessageResourceAccess.insert(messageData);
-      if (insertMessage) {
-        let customerList = await AppUsersResourceAccess.customSearch(filterUser, undefined, undefined, undefined);
-        if (customerList) {
-          customerList = customerList.filter(item => item.appUserId !== appUserId);
-
-          sendMessageToManyCustomer(
-            customerList,
-            'Hệ thống tự động',
-            insertMessage[0],
-            MESSAGE_TYPE.REALESTATE,
-            {
-              realEstateId: realEstateData.realEstateId,
-              agency: realEstateData.agency,
-              systemRecordType: realEstateData.systemRecordType,
-              realEstatePostTypeId: realEstateData.realEstatePostTypeId,
-              hiddenAfterSend: 1,
-            },
-            1,
-          );
-        }
-      }
-      resolve();
-    } catch (e) {
-      console.log('handleSendMessageNewRealEstate error', e);
-      resolve();
-    }
-  });
-}
-
-async function handleSendMessageRealEstate(messageData, data, realEstateData) {
-  const template = Handlebars.compile(JSON.stringify(messageData));
-  const message = JSON.parse(template(data));
-  await handleSendMessage(
-    realEstateData.appUserId,
-    message,
-    {
-      realEstateId: realEstateData.realEstateId,
-      agency: realEstateData.agency,
-      systemRecordType: realEstateData.systemRecordType,
-      realEstatePostTypeId: realEstateData.realEstatePostTypeId,
-    },
-    messageData.customerMessageCategories,
-  );
 }
 
 async function _handleFirebasePushMessage(messageData, messageType, additionData) {
@@ -369,7 +294,7 @@ async function _handleFirebasePushMessage(messageData, messageType, additionData
   //store message into database
   let storeFirebasePushResult = await CustomerMessageResourceAccess.insert(messageDataList);
   if (!storeFirebasePushResult) {
-    Logger.error(`can not storeFirebasePushResult sendMessageConfirmSchedule`);
+    Logger.error(`can not storeFirebasePushResult _handleFirebasePushMessage`);
     return FUNC_FAILED;
   }
 
@@ -415,7 +340,7 @@ async function _handleSMSMessage(messageData, additionData) {
     let storeSMSResult = await CustomerMessageResourceAccess.insert(messageData);
 
     if (!storeSMSResult) {
-      Logger.error(`can not storeSMSResult sendMessageConfirmSchedule`);
+      Logger.error(`can not storeSMSResult _handleSMSMessage`);
     } else {
       const SMSClientFunctions = require('../../ThirdParty/SMSAPIClient/SMSAPIClientFunctions');
 
@@ -455,43 +380,82 @@ async function _sendMessage(scheduleData, messageTitle, messageContent, messageT
   return FUNC_SUCCESS;
 }
 
-//gui message cho lich hen da duoc xac nhan
-async function sendMessageConfirmSchedule(scheduleData, stationData) {
-  let _messageTitle = `Lịch hẹn được xác nhận`;
-  let _messageContent = '';
-  if (stationData) {
-    _messageContent = `Lịch hẹn của bạn tại ${stationData.stationsName} đã được xác nhận. 
-    *** LƯU Ý: Mọi thông tin cần hỗ trợ qua số hotline ${stationData.stationsHotline}. Xin cảm ơn`;
-  } else {
-    _messageContent = `Lịch hẹn của bạn đã được xác nhận. 
-    *** LƯU Ý: Mọi thông tin cần hỗ trợ qua số hotline. Xin cảm ơn`;
+async function sendNotificationUser(appUserId, notifiTitle, notifiContent, staffId, customerMessageImage) {
+  let customerMessageData = {
+    customerId: appUserId,
+    isRead: 0,
+    customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
+    customerMessageTopic: MESSAGE_TOPIC.USER,
+    receiverType: MESSAGE_RECEIVER.USER,
+    customerMessageContent: notifiContent,
+    customerMessageTitle: notifiTitle,
+  };
+  if (staffId) {
+    customerMessageData.staffId = staffId;
   }
-  return await _sendMessage(scheduleData, _messageTitle, _messageContent, MESSAGE_TYPE.CUSTOMER_SCHEDULE_APPROVED);
+  if (customerMessageImage) {
+    customerMessageData.customerMessageImage = customerMessageImage;
+  }
+  return await CustomerMessageResourceAccess.insert(customerMessageData);
 }
 
-//gui message cho lich hen moi
-async function sendMessageNewSchedule(scheduleData, stationData) {
-  let _messageTitle = `Lịch hẹn mới`;
-  let _messageContent = '';
-  if (stationData) {
-    _messageContent = `Bạn có 1 lịch hẹn mới tại ${stationData.stationsName}. 
-    *** LƯU Ý: Mọi thông tin cần hỗ trợ qua số hotline ${stationData.stationsHotline}. Xin cảm ơn`;
-  } else {
-    _messageContent = `Bạn có 1 lịch hẹn mới. 
-    *** LƯU Ý: Mọi thông tin cần hỗ trợ qua số hotline. Xin cảm ơn`;
+async function sendNotificationAllUser(notifiTitle, notifiContent, staffId, groupCustomerMessageImage) {
+  let groupCustomerMessageData = {
+    groupCustomerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
+    groupCustomerMessageType: MESSAGE_TYPE.GENERAL,
+    groupCustomerMessageContent: notifiContent,
+    groupCustomerMessageTitle: notifiTitle,
+  };
+  if (staffId) {
+    groupCustomerMessageData.staffId = staffId;
   }
-  return await _sendMessage(scheduleData, _messageTitle, _messageContent, MESSAGE_TYPE.CUSTOMER_SCHEDULE_NEW);
+  if (groupCustomerMessageImage) {
+    groupCustomerMessageData.groupCustomerMessageImage = groupCustomerMessageImage;
+  }
+  return await GroupCustomerMessageResourceAccess.insert(groupCustomerMessageData);
 }
 
+async function createMessageToUserById(appUserId, title, content) {
+  let _messageData = {};
+  if (appUserId) {
+    _messageData.customerMessageTitle = title;
+    _messageData.customerMessageContent = content;
+    _messageData.customerId = appUserId;
+  }
+
+  return await CustomerMessageResourceAccess.insert(_messageData);
+}
+
+async function userReadGroupMessage(appUserId, groupCustomerMessageId) {
+  const UserGroupCustomerMessageResourceAccess = require('./resourceAccess/UserGroupCustomerMessageResourceAccess');
+  await UserGroupCustomerMessageResourceAccess.insert({
+    appUserId: appUserId,
+    groupCustomerMessageId: groupCustomerMessageId,
+  });
+}
+
+async function getUserReadStatusForGroupMessage(appUserId, groupCustomerMessageId) {
+  const UserGroupCustomerMessageResourceAccess = require('./resourceAccess/UserGroupCustomerMessageResourceAccess');
+  let _result = await UserGroupCustomerMessageResourceAccess.find({
+    appUserId: appUserId,
+    groupCustomerMessageId: groupCustomerMessageId,
+  });
+
+  if (_result && _result.length > 0) {
+    const ALREADY_READ = 1;
+    return ALREADY_READ;
+  }
+  return 0;
+}
 module.exports = {
   getTemplateMessages,
+  getUserReadStatusForGroupMessage,
   sendMessageToManyCustomer,
   getMessageContentByTemplate,
   handleSendMessage,
   handleSendMessageUser,
-  handleSendMessageToFollower,
-  handleSendMessageNewRealEstate,
-  handleSendMessageRealEstate,
-  sendMessageConfirmSchedule,
-  sendMessageNewSchedule,
+  sendNotificationUser,
+  sendNotificationAllUser,
+  userReadGroupMessage,
+  createMessageToUserById,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -6,8 +6,9 @@ const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const tableName = 'WalletRecord';
 const primaryKeyField = 'WalletRecordId';
+const Logger = require('../../../utils/logging');
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -15,15 +16,15 @@ async function createTable() {
           table.increments('WalletRecordId').primary();
           table.integer('appUserId');
           table.integer('walletId');
-          table.float('paymentAmount', 48, 10).defaultTo(0);
-          table.float('paymentAmountIn', 48, 10).defaultTo(0); //credit
-          table.float('paymentAmountOut', 48, 10).defaultTo(0); //debit
+          table.bigInteger('paymentAmount').defaultTo(0);
+          table.bigInteger('paymentAmountIn').defaultTo(0); //credit
+          table.bigInteger('paymentAmountOut').defaultTo(0); //debit
           table.integer('paymentAmountInOut').defaultTo(0); //0: CREDIT , 10: DEBIT
-          table.float('balanceBefore', 48, 10).defaultTo(0);
-          table.float('balanceAfter', 48, 10).defaultTo(0);
+          table.bigInteger('balanceBefore').defaultTo(0);
+          table.bigInteger('balanceAfter').defaultTo(0);
           table.string('WalletRecordNote').nullable(); // nội dung để tham khảo
           table.string('WalletRecordRef').nullable(); //hóa đơn, mã giao dịch .v.v. id để tham khảo
-          table.float('WalletRecordRefAmount', 48, 10).defaultTo(0); //Số tiền gì đó, dùng để tham khảo
+          table.bigInteger('WalletRecordRefAmount').defaultTo(0); //Số tiền gì đó, dùng để tham khảo
           table.string('WalletRecordType');
           table.integer('staffId');
           table.integer('betRecordId');
@@ -44,9 +45,10 @@ async function createTable() {
           table.index('paymentExchangeTransactionId');
           table.index('paymentExternalTransactionId');
           table.index('paymentBonusTransactionId');
+          table.index('WalletRecordType');
         })
         .then(() => {
-          console.info(`${tableName} table created done`);
+          Logger.info(`${tableName} table created done`);
           resolve();
         });
     });
@@ -93,10 +95,12 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   queryBuilder.where(filterData);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -114,7 +118,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;

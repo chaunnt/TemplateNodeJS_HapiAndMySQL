@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -26,21 +26,35 @@ async function createTable() {
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
           let initialStaffPermissions = [
-            'VIEW_DASHBOARD',
-            'VIEW_PRODUCTS',
-            'VIEW_ORDERS',
-            'VIEW_USERS',
-            'VIEW_DEPOSIT',
-            'VIEW_WITHDRAW',
-            'VIEW_TRANSACTION',
-            'VIEW_NOTIFICATIONS',
-            'VIEW_PAYMENT_METHOD',
-            'VIEW_SYSTEM_CONFIG',
-            'VIEW_ROLES',
-            'VIEW_STAFFS',
-            'EDIT_USERS',
-            'APPROVE_DEPOSIT',
-            'APPROVE_WITHDRAW',
+            'VIEW_DASHBOARD', //Thấy menu thống kê
+            'VIEW_USERS', //Thấy menu danh sách user
+            'VIEW_TRANSACTION_DEPOSIT_BANK', //Thấy tab nạp tiền bank
+            'VIEW_TRANSACTION_DEPOSIT_USDT', //Thấy tab nạp tiền usdt
+            'VIEW_TRANSACTION_WITHDRAW_BANK', //Thấy tab rút tiền bank
+            'VIEW_TRANSACTION_WITHDRAW_USDT', //thấy tab rút tiền usdt
+            'VIEW_TRANSACTION_BONUS', //thấy tab hoa hồng
+            'VIEW_TRANSACTION', //thấy menu lịch sử giao dịch
+            'VIEW_EVENTS', //thấy menu sự kiện
+            'VIEW_SUPPORTS', //thấy menu hỗ trợ (Chat)
+            'VIEW_STAFFS', //thấy menu nhân viên
+            'VIEW_SYSTEM_CONFIG', //thấy menu thiết lập
+            'VIEW_PAYMENT_METHOD', //thấy menu phương thức thanh toán
+            'VIEW_MEMBERSHIP_LEVEL', //thấy menu cấp bậc
+            'VIEW_MISSION_CONFIG', //thấy menu cấu hình nhiệm vụ
+            'VIEW_GAMES', //thấy menu điều khiển game
+            'VIEW_AGENTS', //thấy menu đại lý
+            'VIEW_CONFIG_MAINTAIN', //thấy menu bảo trì
+            'EDIT_USERS', //được phép sửa thông tin user
+            'APPROVE_DEPOSIT', //được phép duyệt nạp tiền
+            'APPROVE_WITHDRAW', //được phép duyệt rút tiền
+            'VIEW_ALL_DEPOSIT', //được phép xem toàn bộ giao dịch nạp tiền của toàn hệ thống
+            'VIEW_ALL_WITHDRAW', //được phép xem toàn bộ giao dịch rút tiền của toàn hệ thống
+            'VIEW_ALL_USERS', //được phép xem user toàn bộ hệ thống (dành cho CSKH)
+            'VIEW_PAYMENT_METHOD_BANK', // => thấy danh sách bank
+            'VIEW_PAYMENT_METHOD_USDT', // => thấy danh sách tiền ảo
+            'EDITS_PAYMENT_METHOD_BANK', // => edit được bank
+            'EDITS_PAYMENT_METHOD_USDT', // => edit được tiền ảo
+            'VIEW_SYSTEM_APP_LOG', // được phép xem lịch sử sửa đổi
           ];
           let permissionArr = [];
           for (let i = 0; i < initialStaffPermissions.length; i++) {

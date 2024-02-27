@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -10,7 +10,7 @@ const { WALLET_TYPE, BALANCE_UNIT } = require('../WalletConstant');
 const Logger = require('../../../utils/logging');
 
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -18,7 +18,7 @@ async function createTable() {
           table.increments('walletId').primary();
           table.integer('appUserId');
           table.string('walletType').defaultTo(WALLET_TYPE.USDT);
-          table.float('balance', 48, 24).defaultTo(0);
+          table.bigInteger('balance').defaultTo(0);
           table.string('balanceUnit').defaultTo(BALANCE_UNIT.VND);
           table.integer('walletBalanceUnitId').defaultTo(0);
           table.string('lastDepositAt');
@@ -139,7 +139,7 @@ async function count(filter, order) {
 }
 
 async function incrementBalance(id, amount) {
-  return await Common.incrementFloat(tableName, primaryKeyField, id, 'balance', amount);
+  return await Common.incrementInt(tableName, primaryKeyField, id, 'balance', amount);
 }
 
 async function updateBalanceTransaction(walletsDataList) {
@@ -153,7 +153,7 @@ async function updateBalanceTransaction(walletsDataList) {
     });
     return 'ok';
   } catch (error) {
-    console.error(`error WalletBalanceUnit updateBalanceTransaction: ${ERROR}`);
+    Logger.error(`error WalletBalanceUnit updateBalanceTransaction: `);
     return undefined;
   }
 }
@@ -165,7 +165,7 @@ async function findById(id) {
 }
 
 async function decrementBalance(id, amount) {
-  return await Common.decrementFloat(tableName, primaryKeyField, id, 'balance', amount);
+  return await Common.decrementInt(tableName, primaryKeyField, id, 'balance', amount);
 }
 
 async function findWalletByUserId(appUserId, walletType) {

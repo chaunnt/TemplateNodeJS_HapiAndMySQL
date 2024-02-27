@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -61,7 +61,7 @@ async function _createNewMessageForAllCustomer(groupMessage) {
     }
 
     if (_newMessageList.length > 0) {
-      await CustomerMessage.insert(_newMessageList);
+      //await CustomerMessage.insert(_newMessageList);
     }
 
     if (100 * i > _countCustomer) {

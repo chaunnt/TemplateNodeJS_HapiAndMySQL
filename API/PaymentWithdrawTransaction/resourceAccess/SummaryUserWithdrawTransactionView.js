@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -16,6 +16,7 @@ async function createUserWithdrawTransactionView() {
     `${rootTableName}.tentaikhoan`,
     `${rootTableName}.tennganhang`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.firstName`,
     `${rootTableName}.lastName`,
     `${rootTableName}.email`,

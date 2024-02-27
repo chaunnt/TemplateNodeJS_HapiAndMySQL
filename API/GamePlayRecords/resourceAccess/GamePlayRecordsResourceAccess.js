@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -7,23 +7,26 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { BET_STATUS, BET_TYPE } = require('../GamePlayRecordsConstant');
 const tableName = 'GamePlayRecords';
 const primaryKeyField = 'betRecordId';
+const Logger = require('../../../utils/logging');
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments('betRecordId').primary();
           table.integer('appUserId');
-          table.float('betRecordAmountIn', 48, 24).defaultTo(0);
-          table.float('betRecordAmountOut', 48, 24).defaultTo(0);
-          table.float('betRecordWin', 48, 24).defaultTo(0);
+          table.bigInteger('betRecordAmountIn').defaultTo(0);
+          table.bigInteger('betRecordAmountOut').defaultTo(0);
+          table.bigInteger('betRecordWin').defaultTo(0);
           table.string('betRecordSection');
           table.string('betRecordHalfSection');
           table.string('betRecordNote').defaultTo('');
           table.string('betRecordStatus').defaultTo(BET_STATUS.NEW);
           table.string('betRecordType', 40);
-          table.string('betRecordValue', 24);
+          table.string('betRecordValue', 255);
+          table.string('betRecordUnit');
+          table.string('betRecordHash').unique().nullable();
           table.integer('betRecordQuantity');
           table.string('betRecordPaymentBonusStatus').defaultTo(BET_STATUS.NEW);
           table.integer('betRecordResult');
@@ -36,14 +39,64 @@ async function createTable() {
           table.index('betRecordType');
           table.index('betRecordSection');
           table.index('betRecordHalfSection');
+          table.index('betRecordResult');
+          table.index('betRecordUnit');
           table.index('gameInfoId');
           table.index('walletId');
+          table.index('betRecordHash');
         })
-        .then(() => {
-          console.info(`${tableName} table created done`);
-          resolve();
+        .then(async () => {
+          Logger.info(`${tableName}`, `${tableName} table created done`);
+          seeding().then(() => {
+            resolve();
+          });
         });
     });
+  });
+}
+
+async function seeding() {
+  let seedingData = [
+    {
+      appUserId: 1,
+      betRecordAmountIn: 10000,
+      betRecordAmountOut: 20000,
+      betRecordSection: '202302141134-XXX',
+      betRecordWin: 10000,
+      betRecordStatus: BET_STATUS.COMPLETED,
+      betRecordValue: 'XXXXXXXXXXXXXXX',
+    },
+  ];
+
+  // seedingData = [];
+  // for (let gameCounter = 1; gameCounter <= 8; gameCounter++) {
+  //   const _gameId = gameCounter;
+  //   for (let i = 0; i < Object.keys(BET_TYPE).length; i++) {
+  //     const _betType = Object.keys(BET_TYPE)[i];
+  //     let _newBet = {
+  //       appUserId: 1,
+  //       betRecordAmountIn: 10000,
+  //       betRecordAmountOut: 20000,
+  //       betRecordSection: `202302141134-00${_gameId}`,
+  //       betRecordWin: 10000,
+  //       betRecordStatus: BET_STATUS.COMPLETED,
+  //       betRecordValue: 'XXXXXXXXXXXXXXX',
+  //       betRecordType: _betType,
+  //       gameInfoId: _gameId,
+  //     };
+  //     seedingData.push(_newBet);
+  //   }
+  // }
+
+  return new Promise(async (resolve, reject) => {
+    Logger.info(`${tableName}`, `seeding ${tableName}`);
+    resolve();
+    // DB(`${tableName}`)
+    //   .insert(seedingData)
+    //   .then(result => {
+    //     Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+    //     resolve();
+    //   });
   });
 }
 
@@ -61,24 +114,14 @@ async function updateById(id, data) {
   return await Common.updateById(tableName, dataId, data);
 }
 
-async function findAllTodayNewBet(filter) {
-  let result = undefined;
-
-  let today = new Date();
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(5);
-  try {
-    result = await DB(tableName).where(filter).where('createdAt', '>=', today);
-  } catch (e) {
-    console.error(`DB UPDATEALL ERROR: ${tableName} : ${filter}`);
-    console.error(e);
-  }
-  return result;
-}
-
 async function find(filter, skip, limit, order) {
   return await Common.find(tableName, filter, skip, limit, order);
+}
+
+async function findById(id) {
+  let dataId = {};
+  dataId[primaryKeyField] = id;
+  return await Common.findById(tableName, dataId, id);
 }
 
 async function count(filter, order) {
@@ -92,16 +135,17 @@ async function sum(field, filter, order) {
 async function sumaryPointAmount(startDate, endDate, filter, referAgentId) {
   let sumField = 'betRecordAmountIn';
   let queryBuilder = DB(tableName);
-  if (filter) {
-    queryBuilder.where(filter);
-  }
+  let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
+  Common.filterHandler(filterData, queryBuilder);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   if (referAgentId) {
@@ -111,6 +155,7 @@ async function sumaryPointAmount(startDate, endDate, filter, referAgentId) {
   queryBuilder.where({
     betRecordStatus: BET_STATUS.COMPLETED,
   });
+  queryBuilder.where({ isDeleted: 0 });
 
   return new Promise((resolve, reject) => {
     try {
@@ -118,7 +163,7 @@ async function sumaryPointAmount(startDate, endDate, filter, referAgentId) {
         resolve(records);
       });
     } catch (e) {
-      console.error('error sum point amount: ', e);
+      Logger.error('error sum point amount: ', e);
       reject(-1);
     }
   });
@@ -127,21 +172,24 @@ async function sumaryPointAmount(startDate, endDate, filter, referAgentId) {
 async function sumaryWinLoseAmount(startDate, endDate, filter, referAgentId) {
   let sumField = 'betRecordWin';
   let queryBuilder = DB(tableName);
-  if (filter) {
-    queryBuilder.where(filter);
-  }
+  let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
+  Common.filterHandler(filterData, queryBuilder);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   if (referAgentId) {
     queryBuilder.where('referId', referAgentId);
   }
+
+  queryBuilder.where({ isDeleted: 0 });
 
   queryBuilder.where({
     betRecordStatus: BET_STATUS.COMPLETED,
@@ -153,7 +201,7 @@ async function sumaryWinLoseAmount(startDate, endDate, filter, referAgentId) {
         resolve(records);
       });
     } catch (e) {
-      console.error('error', e);
+      Logger.error('error', e);
       reject(-1);
     }
   });
@@ -168,13 +216,15 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
-  queryBuilder.where(filterData);
+  Common.filterHandler(filterData, queryBuilder);
 
   queryBuilder.where({ isDeleted: 0 });
 
@@ -189,8 +239,9 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
+
   return queryBuilder;
 }
 
@@ -198,8 +249,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   let query = await _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query;
 }
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
@@ -212,8 +263,8 @@ async function customCount(filter, startDate, endDate, searchText, order) {
     }
   });
 }
-async function customSum(sumField, filter, startDate, endDate, searchText, order) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customSum(sumField, filter, startDate, endDate, searchText, order, skip, limit) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.sum(`${sumField} as sumResult`).then(records => {
@@ -249,7 +300,7 @@ function _makeQueryBuilderForReferedUser(filter, skip, limit, startDate, endDate
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
@@ -285,6 +336,7 @@ async function customSumReferedUserByUserId(appUserId, sumField, filter, startDa
 module.exports = {
   insert,
   find,
+  findById,
   count,
   updateById,
   initDB,
@@ -292,7 +344,6 @@ module.exports = {
   sumaryPointAmount,
   sumaryWinLoseAmount,
   updateAll,
-  findAllTodayNewBet,
   customSearch,
   customCount,
   customSum,

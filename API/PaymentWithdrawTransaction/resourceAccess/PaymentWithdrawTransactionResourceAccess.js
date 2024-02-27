@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -7,8 +7,9 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { WITHDRAW_TRX_STATUS, WITHDRAW_TRX_CATEGORY, WITHDRAW_TRX_UNIT, WITHDRAW_TRX_TYPE } = require('../PaymentWithdrawTransactionConstant');
 const tableName = 'PaymentWithdrawTransaction';
 const primaryKeyField = 'paymentWithdrawTransactionId';
+const Logger = require('../../../utils/logging');
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -18,11 +19,11 @@ async function createTable() {
           table.integer('walletId');
           table.integer('referId'); // nguoi gioi thieu
           table.integer('paymentMethodId');
-          table.float('paymentAmount', 48, 24).defaultTo(0); //số tiền rút
-          table.float('balanceBefore', 48, 24).defaultTo(0);
-          table.float('balanceAfter', 48, 24).defaultTo(0);
-          table.float('paymentRewardAmount', 48, 24).defaultTo(0); //số tiền được thưởng
-          table.float('paymentRefAmount', 48, 24).defaultTo(0); //số tiền quy đổi hoặc tham chiếu
+          table.bigInteger('paymentAmount').defaultTo(0); //số tiền rút
+          table.bigInteger('balanceBefore').defaultTo(0);
+          table.bigInteger('balanceAfter').defaultTo(0);
+          table.bigInteger('paymentRewardAmount').defaultTo(0); //số tiền được thưởng
+          table.double('paymentRefAmount', 22, 1).defaultTo(0); //số tiền quy đổi hoặc tham chiếu
           table.string('paymentUnit').defaultTo(WITHDRAW_TRX_UNIT.VND); //don vi tien
           table.string('paymentType').defaultTo(WITHDRAW_TRX_TYPE.USER_WITHDRAW);
           table.string('paymentStatus').defaultTo(WITHDRAW_TRX_STATUS.NEW);
@@ -35,15 +36,21 @@ async function createTable() {
           table.timestamp('paymentApproveDate', { useTz: true }); // ngay duyet
           table.integer('paymentPICId'); // nguoi duyet
           table.integer('paymentStaffId'); // nguoi tạo, người quản lý
-          table.float('paymentFeeAmount', 48, 24).defaultTo(0); //fee rút tiền cần chuyển
+          table.bigInteger('paymentFeeAmount').defaultTo(0); //fee rút tiền cần chuyển
 
           timestamps(table);
           table.index('appUserId');
           table.index('walletId');
           table.index('referId');
+          table.index('paymentMethodId');
+          table.index('paymentType');
+          table.index('paymentUnit');
+          table.index('paymentStatus');
+          table.index('paymentCategory');
+          table.index('paymentStaffId');
         })
         .then(() => {
-          console.info(`${tableName} table created done`);
+          Logger.info(`${tableName} table created done`);
           resolve();
         });
     });
@@ -78,16 +85,14 @@ async function customSum(sumField, filter, skip, limit, startDate, endDate, sear
   queryBuilder.where(filterData);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
-
-  queryBuilder.where({
-    paymentStatus: WITHDRAW_TRX_STATUS.COMPLETED,
-  });
 
   return new Promise((resolve, reject) => {
     try {
@@ -104,6 +109,44 @@ async function customSum(sumField, filter, skip, limit, startDate, endDate, sear
       reject(undefined);
     }
   });
+}
+
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+  let queryBuilder = DB(tableName);
+  let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
+
+  if (startDate) {
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
+  }
+  if (endDate) {
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
+  }
+
+  Common.filterHandler(filterData, queryBuilder);
+
+  queryBuilder.where({ isDeleted: 0 });
+
+  if (limit) {
+    queryBuilder.limit(limit);
+  }
+
+  if (skip) {
+    queryBuilder.offset(skip);
+  }
+
+  if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
+    queryBuilder.orderBy(order.key, order.value);
+  } else {
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
+  }
+  return queryBuilder;
+}
+
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+  return await query.select();
 }
 
 async function sumAmountDistinctByDate(filter, startDate, endDate) {
@@ -123,6 +166,7 @@ module.exports = {
   updateById,
   initDB,
   customSum,
+  customSearch,
   sumAmountDistinctByDate,
   findById,
 };

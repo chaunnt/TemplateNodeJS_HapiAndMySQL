@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -17,24 +17,30 @@ const insertSchema = {
 
 const updateSchema = {
   id: Joi.number().required(),
-  paymentStatus: Joi.string().max(255),
+  paymentStatus: Joi.string(),
   paymentRef: Joi.string(),
 };
 
 const filterSchema = {
   appUserId: Joi.number(),
-  username: Joi.string().min(6).max(30),
+  username: Joi.string(),
   walletId: Joi.number(),
   referId: Joi.number(),
-  firstName: Joi.string().max(255),
-  lastName: Joi.string().max(255),
-  email: Joi.string().max(255),
+  firstName: Joi.string(),
+  lastName: Joi.string(),
+  email: Joi.string(),
   paymentPICId: Joi.number(),
-  phoneNumber: Joi.string().max(15),
-  paymentStatus: Joi.string().max(255),
+  phoneNumber: Joi.string(),
+  paymentStatus: Joi.string(),
   paymentRef: Joi.string(),
-  paymentApproveDate: Joi.string().max(255),
+  paymentApproveDate: Joi.string(),
   paymentMethodId: Joi.number(),
+};
+
+const filterUser = {
+  WalletId: Joi.number(),
+  paymentStatus: Joi.string(),
+  appUserId: Joi.number(),
 };
 
 module.exports = {
@@ -90,9 +96,9 @@ module.exports = {
         filter: Joi.object(filterSchema),
         startDate: Joi.string(),
         endDate: Joi.string(),
+        searchText: Joi.string().max(255),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
           value: Joi.string().default('desc').allow(''),
@@ -103,6 +109,35 @@ module.exports = {
       Response(req, res, 'find');
     },
   },
+  getReferredBonusOfUser: {
+    tags: ['api', `${moduleName}`],
+    description: `update ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object(filterSchema),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
+        searchText: Joi.string().max(255),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100).min(1),
+        order: Joi.object({
+          key: Joi.string().default('createdAt').allow(''),
+          value: Joi.string().default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getReferredBonusOfUser');
+    },
+  },
+
   findById: {
     tags: ['api', `${moduleName}`],
     description: `find by id ${moduleName}`,
@@ -155,7 +190,6 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         paymentNote: Joi.string().allow(''),
-        paymentRef: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {
@@ -262,6 +296,22 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'exportSalesToExcel');
+    },
+  },
+  getWaitingApproveCount: {
+    tags: ['api', `${moduleName}`],
+    description: `get count waiting for approve bonus transaction ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getWaitingApproveCount');
     },
   },
 };

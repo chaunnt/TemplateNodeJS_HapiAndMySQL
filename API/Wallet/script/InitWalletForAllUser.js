@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -6,17 +6,18 @@
 'use strict';
 const AppUserResource = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const WalletFunctions = require('../WalletFunctions');
+const Logger = require('../../../utils/logging');
 
 async function InitWalletForAllUser() {
-  console.info(`Start InitWalletForAllUser`);
+  Logger.info(`Start InitWalletForAllUser`);
   let userCount = await AppUserResource.count({});
   if (userCount === undefined || userCount.length < 1) {
-    console.info('There is no user to init wallet');
+    Logger.info('There is no user to init wallet');
     return;
   }
 
   userCount = userCount[0].count;
-  console.info(`Need to InitWalletForAllUser for ${userCount} users`);
+  Logger.info(`Need to InitWalletForAllUser for ${userCount} users`);
 
   const MAX_PER_BATCH = 100;
   let batchCount = parseInt(userCount / MAX_PER_BATCH);

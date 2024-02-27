@@ -1,20 +1,13 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const { CronInstance, executeJob } = require('../../ThirdParty/Cronjob/CronInstance');
-
-const syncETHScheduler = () => {
-  //Sync every 5 minutes, hope it go well
-  CronInstance.schedule('*/5 * * * *', async function () {
-    executeJob('./Wallet/cronjob/Jobs_SyncETHBalance.js');
-  });
-};
+const Logger = require('../../../utils/logging');
 
 async function startSchedule() {
-  console.info('start WalletSchedule');
-  if (process.env.NODE_ENV === 'Test') {
+  Logger.info('start WalletSchedule');
+  if (process.env.NODE_ENV === 'dev') {
     return;
   }
-  syncETHScheduler();
 }
 
 module.exports = {

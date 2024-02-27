@@ -1,12 +1,12 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const SystemAppLogResource = require('../resourceAccess/SystemAppChangedLogResourceAccess');
+const SystemAppLogAppUserResource = require('../resourceAccess/SystemAppLogAppUserResourceAccess');
 const Logger = require('../../../utils/logging');
-const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
 
 async function insert(req) {
   return new Promise(async (resolve, reject) => {
@@ -16,7 +16,6 @@ async function insert(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error SystemAppChangedLog insert failed: ${UNKNOWN_ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -56,7 +55,6 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       }
-      console.error(`error SystemAppChangedLog updateById failed with systemAppLogId ${systemAppLogId}: ${UNKNOWN_ERROR}`);
       reject('failed');
     } catch (e) {
       Logger.error(__filename, e);
@@ -75,10 +73,37 @@ async function findById(req) {
     }
   });
 }
-
+async function getAppLogAppUser(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let data = await SystemAppLogAppUserResource.customSearch(filter, skip, limit);
+      let dataCount = await SystemAppLogAppUserResource.customCount(filter);
+      if (data && data.length > 0 && dataCount) {
+        // data = JSON.parse(JSON.stringify(data))
+        data.dataValueBefore = JSON.parse(data[0].dataValueBefore);
+        for (let i = 0; i < data.length; i++) {
+          console.log('data[i]: ', data[i]);
+          data[i].dataValueBefore = JSON.parse(data[i].dataValueBefore);
+          data[i].dataValueAfter = JSON.parse(data[i].dataValueAfter);
+        }
+        console.log('data.dataValueBefore: ', data.dataValueBefore);
+        resolve({ data: data, total: dataCount[0].count });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject('failed');
+    }
+  });
+}
 module.exports = {
   insert,
   find,
   updateById,
   findById,
+  getAppLogAppUser,
 };

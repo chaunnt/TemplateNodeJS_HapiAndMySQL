@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const AppUsersSpec = require('./AppUsers.spec');
 // const UserAuthentication = require('./UserAuthentication.spec');

@@ -1,13 +1,14 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
+require('dotenv').config();
 const UploadFunctions = require('../UploadFunctions');
-const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersResourceAccess');
 const Logger = require('../../../utils/logging');
-
+const { moveFileFromLocalToLinode } = require('../../../ThirdParty/LinodeStorage/LinodeStorageFunctions');
+const { UNKNOWN_ERROR } = require('../../Common/CommonConstant');
 async function uploadMediaFile(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -16,7 +17,6 @@ async function uploadMediaFile(req) {
       const imageFormat = req.payload.imageFormat;
 
       if (!imageData) {
-        console.error(`error uploadMediaFile: do not have book data`);
         reject('do not have book data');
         return;
       }
@@ -24,14 +24,47 @@ async function uploadMediaFile(req) {
       var originaldata = Buffer.from(imageData, 'base64');
       let newMediaUrl = await UploadFunctions.uploadMediaFile(originaldata, imageFormat);
       if (newMediaUrl) {
+        if (process.env.LINODE_ENABLE && process.env.LINODE_ENABLE * 1 === 1) {
+          let _fileName = newMediaUrl.split('uploads/');
+          if (_fileName.length > 1) {
+            _fileName = process.cwd() + '/uploads/' + _fileName[1];
+            let _newUrl = await moveFileFromLocalToLinode(_fileName);
+            return resolve(_newUrl);
+          }
+        }
         resolve(newMediaUrl);
       } else {
-        console.error(`error uploadMediaFile: failed to upload`);
         reject('failed to upload');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
+    }
+  });
+}
+
+async function uploadAdMediaFile(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // booksChapterUrl: Joi.string(),
+      const imageData = req.payload.imageData;
+      const imageFormat = req.payload.imageFormat;
+
+      if (!imageData) {
+        reject('do not have book data');
+        return;
+      }
+
+      var originaldata = Buffer.from(imageData, 'base64');
+      let newMediaUrl = await UploadFunctions.uploadMediaFile(originaldata, imageFormat, 'media/quangcao/');
+      if (newMediaUrl) {
+        resolve(newMediaUrl);
+      } else {
+        reject('failed to upload');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -45,13 +78,11 @@ async function uploadUserAvatar(req) {
       const appUserId = req.currentUser.appUserId;
 
       if (!imageData) {
-        console.error(`error uploadMediaFile: do not have book data`);
         reject('do not have book data');
         return;
       }
 
       if (!appUserId) {
-        console.error(`error uploadMediaFile: do not have user id`);
         reject('do not have user id');
         return;
       }
@@ -59,22 +90,13 @@ async function uploadUserAvatar(req) {
       var originaldata = Buffer.from(imageData, 'base64');
       let newAvatar = await UploadFunctions.uploadMediaFile(originaldata, imageFormat);
       if (newAvatar) {
-        let updateResult = await AppUsersResourceAccess.updateById(appUserId, {
-          userAvatar: newAvatar,
-        });
-        if (updateResult) {
-          resolve(newAvatar);
-        } else {
-          console.error(`error uploadMediaFile: failed to save new avatar`);
-          reject('failed to save new avatar');
-        }
+        resolve(newAvatar);
       } else {
-        console.error(`error uploadMediaFile: failed to upload`);
         reject('failed to upload');
       }
     } catch (e) {
       Logger.error(__filename, e);
-      reject('failed');
+      reject(UNKNOWN_ERROR);
     }
   });
 }
@@ -82,4 +104,5 @@ async function uploadUserAvatar(req) {
 module.exports = {
   uploadMediaFile,
   uploadUserAvatar,
+  uploadAdMediaFile,
 };

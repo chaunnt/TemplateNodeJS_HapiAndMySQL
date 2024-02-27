@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -14,19 +14,28 @@ async function createTable() {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
-          // table.increments(`${primaryKeyField}`).primary();
-          table.float('totalPlayScore', 48, 24).defaultTo(0);
-          table.float('totalReferScore', 48, 24).defaultTo(0);
-          table.integer('appUserId');
-          table.integer('ranking').nullable().defaultTo(9999);
-          table.float('totalScore ', 48, 24).defaultTo(0);
+          table.integer(`${primaryKeyField}`).primary();
+          table.bigInteger('totalPlayAmount').defaultTo(0); //tổng nạp
+          table.bigInteger('totalPlayCount').defaultTo(0); //tổng nạp
+          table.bigInteger('totalDepositAmount').defaultTo(0); //tổng nạp
+          table.bigInteger('totalDepositCount').defaultTo(0); //tổng nạp
+          table.bigInteger('totalWithdrawAmount').defaultTo(0); //tổng rút
+          table.bigInteger('totalWithdrawCount').defaultTo(0); //tổng rút
+          table.bigInteger('totalPlayWinAmount').defaultTo(0); //tổng thắng
+          table.bigInteger('totalPlayWinCount').defaultTo(0); //tổng thắng
+          table.bigInteger('totalPlayLoseAmount').defaultTo(0); //tổng thua
+          table.bigInteger('totalPlayLoseCount').defaultTo(0); //tổng thắng
+          table.bigInteger('totalProfit').defaultTo(0); //tổng thắng
           timestamps(table);
-          // table.index(`${primaryKeyField}`);
-          table.unique(`appUserId`);
-          table.index(`appUserId`);
+          table.index('totalPlayAmount');
+          table.index('totalDepositAmount');
+          table.index('totalWithdrawAmount');
+          table.index('totalPlayWinAmount');
+          table.index('totalPlayLoseAmount');
+          table.index('totalProfit');
         })
         .then(() => {
-          console.log(`${tableName} table created done`);
+          Logger.info(`${tableName} table created done`);
           resolve();
         });
     });

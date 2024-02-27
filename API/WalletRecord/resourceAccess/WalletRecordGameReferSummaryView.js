@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -6,7 +6,7 @@ const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const { WALLET_RECORD_TYPE } = require('../WalletRecordConstant');
-
+const Logger = require('../../../utils/logging');
 const tableName = 'WalletRecordGameReferSummaryView';
 const rootTableName = 'WalletRecord';
 const primaryKeyField = 'gameRecordId';
@@ -17,6 +17,7 @@ async function createView() {
     `${rootTableName}.appUserId`,
     `${rootTableName}.gameRecordId`,
     `${GameTable}.createdAt`,
+    `${GameTable}.createdAtTimestamp`,
     `${GameTable}.isDeleted`,
     `${GameTable}.gameRecordName`,
     `${GameTable}.teamNameHome`,
@@ -95,8 +96,8 @@ async function customSumDistinct(sumField, distinctFields, filter, skip, limit, 
           }
         });
     } catch (e) {
-      console.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
-      console.error('ResourceAccess', e);
+      Logger.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -118,11 +119,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   queryBuilder.where(filterData);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   if (limit) {
@@ -135,7 +138,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
   return queryBuilder;
 }
@@ -146,7 +149,7 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
 }
 
 async function customCount(filter, startDate, endDate, searchText) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, undefined);
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`${primaryKeyField} as count`);
 }
 

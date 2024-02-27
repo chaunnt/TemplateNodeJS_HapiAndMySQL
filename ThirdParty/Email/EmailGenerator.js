@@ -1,9 +1,10 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const Handlebars = require('handlebars');
 const fs = require('fs');
+const { OTP_TITLE } = require('../../API/OTPMessage/OTPMessageConstant');
 
-function generateNewOTPEmail(fullName, newOTP) {
+function generateNewOTPEmail(fullName, newOTP, otpTitle) {
   let templateEmailNewOTP = {
     subject: `Account Registration`,
     body: '',
@@ -17,6 +18,7 @@ function generateNewOTPEmail(fullName, newOTP) {
     paramSupportEmail: 'info@demo.com',
     paramWebsite: `https://${process.env.WEB_HOST_NAME}`,
     paramCopyright: `${process.env.PROJECT_NAME}`,
+    otpTitle: otpTitle,
   };
   templateEmailNewOTP.htmlBody = fs.readFileSync('./ThirdParty/Email/Template/emailNewOTP.html');
   templateEmailNewOTP.htmlBody = templateEmailNewOTP.htmlBody.toString();
@@ -27,7 +29,30 @@ function generateNewOTPEmail(fullName, newOTP) {
 
   return { subject, body, htmlBody };
 }
+function generateRegisterOTPEmail(fullName, newOTP) {
+  let templateEmailNewOTP = {
+    subject: `Account Registration`,
+    body: '',
+    htmlBody: '',
+  };
 
+  const subjectParams = {};
+  const bodyParams = {
+    paramFullName: fullName,
+    paramNewOTP: newOTP,
+    paramWebsite: `https://${process.env.WEB_HOST_NAME}`,
+    paramCopyright: `${process.env.PROJECT_NAME}`,
+  };
+
+  templateEmailNewOTP.htmlBody = fs.readFileSync('./ThirdParty/Email/Template/emailRegisterOTP.html');
+  templateEmailNewOTP.htmlBody = templateEmailNewOTP.htmlBody.toString();
+
+  const subject = Handlebars.compile(templateEmailNewOTP.subject)(subjectParams);
+  const htmlBody = Handlebars.compile(templateEmailNewOTP.htmlBody)(bodyParams);
+  const body = '';
+
+  return { subject, body, htmlBody };
+}
 function generateResetPasswordEmail(token) {
   let templateForgotPassword = {
     subject: `Reset Password`,
@@ -52,5 +77,6 @@ function generateResetPasswordEmail(token) {
 }
 module.exports = {
   generateNewOTPEmail,
+  generateRegisterOTPEmail,
   generateResetPasswordEmail,
 };

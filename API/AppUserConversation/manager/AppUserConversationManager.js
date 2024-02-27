@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -33,13 +33,14 @@ async function find(req) {
       let filter = req.payload.filter;
       let skip = req.payload.skip;
       let limit = req.payload.limit;
+      let searchText = req.payload.searchText;
       let order = {
         key: 'updatedAt',
         value: 'desc',
       };
 
-      let data = await AppUserConversationResourceView.customSearch(filter, skip, limit, undefined, undefined, undefined, order);
-      let dataCount = await AppUserConversationResourceView.customCount(filter);
+      let data = await AppUserConversationResourceView.customSearch(filter, skip, limit, undefined, undefined, searchText, order);
+      let dataCount = await AppUserConversationResourceView.customCount(filter, undefined, undefined, searchText);
       if (data && dataCount) {
         resolve({ data: data, total: dataCount[0].count });
       } else {

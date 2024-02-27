@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -32,10 +32,22 @@ async function createTable() {
           table.string('staffAvatar', 2000); //Image from social login may be so long (include token)
           table.string('stationsId');
           table.string('staffToken', 1000);
+          table.string('referCode', 15).nullable(); //dung de luu code cua nguoi gioi thieu (khi can thiet)
+          table.integer('supervisorId'); // dùng để lưu staffId của staff tạo
+          table.string('sotaikhoan', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.string('tentaikhoan', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.string('tennganhang', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.string('diachivitienao', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.string('tenmangtienao', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.string('tenloaitienao', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+          table.integer('totalAgentF1Count');
+          table.integer('totalBranchCount');
+          table.integer('totalF1Count');
           timestamps(table);
           table.index('staffId');
           table.unique('username');
           table.unique('email');
+          table.unique('referCode');
           table.index('username');
           table.index('firstName');
           table.index('lastName');
@@ -46,6 +58,9 @@ async function createTable() {
           table.index('phoneNumber');
           table.index('lastActiveAt');
           table.index('twoFACode');
+          table.index('staffRoleId');
+          table.index('supervisorId');
+          table.index('stationsId');
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -82,6 +97,16 @@ async function seeding() {
         password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
         phoneNumber: 'agency',
         staffRoleId: 5,
+        stationsId: 1,
+      },
+      {
+        lastName: 'operator',
+        firstName: 'operator',
+        username: 'superadmino',
+        email: 'operator@string.com',
+        password: 'fc6e53bc3b36d4f8a9479ab9886904dc62b1194f60cc0a7dea4fbc58e0859614',
+        phoneNumber: 'operator',
+        staffRoleId: 1,
         stationsId: 1,
       },
     ];

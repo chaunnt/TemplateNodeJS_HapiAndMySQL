@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2020-2023 Reminano */
 
 'use strict';
 
@@ -25,12 +25,12 @@ module.exports = {
   logging: {
     console: {
       enable: true,
-      levels: env === 'production' ? [] : [{ log: '*', request: '*', response: '*', error: '*' }],
+      levels: [{ log: '*', request: '*', response: '*', error: '*' }],
       winston: {
         level: env === 'production' ? 'info' : 'debug',
       },
       squeeze: {
-        levels: env === 'production' ? [] : [{ log: '*', request: '*', response: '*', error: '*' }],
+        levels: [{ log: '*', request: '*', response: '*', error: '*' }],
       },
     },
     loggly: {

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -16,6 +16,7 @@ module.exports = {
   },
   WITHDRAW_TRX_CATEGORY: {
     BANK: 'ATM/BANK',
+    USDT: 'USDT',
     DIRECT_REWARD: 'DIRECT_REWARD', // cong tien truc tiep
   },
   WITHDRAW_TRX_UNIT: {
@@ -31,5 +32,17 @@ module.exports = {
     INVALID_PAYMENTNOTE: undefined,
     INVALID_WALLET: undefined,
     INVALID_BANKINFOMATION: undefined,
+  },
+  WITHDRAW_TRX_QUOTA: {
+    DAY: 3,
+  },
+  WITHDRAW_ERROR: {
+    NOT_ENOUGH_TIME: 'NOT_ENOUGH_TIME',
+    LIMIT_MAX_WITHDRAW: 'LIMIT_MAX_WITHDRAW',
+    LIMIT_MIN_OR_MAX_WITHDRAW: 'LIMIT_MIN_OR_MAX_WITHDRAW',
+  },
+  MIN_WITHDRAW: {
+    POINT_VND: 110000,
+    POINT_USDT: 10,
   },
 };

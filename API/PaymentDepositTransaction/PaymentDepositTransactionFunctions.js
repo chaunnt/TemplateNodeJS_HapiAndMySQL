@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -6,7 +6,14 @@
 'use strict';
 const DepositTransactionAccess = require('./resourceAccess/PaymentDepositTransactionResourceAccess');
 const UserWallet = require('../Wallet/resourceAccess/WalletResourceAccess');
-const { PAYMENT_NOTE, DEPOSIT_TRX_TYPE, DEPOSIT_TRX_CATEGORY } = require('./PaymentDepositTransactionConstant');
+const {
+  PAYMENT_NOTE,
+  DEPOSIT_TRX_TYPE,
+  DEPOSIT_TRX_CATEGORY,
+  DEPOSIT_TRX_UNIT,
+  MINIMUM_DEPOSIT_AMOUNT,
+  DEPOSIT_ERROR,
+} = require('./PaymentDepositTransactionConstant');
 const WalletRecordFunction = require('../WalletRecord/WalletRecordFunction');
 const StaffResourceAccess = require('../Staff/resourceAccess/StaffResourceAccess');
 const DEPOSIT_TRX_STATUS = require('./PaymentDepositTransactionConstant').DEPOSIT_TRX_STATUS;
@@ -14,40 +21,84 @@ const WALLET_TYPE = require('../Wallet/WalletConstant').WALLET_TYPE;
 const CustomerMessageFunctions = require('../CustomerMessage/CustomerMessageFunctions');
 const moment = require('moment');
 const AppUserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
-
-async function createDepositTransaction(user, amount, paymentRef, walletId, bankInfomation, staff, paymentSecondaryRef) {
-  let filter = {};
-
-  if (walletId) {
-    filter = {
-      appUserId: user.appUserId,
-      walletId: walletId,
-    };
-  } else {
-    filter = {
-      appUserId: user.appUserId,
-      walletType: WALLET_TYPE.POINT,
-    };
-  }
+const utilFunctions = require('../ApiUtils/utilFunctions');
+const PaymentMethodResourceAccess = require('../PaymentMethod/resourceAccess/PaymentMethodResourceAccess');
+const AppUserMissionInfoResourceAccess = require('../AppUserMission/resourceAccess/AppUserMissionInfoResourceAccess');
+const { DATETIME_DISPLAY_FORMAT, DATETIME_DATA_ISO_FORMAT } = require('../Common/CommonConstant');
+const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
+const Logger = require('../../utils/logging');
+const { ACTION } = require('../AppUserDevices/AppUserDevicesConstants');
+const { publishJSONToClient } = require('../../ThirdParty/SocketIO/SocketIOClient');
+const { saveUserDevice } = require('../AppUserDevices/AppUserDevicesFunctions');
+const { reportToTelegramByConfig } = require('../../ThirdParty/TelegramBot/TelegramBotFunctions');
+const ERROR = require('../Common/CommonConstant');
+async function createDepositTransaction(
+  appUserId,
+  amount,
+  paymentRef,
+  staff,
+  paymentSecondaryRef,
+  paymentMethodId,
+  paymentUnit,
+  staffId,
+  paymentRefAmount,
+  category,
+) {
+  const filter = {
+    appUserId: appUserId,
+    walletType: WALLET_TYPE.POINT,
+  };
 
   let wallet = await UserWallet.find(filter);
   if (!wallet || wallet.length < 1) {
-    console.error('user wallet is invalid');
+    Logger.error(`createDepositTransaction user wallet is invalid ${appUserId}`);
     return undefined;
   }
   wallet = wallet[0];
 
-  let transactionData = {
-    appUserId: user.appUserId,
+  let transactionData = {};
+  let paymentCategory = DEPOSIT_TRX_CATEGORY.BANK;
+  if (paymentMethodId) {
+    let paymentMethod = await PaymentMethodResourceAccess.findById(paymentMethodId);
+    if (!paymentMethod) {
+      Logger.error('paymentMethod is invalid');
+      return undefined;
+    }
+    // let paymentCategory = DEPOSIT_TRX_CATEGORY.BANK;
+    let paymentNote = `Đến: ${paymentMethod.paymentMethodName}`;
+    paymentNote += ` - ${utilFunctions.replaceCharactersToHide(paymentMethod.paymentMethodReceiverName, 1)}`;
+    paymentNote += ` - ${utilFunctions.replaceCharactersFirstLast(paymentMethod.paymentMethodIdentityNumber, 0, 3)}`;
+    if (paymentUnit == DEPOSIT_TRX_UNIT.USDT) {
+      paymentCategory = DEPOSIT_TRX_CATEGORY.USDT;
+      paymentNote = `Đến: ${paymentMethod.paymentMethodReceiverName} - ${paymentMethod.paymentMethodIdentityNumber}`;
+    }
+    transactionData = {
+      // paymentMethodId: paymentMethodId,
+      paymentOwner: paymentMethod.paymentMethodReceiverName,
+      paymentOriginSource: paymentMethod.paymentMethodIdentityNumber,
+      paymentOriginName: paymentMethod.paymentMethodName,
+      paymentNote: paymentNote,
+      // paymentCategory: paymentCategory,
+    };
+  }
+  if (category) {
+    paymentCategory = category;
+  }
+  transactionData = {
+    ...transactionData,
+    appUserId: appUserId,
     walletId: wallet.walletId,
     paymentAmount: amount,
+    paymentUnit: paymentUnit,
+    paymentStaffId: staffId,
+    paymentRefAmount: paymentRefAmount,
+    paymentCategory: paymentCategory,
   };
 
-  if (bankInfomation) {
-    transactionData.paymentOwner = bankInfomation.paymentOwner;
-    transactionData.paymentOriginSource = bankInfomation.paymentOriginSource;
-    transactionData.paymentOriginName = bankInfomation.paymentOriginName;
+  if (paymentMethodId) {
+    transactionData.paymentMethodId = paymentMethodId;
   }
+
   if (staff) {
     transactionData.paymentType = DEPOSIT_TRX_TYPE.ADMIN_DEPOSIT;
     transactionData.paymentStatus = DEPOSIT_TRX_STATUS.COMPLETED;
@@ -63,7 +114,7 @@ async function createDepositTransaction(user, amount, paymentRef, walletId, bank
     if (_existingPaymentRefs && _existingPaymentRefs.length > 0) {
       for (let i = 0; i < _existingPaymentRefs.length; i++) {
         const _payment = _existingPaymentRefs[i];
-        if (_payment.paymentStatus === DEPOSIT_TRX_STATUS.NEW || _payment.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED) {
+        if (_payment.paymentStatus === DEPOSIT_TRX_STATUS.NEW) {
           //khong cho trung transaction Id
           throw 'DUPLICATE_TRANSACTION_ID';
         }
@@ -74,11 +125,12 @@ async function createDepositTransaction(user, amount, paymentRef, walletId, bank
   if (paymentSecondaryRef) {
     transactionData.paymentSecondaryRef = paymentSecondaryRef;
   }
+
   let result = await DepositTransactionAccess.insert(transactionData);
   if (result) {
     return result;
   } else {
-    console.error('insert deposit transaction error');
+    Logger.error('insert deposit transaction error');
     return undefined;
   }
 }
@@ -90,7 +142,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
   });
 
   if (!transaction || transaction.length < 1) {
-    console.error('transaction is invalid');
+    Logger.error('transaction is invalid');
     return undefined;
   }
   transaction = transaction[0];
@@ -99,7 +151,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
   const isCompletedOrCanceled =
     transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED || transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
   if (isCompletedOrCanceled) {
-    console.error('deposit transaction was approved or canceled');
+    Logger.error('deposit transaction was approved or canceled');
     return undefined;
   }
 
@@ -110,7 +162,7 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
   });
 
   if (!pointWallet || pointWallet.length < 1) {
-    console.error('point wallet is invalid');
+    Logger.error('point wallet is invalid');
     return undefined;
   }
   pointWallet = pointWallet[0];
@@ -121,8 +173,8 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
     transaction.paymentPICId = staff.staffId;
   } else {
     // tien tu hoa hong chuyen vao
-    transaction.paymentCategory = DEPOSIT_TRX_CATEGORY.FROM_BONUS;
-    transaction.paymentType = DEPOSIT_TRX_TYPE.AUTO_DEPOSIT;
+    // transaction.paymentCategory = DEPOSIT_TRX_CATEGORY.FROM_BONUS;
+    // transaction.paymentType = DEPOSIT_TRX_TYPE.AUTO_DEPOSIT;
   }
 
   if (paymentNote) {
@@ -146,21 +198,33 @@ async function approveDepositTransaction(transactionId, staff, paymentNote, paym
     let updateWalletResult = undefined;
     //Update wallet balance and WalletRecord in DB
     updateWalletResult = await WalletRecordFunction.depositPointWalletBalance(transaction.appUserId, transaction.paymentAmount, staff);
-
+    //tăng số lần nạp của user lên
+    let _userMission = await AppUserMissionInfoResourceAccess.findById(transaction.appUserId);
+    if (_userMission) {
+      await AppUserMissionInfoResourceAccess.updateById(transaction.appUserId, {
+        depositCount: _userMission.depositCount + 1,
+        lastDepositedAt: new Date(),
+      });
+    } else {
+      await AppUserMissionInfoResourceAccess.insert({ appUserId: transaction.appUserId, depositCount: 1, lastDepositedAt: new Date() });
+    }
     if (updateWalletResult) {
+      const amount = utilFunctions.formatCurrency(transaction.paymentAmount);
+      // let _currency = transaction.paymentCategory === DEPOSIT_TRX_CATEGORY.BANK ? 'VNĐ' : 'USDT';
+      let _currency = 'VNĐ';
       let notifyTitle = 'Nạp tiền thành công';
-      let approveDate = moment(transaction.paymentApproveDate).format('YYYY-MM-DD HH:mm:ss');
-      let notifyContent = `Bạn đã nạp ${transaction.paymentAmount} đồng vào ví chính thành công vào lúc ${approveDate}`;
+      let approveDate = moment(transaction.paymentApproveDate).format(DATETIME_DISPLAY_FORMAT);
+      let notifyContent = `Bạn đã nạp ${amount} ${_currency} vào ví chính thành công vào lúc ${approveDate}`;
       let staffId = staff ? staff.staffId : undefined;
       await CustomerMessageFunctions.sendNotificationUser(transaction.appUserId, notifyTitle, notifyContent, staffId);
 
       return updateWalletResult;
     } else {
-      console.error(`updateWalletResult error pointWallet.walletId ${pointWallet.walletId} - ${JSON.stringify(transaction)}`);
+      Logger.error(`updateWalletResult error pointWallet.walletId ${pointWallet.walletId} - ${JSON.stringify(transaction)}`);
       return undefined;
     }
   } else {
-    console.error('approveDepositTransaction error');
+    Logger.error('approveDepositTransaction error');
     return undefined;
   }
 }
@@ -172,7 +236,7 @@ async function denyDepositTransaction(transactionId, staff, paymentNote) {
   });
 
   if (!transaction || transaction.length < 1) {
-    console.error('transaction is invalid');
+    Logger.error('transaction is invalid');
     return undefined;
   }
   transaction = transaction[0];
@@ -181,7 +245,7 @@ async function denyDepositTransaction(transactionId, staff, paymentNote) {
   const isCompletedOrCanceled =
     transaction.paymentStatus === DEPOSIT_TRX_STATUS.COMPLETED || transaction.paymentStatus === DEPOSIT_TRX_STATUS.CANCELED;
   if (isCompletedOrCanceled) {
-    console.error('deposit transaction was approved or canceled');
+    Logger.error('deposit transaction was approved or canceled');
     return undefined;
   }
 
@@ -199,18 +263,52 @@ async function denyDepositTransaction(transactionId, staff, paymentNote) {
   if (paymentNote) {
     updatedData.paymentNote = paymentNote;
   }
-  // //send message
-  // const template = Handlebars.compile(JSON.stringify(REFUSED_PAYMENT));
-  // const data = {
-  //   "paymentId": transactionId
-  // };
-  // const message = JSON.parse(template(data));
-  // await handleSendMessage(transaction.appUserId, message, {
-  //   paymentDepositTransactionId: transactionId
-  // }, MESSAGE_TYPE.USER);
 
   let updateResult = await DepositTransactionAccess.updateById(transactionId, updatedData);
-  return updateResult;
+  if (updateResult) {
+    // let _currency = transaction.paymentCategory === DEPOSIT_TRX_CATEGORY.BANK ? 'VNĐ' : 'USDT';
+    let _currency = 'VNĐ';
+    const amount = utilFunctions.formatCurrency(transaction.paymentAmount);
+    let notifyTitle = 'Nạp tiền thất bại';
+    let denyDate = moment(updatedData.paymentApproveDate).format(DATETIME_DISPLAY_FORMAT);
+    let notifyContent = `Bạn đã bị từ chối nạp ${amount} ${_currency} vào ví chính vào lúc ${denyDate}`;
+    let staffId = staff ? staff.staffId : undefined;
+    await CustomerMessageFunctions.sendNotificationUser(transaction.appUserId, notifyTitle, notifyContent, staffId);
+
+    return updateResult;
+  } else {
+    return undefined;
+  }
+}
+
+async function updateLastDepositForUser(appUserId) {
+  let _allTransaction = await DepositTransactionAccess.find({ appUserId: appUserId }, 0, 1, { key: 'paymentDepositTransactionId', value: 'desc' });
+
+  if (_allTransaction && _allTransaction.length > 0) {
+    let _updateData = {};
+    _updateData.lastDepositAt = _allTransaction[0].createdAt;
+    _updateData.lastDepositAtTimestamp = moment(_allTransaction[0].createdAt, DATETIME_DATA_ISO_FORMAT).toDate() * 1;
+    _updateData.lastDepositAmount = _allTransaction[0].paymentAmount;
+
+    await AppUsersResourceAccess.updateById(appUserId, _updateData);
+  }
+}
+
+async function updateFirstDepositForUser(appUserId) {
+  let _user = await AppUsersResourceAccess.findById(appUserId);
+  if (utilFunctions.isNotEmptyStringValue(_user.firstDepositAt) && utilFunctions.isValidValue(_user.firstDepositAmount)) {
+    return;
+  }
+  let _allTransaction = await DepositTransactionAccess.find({ appUserId: appUserId }, 0, 1, { key: 'paymentDepositTransactionId', value: 'asc' });
+
+  if (_allTransaction && _allTransaction.length > 0) {
+    let _updateData = {};
+    _updateData.firstDepositAt = _allTransaction[0].createdAt;
+    _updateData.firstDepositAtTimestamp = moment(_allTransaction[0].createdAt, DATETIME_DATA_ISO_FORMAT).toDate() * 1;
+    _updateData.firstDepositAmount = _allTransaction[0].paymentAmount;
+
+    await AppUsersResourceAccess.updateById(appUserId, _updateData);
+  }
 }
 
 //Thêm tiền cho user vì 1 số lý do. Ví dụ hoàn tất xác thực thông tin cá nhân
@@ -222,7 +320,7 @@ async function addPointForUser(appUserId, rewardAmount, staff, paymentNote) {
   });
 
   if (rewardWallet === undefined || rewardWallet.length < 0) {
-    console.error(`Can not find reward wallet to add point for user id ${appUserId}`);
+    Logger.error(`Can not find reward wallet to add point for user id ${appUserId}`);
     return undefined;
   }
   rewardWallet = rewardWallet[0];
@@ -247,28 +345,19 @@ async function addPointForUser(appUserId, rewardAmount, staff, paymentNote) {
   let insertResult = await DepositTransactionAccess.insert(newRewardTransaction);
 
   if (insertResult) {
-    // send message
-    // const template = Handlebars.compile(JSON.stringify(REWARD_POINT));
-    // const data = {
-    //   "money": rewardAmount,
-    //   "time": moment().format("hh:mm DD/MM/YYYY")
-    // };
-    // const message = JSON.parse(template(data));
-    // await handleSendMessage(appUserId, message, {
-    //   paymentDepositTransactionId: insertResult[0]
-    // }, MESSAGE_TYPE.USER);
-
     // tự động thêm tiền vào ví thưởng của user
     await UserWallet.incrementBalance(rewardWallet.walletId, rewardAmount);
     return insertResult;
   } else {
-    console.error(`can not create reward point transaction`);
+    Logger.error(`can not create reward point transaction`);
     return undefined;
   }
 }
 
 module.exports = {
   createDepositTransaction,
+  updateLastDepositForUser,
+  updateFirstDepositForUser,
   approveDepositTransaction,
   denyDepositTransaction,
   addPointForUser,

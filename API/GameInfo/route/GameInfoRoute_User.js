@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -11,8 +11,7 @@ const Response = require('../../Common/route/response').setup(Manager);
 const CommonFunctions = require('../../Common/CommonFunctions');
 
 const filterSchema = {
-  gameRecordType: Joi.string().required().max(255),
-  gameRecordSection: Joi.string().max(255),
+  gameInfoCategory: Joi.string().max(255),
 };
 
 module.exports = {
@@ -25,11 +24,11 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        filter: Joi.object(filterSchema).required(),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        filter: Joi.object(filterSchema),
+        // startDate: Joi.string().max(255),
+        // endDate: Joi.string().max(255),
+        // skip: Joi.number().default(0).min(0),
+        // limit: Joi.number().default(20).max(100),
       }),
     },
     handler: function (req, res) {

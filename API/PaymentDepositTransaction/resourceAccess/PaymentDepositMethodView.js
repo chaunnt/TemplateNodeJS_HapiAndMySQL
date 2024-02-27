@@ -1,13 +1,13 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
 const { DB } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 
-const tableName = 'DepositTransactionMethodUserView';
+const tableName = 'DepositTransactionUserView';
 const rootTableName = 'PaymentMethod';
-const primaryKeyField = 'PaymentMethodId';
+const primaryKeyField = 'paymentDepositTransactionId';
 async function createView() {
   const UserTableName = 'DepositTransactionUserView';
   let fields = [
@@ -42,6 +42,7 @@ async function createView() {
     `${UserTableName}.paymentApproveDate`,
     `${UserTableName}.paymentPICId`,
     `${UserTableName}.createdAt`,
+    `${UserTableName}.createdAtTimestamp`,
     `${UserTableName}.updatedAt`,
     `${UserTableName}.isHidden`,
     `${UserTableName}.isDeleted`,
@@ -49,6 +50,7 @@ async function createView() {
     `${rootTableName}.paymentMethodId`,
     `${rootTableName}.paymentMethodName`,
     `${rootTableName}.paymentMethodType`,
+    `${rootTableName}.paymentCategory`,
     `${rootTableName}.paymentMethodIdentityNumber`,
     `${rootTableName}.paymentMethodReferName`,
     `${rootTableName}.paymentMethodReceiverName`,
@@ -109,11 +111,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   queryBuilder.where(filterData);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   if (limit) {
@@ -126,7 +130,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
   return queryBuilder;
 }
@@ -135,9 +139,14 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`paymentDepositTransactionId as count`);
+}
+
+async function customSum(sumField, filter, searchText, startDate, endDate) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
+  return await query.sum(`${sumField} as sumResult`);
 }
 
 module.exports = {
@@ -150,4 +159,5 @@ module.exports = {
   modelName: tableName,
   customSearch,
   customCount,
+  customSum,
 };

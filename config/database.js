@@ -1,16 +1,10 @@
-/* Copyright (c) 2020-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2020-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
  */
 const dotenv = require('dotenv').config();
-console.info({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-})
+
 const knex = require('knex')({
   client: 'mysql',
   connection: {
@@ -34,8 +28,10 @@ const knex = require('knex')({
 function timestamps(table) {
   table.timestamp('updatedAt', { useTz: true }).defaultTo(knex.raw('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'));
   table.timestamp('createdAt', { useTz: true }).defaultTo(knex.fn.now());
+  table.bigInteger('createdAtTimestamp').nullable();
   table.index('createdAt');
   table.index('updatedAt');
+  table.index('createdAtTimestamp');
   table.integer('isHidden').defaultTo(0);
   table.integer('isDeleted').defaultTo(0);
   table.index('isHidden');

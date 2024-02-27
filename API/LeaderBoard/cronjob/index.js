@@ -1,20 +1,17 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const { CronInstance, executeJob } = require('../../../ThirdParty/Cronjob/CronInstance');
+const Logger = require('../../../utils/logging');
+async function startLeaderBoardSchedule() {
+  Logger.info(`startLeaderBoardSchedule ${new Date()}`);
 
-async function startSchedule() {
-  console.log('start LeaderBoardSchedule');
-  //every 23h chủ nhật
-  CronInstance.schedule('* 23 * * 0', async function () {
-    executeJob('./API/LeaderBoard/cronjob/Job_CalculateScoreForAllUsers.js');
-  });
-
-  //every 1h thứ 2 (sau do admin co quyen chinh sua)
-  CronInstance.schedule('* 1 * * 1', async function () {
-    executeJob('./API/LeaderBoard/cronjob/Job_UpdateLeaderboardRanks.js');
+  //every 3 phut
+  CronInstance.schedule('59 23 * * *', async function () {
+    const { updateTotalPlayForAllUser, updateTotalWithdrawForAllUser, updateTotalDepositForAllUser } = require('../LeaderFunction');
+    await Promise.all([updateTotalPlayForAllUser(), updateTotalWithdrawForAllUser(), updateTotalDepositForAllUser()]);
   });
 }
 
 module.exports = {
-  startSchedule,
+  startLeaderBoardSchedule,
 };

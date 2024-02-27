@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -18,6 +18,13 @@ const insertSchema = {
   password: Joi.string().required(),
   phoneNumber: Joi.string().min(8).max(15),
   staffAvatar: Joi.string().max(2000),
+  referCode: Joi.string().max(20),
+  sotaikhoan: Joi.string().allow(['', null]),
+  tentaikhoan: Joi.string().allow(['', null]),
+  tennganhang: Joi.string().allow(['', null]),
+  diachivitienao: Joi.string().allow(['', null]),
+  tenmangtienao: Joi.string().allow(['', null]),
+  tenloaitienao: Joi.string().allow(['', null]),
 };
 
 const updateSchema = {
@@ -32,15 +39,17 @@ const updateSchema = {
   isDeleted: Joi.number(),
   stationsId: Joi.number(),
   staffAvatar: Joi.string().max(2000),
+  referCode: Joi.string().max(20),
+  sotaikhoan: Joi.string().allow(['', null]),
+  tentaikhoan: Joi.string().allow(['', null]),
+  tennganhang: Joi.string().allow(['', null]),
+  diachivitienao: Joi.string().allow(['', null]),
+  tenmangtienao: Joi.string().allow(['', null]),
+  tenloaitienao: Joi.string().allow(['', null]),
 };
 
 const filterSchema = {
   active: Joi.number().min(0).max(1),
-  username: Joi.string().alphanum().min(6).max(30),
-  lastName: Joi.string().max(255),
-  firstName: Joi.string().max(255),
-  email: Joi.string().max(255),
-  phoneNumber: Joi.string().min(8).max(15),
   staffRoleId: Joi.number(),
   stationsId: Joi.number(),
 };
@@ -100,11 +109,13 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
+        startDate: Joi.string(),
+        endDate: Joi.string(),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -246,6 +257,36 @@ module.exports = {
     },
     handler: function (req, res) {
       Response(req, res, 'changePasswordUserOfStaff');
+    },
+  },
+  getUserRefer: {
+    tags: ['api', `${moduleName}`],
+    description: `get user refer by agent${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          staffId: Joi.number().default(0).min(0),
+        }),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
+        searchText: Joi.string().max(255),
+        order: Joi.object({
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getUserRefer');
     },
   },
 };

@@ -1,165 +1,379 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
-const GamePlayRecordsViews = require('../GamePlayRecords/resourceAccess/GamePlayRecordsView');
-const LeaderBoardViews = require('./resourceAccess/LeaderBoardViews');
+const GamePlayRecordsResourceAccess = require('../GamePlayRecords/resourceAccess/GamePlayRecordsResourceAccess');
+const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransaction/PaymentDepositTransactionConstant');
+const PaymentDepositTransactionResourceAccess = require('../PaymentDepositTransaction/resourceAccess/PaymentDepositTransactionResourceAccess');
+const { WITHDRAW_TRX_STATUS } = require('../PaymentWithdrawTransaction/PaymentWithdrawTransactionConstant');
+const PaymentWithdrawTransactionResourceAccess = require('../PaymentWithdrawTransaction/resourceAccess/PaymentWithdrawTransactionResourceAccess');
 const LeaderBoardResourAccess = require('./resourceAccess/LeaderBoardResourAccess');
+const LeaderBoardDailyResourceAccess = require('./resourceAccess/LeaderBoardDailyResourceAccess');
+const LeaderBoardDailyView = require('./resourceAccess/LeaderBoardDailyView');
 const moment = require('moment');
-async function _calculatePlayScore(appUserId) {
-  let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
-  let lastWeekEnd = moment().subtract(1, 'weeks').endOf('week').add(1, 'day').format();
+const { DATE_DBDATA_FORMAT } = require('./LeaderBoardConstant');
 
-  console.info(`start _calculatePlayScore ${lastWeekStart} -- ${lastWeekEnd}`);
+async function updateTotalPlayForUser(appUserId) {
+  let data = await _updateTotalPlay(appUserId);
 
-  let filter = {};
-  filter.appUserId = appUserId;
-  let result = await GamePlayRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
-  if (result && result.length) {
-    let sumResult;
-    if (result[0].sumResult === null) {
-      return (sumResult = 0);
-    }
-    sumResult = result[0].sumResult;
-    return sumResult;
+  let _existingRecord = await LeaderBoardResourAccess.findById(appUserId);
+  if (_existingRecord) {
+    await LeaderBoardResourAccess.updateById(appUserId, {
+      totalPlayAmount: data._totalPlayAmount,
+      totalPlayWinAmount: data._totalPlayWinAmount,
+      totalPlayLoseAmount: data._totalPlayLoseAmount,
+      totalPlayLoseCount: data._totalPlayLoseCount,
+      totalPlayWinCount: data._totalPlayWinCount,
+      totalPlayCount: data._totalPlayCount,
+      totalProfit: data._totalProfit,
+    });
   } else {
-    return 0;
-  }
-}
-async function _calculateReferScore(appUserId) {
-  let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
-  let lastWeekEnd = moment().subtract(1, 'weeks').endOf('week').add(1, 'day').format();
-
-  console.info(`start _calculateReferScore ${lastWeekStart} -- ${lastWeekEnd}`);
-
-  let filter = {};
-  filter.memberReferIdF1 = appUserId;
-  let result = await GamePlayRecordsViews.sumaryWinAmount(filter, lastWeekStart, lastWeekEnd);
-  if (result && result.length > 0) {
-    let sumResult;
-    if (result[0].sumResult === null) {
-      return (sumResult = 0);
-    }
-    sumResult = result[0].sumResult;
-    return sumResult;
-  } else {
-    return 0;
+    await LeaderBoardResourAccess.insert({
+      appUserId: appUserId,
+      totalPlayAmount: data._totalPlayAmount,
+      totalPlayWinAmount: data._totalPlayWinAmount,
+      totalPlayLoseAmount: data._totalPlayLoseAmount,
+      totalPlayLoseCount: data._totalPlayLoseCount,
+      totalPlayWinCount: data._totalPlayWinCount,
+      totalPlayCount: data._totalPlayCount,
+      totalProfit: data._totalProfit,
+    });
   }
 }
 
-async function calculateRankingScoreByUserId(appUserId) {
-  let data = {};
-  let resultPlayScore = await _calculatePlayScore(appUserId);
-  let resultReferScore = await _calculateReferScore(appUserId);
-  data.totalPlayScore = resultPlayScore;
-  data.totalReferScore = resultReferScore;
-  data.totalScore = data.totalReferScore + data.totalPlayScore;
-  return data;
-}
+async function _updateTotalPlay(appUserId, startDate, endDate) {
+  let _skip = 0;
+  let _limit = 50;
+  let _totalPlayAmount = 0;
+  let _totalPlayWinAmount = 0;
+  let _totalPlayLoseAmount = 0;
+  let _totalPlayCount = 0;
+  let _totalPlayLoseCount = 0;
+  let _totalPlayWinCount = 0;
+  let _totalProfit = 0;
+  while (true) {
+    let _allUserPlayRecord = await GamePlayRecordsResourceAccess.customSearch({ appUserId: appUserId }, _skip, _limit, startDate, endDate);
+    if (_allUserPlayRecord && _allUserPlayRecord.length > 0) {
+      for (let i = 0; i < _allUserPlayRecord.length; i++) {
+        const _userPlayRecord = _allUserPlayRecord[i];
+        _totalPlayAmount += _userPlayRecord.betRecordAmountIn;
+        _totalPlayCount++;
+        if (_userPlayRecord.betRecordWin > 0) {
+          _totalPlayWinAmount += _userPlayRecord.betRecordWin;
+          _totalPlayWinCount++;
+        } else {
+          _totalPlayLoseAmount += Math.abs(_userPlayRecord.betRecordWin);
+          _totalPlayLoseCount++;
+        }
+        _totalProfit += _userPlayRecord.betRecordWin;
+      }
+    } else {
+      break;
+    }
 
-async function updateRankingForAllUsers() {
-  let order = {
-    key: 'totalScore',
-    value: 'desc',
+    _skip += _limit;
+  }
+  return {
+    _totalPlayAmount: _totalPlayAmount,
+    _totalPlayWinAmount: _totalPlayWinAmount,
+    _totalPlayLoseAmount: _totalPlayLoseAmount,
+    _totalPlayCount: _totalPlayCount,
+    _totalPlayLoseCount: _totalPlayLoseCount,
+    _totalPlayWinCount: _totalPlayWinCount,
+    _totalProfit: _totalProfit,
   };
-  let limit = 10;
+}
 
-  let lastWeekStart = moment().subtract(2, 'weeks').endOf('week').add(1, 'day').format();
-  let lastWeekEnd = moment().subtract(1, 'weeks').endOf('week').add(1, 'day').format();
+async function updateTotalDepositForUser(appUserId) {
+  let data = await _updateTotalDeposit(appUserId);
 
-  console.info(`start updateRankingForAllUsers ${lastWeekStart} -- ${lastWeekEnd}`);
-
-  let result = await LeaderBoardViews.customSearch(undefined, undefined, limit, lastWeekStart, lastWeekEnd, undefined, order);
-  if (result && result.length > 0) {
-    let dataUpdate = {};
-    for (var i = 0; i < result.length; i++) {
-      dataUpdate.ranking = i + 1;
-
-      let resultUpdate = await LeaderBoardResourAccess.updateById(result[i].appUserId, dataUpdate);
-      if (!resultUpdate) {
-        continue;
-      }
-    }
-    return result;
+  let _existingRecord = await LeaderBoardResourAccess.findById(appUserId);
+  if (_existingRecord) {
+    await LeaderBoardResourAccess.updateById(appUserId, {
+      totalDepositAmount: data._totalDepositAmount,
+      totalDepositCount: data._totalDepositCount,
+    });
   } else {
-    return undefined;
+    await LeaderBoardResourAccess.insert({
+      appUserId: appUserId,
+      totalDepositAmount: data._totalDepositAmount,
+      totalDepositCount: data._totalDepositCount,
+    });
+  }
+}
+async function _updateTotalDeposit(appUserId, startDate, endDate) {
+  let _skip = 0;
+  let _limit = 50;
+  let _totalDepositAmount = 0;
+  let _totalDepositCount = 0;
+  while (true) {
+    let _allUserRecord = await PaymentDepositTransactionResourceAccess.customSearch(
+      { appUserId: appUserId, paymentStatus: DEPOSIT_TRX_STATUS.COMPLETED },
+      _skip,
+      _limit,
+      startDate,
+      endDate,
+    );
+    if (_allUserRecord && _allUserRecord.length > 0) {
+      for (let i = 0; i < _allUserRecord.length; i++) {
+        const _userRecord = _allUserRecord[i];
+        _totalDepositAmount += _userRecord.paymentAmount;
+        _totalDepositCount++;
+      }
+    } else {
+      break;
+    }
+
+    _skip += _limit;
+  }
+  return {
+    _totalDepositAmount: _totalDepositAmount,
+    _totalDepositCount: _totalDepositCount,
+  };
+}
+
+async function updateTotalWithdrawForUser(appUserId) {
+  let data = await _updateTotalWithdraw(appUserId);
+
+  let _existingRecord = await LeaderBoardResourAccess.findById(appUserId);
+  if (_existingRecord) {
+    await LeaderBoardResourAccess.updateById(appUserId, {
+      totalWithdrawAmount: data._totalWithdrawAmount,
+      totalWithdrawCount: data._totalWithdrawCount,
+    });
+  } else {
+    await LeaderBoardResourAccess.insert({
+      appUserId: appUserId,
+      totalWithdrawAmount: data._totalWithdrawAmount,
+      totalWithdrawCount: data._totalWithdrawCount,
+    });
   }
 }
 
-async function adminUpdateRanking(appUserId, ranking, totalScore) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let order = {
-        key: 'ranking',
-        value: 'asc',
-      };
-      let limit = 10;
-      let dataUpdate = {
-        ranking: ranking,
-      };
-
-      if (totalScore) {
-        dataUpdate.totalScore = totalScore;
+async function _updateTotalWithdraw(appUserId, startDate, endDate) {
+  let _skip = 0;
+  let _limit = 50;
+  let _totalWithdrawAmount = 0;
+  let _totalWithdrawCount = 0;
+  while (true) {
+    let _allUserRecord = await PaymentWithdrawTransactionResourceAccess.customSearch(
+      { appUserId: appUserId, paymentStatus: WITHDRAW_TRX_STATUS.COMPLETED },
+      _skip,
+      _limit,
+      startDate,
+      endDate,
+    );
+    if (_allUserRecord && _allUserRecord.length > 0) {
+      for (let i = 0; i < _allUserRecord.length; i++) {
+        const _userRecord = _allUserRecord[i];
+        _totalWithdrawAmount += _userRecord.paymentAmount;
+        _totalWithdrawCount++;
       }
+    } else {
+      break;
+    }
 
-      let resultUpdate = await LeaderBoardResourAccess.updateById(appUserId, dataUpdate);
-      if (!resultUpdate) {
-        reject('failed');
-      } else {
-        let resultFind = await LeaderBoardViews.customSearch(undefined, undefined, limit, undefined, undefined, ranking, order);
-        if (resultFind && resultFind.length > 0) {
-          let newArray = [];
-          for (var i = 0; i < resultFind.length; i++) {
-            if (resultFind[i].appUserId !== appUserId) {
-              newArray.push(resultFind[i]);
-            }
+    _skip += _limit;
+  }
+  return {
+    _totalWithdrawAmount: _totalWithdrawAmount,
+    _totalWithdrawCount: _totalWithdrawCount,
+  };
+}
+
+async function updateTotalDailyKLGD(day, skip, limit) {
+  let searchStartDay = moment(day, DATE_DBDATA_FORMAT).startOf('days');
+  let searchEndDay = moment(day, DATE_DBDATA_FORMAT).endOf('days');
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserPlay = await GamePlayRecordsResourceAccess.customSearch({}, _skip, _limit, searchStartDay, searchEndDay);
+    if (_allUserPlay && _allUserPlay.length > 0) {
+      for (let i = 0; i < _allUserPlay.length; i++) {
+        const _userPlayRecord = _allUserPlay[i];
+        let today = moment().endOf('days');
+        let diffToday = today.diff(searchEndDay, 'days');
+        // Tìm trong DB xem có sẵn ngày này chưa
+        let _existingRecord = await LeaderBoardDailyResourceAccess.find({ appUserId: _userPlayRecord.appUserId, leaderBoardDailyDate: day });
+        if (_existingRecord && _existingRecord.length > 0) {
+          if (!_existingRecord[0].totalPlayAmount || (_existingRecord[0].totalPlayAmount && diffToday == 0)) {
+            let totalPlay = await _updateTotalPlay(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+            await LeaderBoardDailyResourceAccess.updateById(_existingRecord[0].leaderBoardDailyId, {
+              totalPlayAmount: totalPlay._totalPlayAmount,
+              totalPlayWinAmount: totalPlay._totalPlayWinAmount,
+              totalPlayLoseAmount: totalPlay._totalPlayLoseAmount,
+              totalPlayLoseCount: totalPlay._totalPlayLoseCount,
+              totalPlayWinCount: totalPlay._totalPlayWinCount,
+              totalPlayCount: totalPlay._totalPlayCount,
+              totalProfit: totalPlay._totalProfit,
+            });
           }
-          if (newArray.length > 0) {
-            for (var i = 0; i < newArray.length; i++) {
-              let resultUpdate = await LeaderBoardResourAccess.updateById(newArray[i].appUserId, {
-                ranking: ranking + i + 1,
-              });
-              if (!resultUpdate) {
-                continue;
-              }
-            }
-          }
-          resolve('update complete');
+        } else {
+          // Nếu chưa thì tính vào up vào DB
+          let totalPlay = await _updateTotalPlay(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+          await LeaderBoardDailyResourceAccess.insert({
+            appUserId: _userPlayRecord.appUserId,
+            totalPlayAmount: totalPlay._totalPlayAmount,
+            totalPlayWinAmount: totalPlay._totalPlayWinAmount,
+            totalPlayLoseAmount: totalPlay._totalPlayLoseAmount,
+            totalPlayLoseCount: totalPlay._totalPlayLoseCount,
+            totalPlayWinCount: totalPlay._totalPlayWinCount,
+            totalPlayCount: totalPlay._totalPlayCount,
+            totalProfit: totalPlay._totalProfit,
+            leaderBoardDailyDate: day,
+            dateTime: moment(day, DATE_DBDATA_FORMAT).format('YYYYMMDD') * 1,
+          });
         }
       }
-    } catch (e) {
-      console.error(e);
-      reject('failed');
+    } else {
+      break;
     }
-  });
+    _skip += _limit;
+  }
 }
 
-async function rewardForTopRanking() {
-  let order = {
-    key: 'ranking',
-    value: 'asc',
-  };
-
-  let topRankUsers = await LeaderBoardViews.customSearch(undefined, 0, 3, undefined, undefined, undefined, order);
-  console.log(topRankUsers);
-  const { addEventBonus } = require('../WalletRecord/WalletRecordFunction');
-  const FIRST_PRIZE = 1000; //thuong 1000 USDT
-  const SECOND_PRIZE = 300; //thuong 1000 USDT
-  const THIRD_PRIZE = 100; //thuong 1000 USDT
-
-  for (let i = 0; i < topRankUsers.length; i++) {
-    const _topUser = topRankUsers[i];
-    if (_topUser.ranking === 1) {
-      await addEventBonus(_topUser.appUserId, FIRST_PRIZE);
-    } else if (_topUser.ranking === 2) {
-      await addEventBonus(_topUser.appUserId, SECOND_PRIZE);
-    } else if (_topUser.ranking === 3) {
-      await addEventBonus(_topUser.appUserId, THIRD_PRIZE);
+async function updateTotalDailyDeposit(day) {
+  let searchStartDay = moment(day, DATE_DBDATA_FORMAT).startOf('days');
+  let searchEndDay = moment(day, DATE_DBDATA_FORMAT).endOf('days');
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserDeposit = await PaymentDepositTransactionResourceAccess.customSearch({}, _skip, _limit, searchStartDay, searchEndDay);
+    if (_allUserDeposit && _allUserDeposit.length > 0) {
+      for (let i = 0; i < _allUserDeposit.length; i++) {
+        const _userPlayRecord = _allUserDeposit[i];
+        let today = moment().endOf('days');
+        let diffToday = today.diff(searchEndDay, 'days');
+        // Tìm trong DB xem có sẵn ngày này chưa
+        let _existingRecord = await LeaderBoardDailyResourceAccess.find({ appUserId: _userPlayRecord.appUserId, leaderBoardDailyDate: day });
+        if (_existingRecord && _existingRecord.length > 0) {
+          if (!_existingRecord[0].totalDepositAmount || (_existingRecord[0].totalDepositAmount && diffToday == 0)) {
+            let totalDeposit = await _updateTotalDeposit(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+            await LeaderBoardDailyResourceAccess.updateById(_existingRecord[0].leaderBoardDailyId, {
+              totalDepositAmount: totalDeposit._totalDepositAmount,
+              totalDepositCount: totalDeposit._totalDepositCount,
+            });
+          }
+        } else {
+          // Nếu chưa thì tính vào up vào DB
+          let totalDeposit = await _updateTotalDeposit(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+          await LeaderBoardDailyResourceAccess.insert({
+            appUserId: _userPlayRecord.appUserId,
+            totalDepositAmount: totalDeposit._totalDepositAmount,
+            totalDepositCount: totalDeposit._totalDepositCount,
+            leaderBoardDailyDate: day,
+            dateTime: moment(day, DATE_DBDATA_FORMAT).format('YYYYMMDD') * 1,
+          });
+        }
+      }
+    } else {
+      break;
     }
+    _skip += _limit;
+  }
+}
+
+async function updateTotalDailyWithdraw(day) {
+  let searchStartDay = moment(day, DATE_DBDATA_FORMAT).startOf('days');
+  let searchEndDay = moment(day, DATE_DBDATA_FORMAT).endOf('days');
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserWithdraw = await PaymentWithdrawTransactionResourceAccess.customSearch({}, _skip, _limit, searchStartDay, searchEndDay);
+    if (_allUserWithdraw && _allUserWithdraw.length > 0) {
+      for (let i = 0; i < _allUserWithdraw.length; i++) {
+        const _userPlayRecord = _allUserWithdraw[i];
+        let today = moment().endOf('days');
+        let diffToday = today.diff(searchEndDay, 'days');
+        // Tìm trong DB xem có sẵn ngày này chưa
+        let _existingRecord = await LeaderBoardDailyResourceAccess.find({ appUserId: _userPlayRecord.appUserId, leaderBoardDailyDate: day });
+        if (_existingRecord && _existingRecord.length > 0) {
+          if (!_existingRecord[0].totalWithdrawAmount || (_existingRecord[0].totalWithdrawAmount && diffToday == 0)) {
+            let totalDeposit = await _updateTotalWithdraw(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+            await LeaderBoardDailyResourceAccess.updateById(_existingRecord[0].leaderBoardDailyId, {
+              totalWithdrawAmount: totalDeposit._totalWithdrawAmount,
+              totalWithdrawCount: totalDeposit._totalWithdrawCount,
+            });
+          }
+        } else {
+          // Nếu chưa thì tính vào up vào DB
+          let totalDeposit = await _updateTotalWithdraw(_userPlayRecord.appUserId, searchStartDay, searchEndDay);
+          await LeaderBoardDailyResourceAccess.insert({
+            appUserId: _userPlayRecord.appUserId,
+            totalWithdrawAmount: totalDeposit._totalWithdrawAmount,
+            totalWithdrawCount: totalDeposit._totalWithdrawCount,
+            leaderBoardDailyDate: day,
+            dateTime: moment(day, DATE_DBDATA_FORMAT).format('YYYYMMDD') * 1,
+          });
+        }
+      }
+    } else {
+      break;
+    }
+    _skip += _limit;
+  }
+}
+
+async function updateTotalPlayForAllUser(startDate = moment().startOf('day').format()) {
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserPlayRecord = await GamePlayRecordsResourceAccess.customSearch({}, _skip, _limit, startDate);
+    if (_allUserPlayRecord && _allUserPlayRecord.length > 0) {
+      for (let i = 0; i < _allUserPlayRecord.length; i++) {
+        const _userPlayRecord = _allUserPlayRecord[i];
+        await updateTotalPlayForUser(_userPlayRecord.appUserId);
+      }
+    } else {
+      break;
+    }
+
+    _skip += _limit;
+  }
+}
+
+async function updateTotalDepositForAllUser(startDate = moment().add(5, 'minute').format()) {
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserRecord = await PaymentDepositTransactionResourceAccess.customSearch({}, _skip, _limit, startDate);
+    if (_allUserRecord && _allUserRecord.length > 0) {
+      for (let i = 0; i < _allUserRecord.length; i++) {
+        const _userRecord = _allUserRecord[i];
+        await updateTotalDepositForUser(_userRecord.appUserId);
+      }
+    } else {
+      break;
+    }
+
+    _skip += _limit;
+  }
+}
+
+async function updateTotalWithdrawForAllUser(startDate = moment().add(5, 'minute').format()) {
+  let _skip = 0;
+  let _limit = 50;
+  while (true) {
+    let _allUserRecord = await PaymentWithdrawTransactionResourceAccess.customSearch({}, _skip, _limit, undefined, startDate);
+    if (_allUserRecord && _allUserRecord.length > 0) {
+      for (let i = 0; i < _allUserRecord.length; i++) {
+        const _userRecord = _allUserRecord[i];
+        await updateTotalWithdrawForUser(_userRecord.appUserId);
+      }
+    } else {
+      break;
+    }
+
+    _skip += _limit;
   }
 }
 
 module.exports = {
-  calculateRankingScoreByUserId,
-  updateRankingForAllUsers,
-  adminUpdateRanking,
-  rewardForTopRanking,
+  updateTotalDepositForUser,
+  updateTotalPlayForUser,
+  updateTotalWithdrawForUser,
+  updateTotalPlayForAllUser,
+  updateTotalWithdrawForAllUser,
+  updateTotalDepositForAllUser,
+  updateTotalDailyKLGD,
+  updateTotalDailyDeposit,
+  updateTotalDailyWithdraw,
 };

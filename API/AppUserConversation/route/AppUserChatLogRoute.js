@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -16,10 +16,16 @@ const insertSchema = {
   appUserConversationId: Joi.number().required(),
 };
 
+const userChatSchema = {
+  appUserChatLogContent: Joi.string().max(500).min(1),
+  roomId: Joi.number().required(),
+};
+
 const updateSchema = {};
 
 const filterSchema = {
-  appUserConversationId: Joi.number().required(),
+  appUserConversationId: Joi.number(),
+  receiverId: Joi.number(),
 };
 
 module.exports = {
@@ -56,10 +62,11 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -138,15 +145,61 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
     handler: function (req, res) {
       Response(req, res, 'userGetList');
+    },
+  },
+  userSendMessageToRoom: {
+    tags: ['api', `${moduleName}`],
+    description: `userSendMessageToRoom ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        ...userChatSchema,
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userSendMessageToRoom');
+    },
+  },
+  userGetRoomChatLog: {
+    tags: ['api', `${moduleName}`],
+    description: `userGetRoomChatLog ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        filter: Joi.object({
+          receiverId: Joi.number().required(),
+        }),
+        skip: Joi.number().default(0).min(0),
+        limit: Joi.number().default(20).max(100).min(1),
+        order: Joi.object({
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
+        }),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'userGetRoomChatLog');
     },
   },
 };

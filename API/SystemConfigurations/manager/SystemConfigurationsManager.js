@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -8,6 +8,7 @@
 const SystemConfigurationsResourceAccess = require('../resourceAccess/SystemConfigurationsResourceAccess');
 const Logger = require('../../../utils/logging');
 const SystemConfigurationsFunction = require('../SystemConfigurationsFunction');
+const { logAppDataChanged } = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
 
 async function find(req) {
   return new Promise(async (resolve, reject) => {
@@ -31,8 +32,16 @@ async function updateById(req) {
     try {
       let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
       let data = req.payload.data;
+      let dataBefore = {};
+      let dataAfter = {};
+      for (let i = 0; i < Object.keys(data).length; i++) {
+        const element = Object.keys(data)[i];
+        dataBefore[element] = config[0][element];
+      }
+      dataAfter = data;
       let result = await SystemConfigurationsResourceAccess.updateById(config[0].systemConfigurationsId, data);
       if (result) {
+        await logAppDataChanged(dataBefore, dataAfter, req.currentUser, SystemConfigurationsResourceAccess.modelName);
         resolve(result);
       }
       reject('failed');

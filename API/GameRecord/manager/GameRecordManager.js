@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -9,40 +9,9 @@ const GameRecordResource = require('../resourceAccess/GameRecordsResourceAccess'
 const GameFunction = require('../GameRecordFunctions');
 const UtilsFunction = require('../../ApiUtils/utilFunctions');
 const { GAME_RECORD_STATUS, GAME_RECORD_TYPE } = require('../GameRecordConstant');
-const { ERROR } = require('../../Common/CommonConstant');
-async function insert(req) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let gameData = req.payload;
-      let newGameSection = gameData.gameRecordSection;
-      let currentSection = new Date();
-      currentSection.setHours(newGameSection.split(':')[0]);
-      currentSection.setMinutes(newGameSection.split(':')[1]);
-
-      const moment = require('moment');
-      newGameSection = moment(currentSection).format('YYYYMMDDHHmm00'); //`${currentSection.getHours()}:${currentSection.getMinutes()}:00`;
-
-      let gameRecordType = {
-        gameRecordTypeUp: gameData.gameRecordTypeUp,
-        gameRecordTypeDown: gameData.gameRecordTypeDown,
-        gameRecordTypeOdd: gameData.gameRecordTypeOdd,
-        gameRecordTypeEven: gameData.gameRecordTypeEven,
-      };
-
-      let result = await GameFunction.addNewGameRecord(newGameSection, gameData.gameRecordPrice, gameData.gameRecordUnit, gameRecordType);
-      if (result) {
-        resolve(result);
-      } else {
-        console.error(`error insert game record: ${ERROR}`);
-        reject('failed');
-      }
-    } catch (e) {
-      console.error(`error insert game record:`, e);
-      reject('failed');
-    }
-  });
-}
-
+const { ERROR, POPULAR_ERROR } = require('../../Common/CommonConstant');
+const { GAME_ID, GAME_RECORD_UNIT_BO } = require('../../GamePlayRecords/GamePlayRecordsConstant');
+const Logger = require('../../../utils/logging');
 async function find(req) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -53,20 +22,74 @@ async function find(req) {
       let startDate = req.payload.startDate;
       let endDate = req.payload.endDate;
       let searchText = req.payload.searchText;
-      if (searchText) {
-        filter.gameRecordSection = searchText;
-      }
 
-      let gameRecords = await GameRecordResource.find(filter, skip, limit, order, startDate, endDate);
+      let gameRecords = await GameRecordResource.customSearch(filter, skip, limit, searchText, startDate, endDate, order);
 
       if (gameRecords && gameRecords.length > 0) {
-        let gameRecordsCount = await GameRecordResource.count(filter, order);
+        let gameRecordsCount = await GameRecordResource.customCount(filter, searchText, startDate, endDate);
         resolve({ data: gameRecords, total: gameRecordsCount[0].count });
       } else {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
-      console.error(`error find game record:`, e);
+      Logger.error(`error find game record:`, e);
+      reject('failed');
+    }
+  });
+}
+
+async function adminGetAssignedResult(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let gameRecordType = req.payload.gameRecordType;
+      let _gameRecordSection = GameFunction.getCurrentGameSection(GAME_ID.BINARYOPTION, gameRecordType, GAME_RECORD_UNIT_BO.BTC);
+      let _assignedRecord = GameFunction.getAssignedGameRecordFromCached(_gameRecordSection);
+      if (_assignedRecord) {
+        resolve(_assignedRecord);
+      } else {
+        resolve({});
+      }
+    } catch (e) {
+      Logger.error(`error update by id ${gameRecordId} game record:`, e);
+      reject('failed');
+    }
+  });
+}
+
+async function adminAssignResult(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let gameRecordValue = req.payload.gameRecordValue;
+      let gameRecordType = req.payload.gameRecordType;
+      let _orderLatest = {
+        key: 'gameRecordSection',
+        value: 'desc',
+      };
+      let _lastRecord = await GameRecordResource.customSearch(
+        {
+          gameRecordType: gameRecordType,
+        },
+        0,
+        1,
+        undefined,
+        undefined,
+        undefined,
+        _orderLatest,
+      );
+      if (_lastRecord && _lastRecord.length > 0) {
+        let _gameRecord = {
+          gameRecordType: gameRecordType,
+          gameRecordResult: gameRecordValue,
+          gameRecordSection: GameFunction.getCurrentGameSection(GAME_ID.BINARYOPTION, gameRecordType, GAME_RECORD_UNIT_BO.BTC),
+          lastGameRecordValue: _lastRecord[0].gameRecordValue,
+        };
+        GameFunction.addAssignedGameRecordToCached(_gameRecord);
+        resolve('success');
+      } else {
+        reject(POPULAR_ERROR.INSERT_FAILED);
+      }
+    } catch (e) {
+      Logger.error(`error update by id ${gameRecordId} game record:`, e);
       reject('failed');
     }
   });
@@ -81,11 +104,11 @@ async function updateById(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error updateById game record: ${ERROR}`);
+        Logger.error(`error updateById game record: `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error update by id ${gameRecordId} game record:`, e);
+      Logger.error(`error update by id ${gameRecordId} game record:`, e);
       reject('failed');
     }
   });
@@ -96,7 +119,7 @@ async function findById(req) {
     try {
       resolve('success');
     } catch (e) {
-      console.error(`error findById game record: `, e);
+      Logger.error(`error findById game record: `, e);
       reject('failed');
     }
   });
@@ -107,7 +130,7 @@ async function deleteById(req) {
     try {
       resolve('success');
     } catch (e) {
-      console.error(`error`, e);
+      Logger.error(`error`, e);
       reject('failed');
     }
   });
@@ -157,11 +180,11 @@ async function insertMany(req) {
       if (result) {
         resolve(result);
       } else {
-        console.error(`error insert many: ${ERROR}`);
+        Logger.error(`error insert many: `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error insert many:`, e);
+      Logger.error(`error insert many:`, e);
       reject('failed');
     }
   });
@@ -180,8 +203,36 @@ async function userGetListGameRecord(req) {
         value: 'desc',
       };
 
-      // filter.gameRecordStatus = GAME_RECORD_STATUS.COMPLETED;
+      filter.gameRecordStatus = GAME_RECORD_STATUS.COMPLETED;
+      let gameRecords = await GameRecordResource.find(filter, skip, limit, order, startDate, endDate);
+      // console.log('gameRecords: ', gameRecords);
 
+      if (gameRecords && gameRecords.length > 0) {
+        resolve({ data: gameRecords });
+      } else {
+        resolve({ data: [], total: 0 });
+      }
+    } catch (e) {
+      Logger.error(`error user Get List Game Record`, e);
+      reject('failed');
+    }
+  });
+}
+
+async function userGetListResult(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let filter = req.payload.filter;
+      let skip = req.payload.skip;
+      let limit = req.payload.limit;
+      let startDate = req.payload.startDate;
+      let endDate = req.payload.endDate;
+      let order = {
+        key: 'gameRecordSection',
+        value: 'desc',
+      };
+
+      filter.isPlayGameRecord = 1;
       let gameRecords = await GameRecordResource.find(filter, skip, limit, order, startDate, endDate);
 
       if (gameRecords && gameRecords.length > 0) {
@@ -191,7 +242,7 @@ async function userGetListGameRecord(req) {
         resolve({ data: [], total: 0 });
       }
     } catch (e) {
-      console.error(`error user Get List Game Record`, e);
+      Logger.error(`error user Get List Game Record`, e);
       reject('failed');
     }
   });
@@ -207,11 +258,11 @@ async function getCurrentGameRecord(req) {
       if (gameRecords) {
         resolve(gameRecords);
       } else {
-        console.error(`error getCurrentGameRecord with gameRecordType:${gameRecordType} ${ERROR}`);
+        Logger.error(`error getCurrentGameRecord with gameRecordType:${gameRecordType} `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error get Current GameRecord`, e);
+      Logger.error(`error get Current GameRecord`, e);
       reject('failed');
     }
   });
@@ -260,11 +311,11 @@ async function userGetCurrentGameRecord(req) {
 
         resolve(currentGameRecordData);
       } else {
-        console.error(`error userGetCurrentGameRecord gameRecordType:${gameRecordType} ${ERROR}`);
+        Logger.error(`error userGetCurrentGameRecord gameRecordType:${gameRecordType} `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error user Get Current Game Record`, e);
+      Logger.error(`error user Get Current Game Record`, e);
       reject('failed');
     }
   });
@@ -285,22 +336,24 @@ async function userGetLatestGameRecord(req) {
 
         resolve(currentGameRecordData);
       } else {
-        console.error(`error userGetLatestGameRecord gameRecordType:${gameRecordType} ${ERROR}`);
+        Logger.error(`error userGetLatestGameRecord gameRecordType:${gameRecordType} `);
         reject('failed');
       }
     } catch (e) {
-      console.error(`error user get latest Game Record`, e);
+      Logger.error(`error user get latest Game Record`, e);
       reject('failed');
     }
   });
 }
 module.exports = {
-  insert,
+  adminAssignResult,
+  adminGetAssignedResult,
   find,
   updateById,
   findById,
   insertMany,
   userGetListGameRecord,
+  userGetListResult,
   userGetCurrentGameRecord,
   getCurrentGameRecord,
   userGetLatestGameRecord,

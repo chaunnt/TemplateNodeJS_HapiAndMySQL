@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -12,6 +12,7 @@ const AppUsersResourceAccess = require('../../AppUsers/resourceAccess/AppUsersRe
 const SystemAppLogFunctions = require('../../SystemAppChangedLog/SystemAppChangedLogFunctions');
 const CustomerMessageFunctions = require('../CustomerMessageFunctions');
 const { MESSAGE_TYPE, MESSAGE_CATEGORY, MESSAGE_RECEIVER, MESSAGE_ERROR } = require('../CustomerMessageConstant');
+const CustomerMessageNotificationResourceAccess = require('../resourceAccess/CustomerMessageNotificationResourceAccess');
 
 // admin send message => topic "GENERAL", type: "GENERAL"
 
@@ -456,6 +457,7 @@ async function userGetListNotificationMessage(req) {
       }
       filter.customerId = req.currentUser.appUserId;
       filter.receiverType = MESSAGE_RECEIVER.USER;
+      filter.customerMessageCategories = MESSAGE_CATEGORY.FIREBASE_PUSH;
 
       let result = await _getListMessage(filter, skip, limit, startDate, endDate, searchText, order);
 
@@ -487,6 +489,8 @@ async function userGetUnreadNotificationMessageCount(req) {
 
       filter.customerId = req.currentUser.appUserId;
       filter.receiverType = MESSAGE_RECEIVER.USER;
+      filter.customerMessageCategories = MESSAGE_CATEGORY.FIREBASE_PUSH;
+      filter.isRead = 0;
 
       let customerMessageCount = await _countUnreadMessage(filter, startDate, endDate, searchText);
 
@@ -733,6 +737,29 @@ async function staffGetDetailMessage(req) {
   });
 }
 
+async function insertNotification(req) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let customerMessageContent = req.payload.customerMessageContent;
+      let customerMessageTitle = req.payload.customerMessageTitle;
+      let currentUser = req.currentUser;
+      let sendResult = await CustomerMessageNotificationResourceAccess.insert({
+        customerMessageContent: customerMessageContent,
+        customerMessageTitle: customerMessageTitle,
+        staffId: currentUser.appUserId,
+        customerMessageCategories: MESSAGE_CATEGORY.FIREBASE_PUSH,
+      });
+      if (sendResult) {
+        resolve(sendResult);
+      } else {
+        reject('insert failed');
+      }
+    } catch (e) {
+      Logger.error(__filename, e);
+      reject('failed');
+    }
+  });
+}
 module.exports = {
   insert,
   find,
@@ -748,6 +775,8 @@ module.exports = {
   findDetailMessageById,
   deleteMessageById,
   findMessagesSent,
+
+  insertNotification,
 
   //User Message handler
   userGetListNotificationMessage,

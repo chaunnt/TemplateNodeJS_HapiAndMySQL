@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -8,9 +8,11 @@
 // const CustomerMessageEmailProcess = require('./CustomerMessageEmailJob');
 // const CustomerMessageSMSProcess = require('./CustomerMessageSMSJob');
 const GenerateMessageProcess = require('./GenerateCustomerMessage');
+const CustomerMessageNotificationJob = require('./CustomerMessageNotificationJob');
+const Logger = require('../../../utils/logging');
 
 async function systemAutoGenerateMessage() {
-  console.log(`systemAutoGenerateMessage`);
+  Logger.info(`systemAutoGenerateMessage`);
   let promiseList = [];
 
   //tao ra message cho tung customer tu group message
@@ -34,8 +36,15 @@ async function systemAutoGenerateMessage() {
   // });
   // promiseList.push(promiseSMS);
 
+  //gui notification cho tung customer
+  const promiseNoti = new Promise(async (resolve, reject) => {
+    let result = await CustomerMessageNotificationJob.sendNotificationToUser();
+    resolve(result);
+  });
+  promiseList.push(promiseNoti);
+
   Promise.all(promiseList).then(values => {
-    console.log(`systemAutoGenerateMessage response ${values}`);
+    Logger.info(`systemAutoGenerateMessage response ${values}`);
   });
 }
 

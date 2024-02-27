@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -22,7 +22,6 @@ const exportExcel = (data, workSheetColumnNames, workSheetName, fileName) => {
     let _row = [];
 
     for (let j = 0; j < workSheetColumnNames.length; j++) {
-      console.log(workSheetColumnNames[j]);
       _row.push(data[i][workSheetColumnNames[j].key]);
     }
     _exportingData.push(_row);

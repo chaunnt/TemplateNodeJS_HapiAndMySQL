@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const API_SID = process.env.STRINGEE_API_SID;
 const API_SECRET = process.env.STRINGEE_API_SECRET;
 const STRINGEE_OTP_PHONE = process.env.STRINGEE_OTP_PHONE;
+const Logger = require('../../utils/logging');
 
 chai.should();
 chai.use(chaiHttp);
@@ -99,7 +100,7 @@ const STRINGEE_ACTIONS = {
   },
 };
 async function sendVoiceOTP(phoneNumber, otp) {
-  console.log(`sendVoiceOTP: ${phoneNumber} - ${otp}`);
+  Logger.info(`sendVoiceOTP: ${phoneNumber} - ${otp}`);
   if (!phoneNumber || phoneNumber === null || phoneNumber.trim() === '') {
     return undefined;
   }
@@ -143,7 +144,6 @@ async function sendVoiceOTP(phoneNumber, otp) {
     .set('Content-type', 'application/json')
     .set('X-STRINGEE-AUTH', token)
     .send(reqBody);
-  console.log(body);
   return true;
 }
 

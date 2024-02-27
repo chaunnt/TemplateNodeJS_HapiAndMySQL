@@ -1,8 +1,9 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 const chai = require('chai');
 require('dotenv').config();
 const { checkResponseStatus } = require('./Common');
+const Logger = require('../../../utils/logging');
 
 async function loginStaff() {
   const body = {
@@ -16,7 +17,7 @@ async function loginStaff() {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
           reject(undefined);
         }
         checkResponseStatus(res, 200);
@@ -37,7 +38,7 @@ async function loginAgency() {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
           reject(undefined);
         }
         checkResponseStatus(res, 200);
@@ -58,7 +59,7 @@ async function loginUser(username = 'string', password = 'string') {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         resolve(res.body.data);

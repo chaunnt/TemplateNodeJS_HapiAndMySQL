@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -10,6 +10,7 @@ const rootTableName = 'PaymentBonusTransaction';
 const primaryKeyField = 'paymentBonusTransactionId';
 async function createView() {
   const UserTableName = 'AppUserViews';
+  const StaffUserTableName = 'StaffUser';
   let fields = [
     `${UserTableName}.appUserId`,
     `${UserTableName}.firstName`,
@@ -30,6 +31,11 @@ async function createView() {
     `${UserTableName}.memberReferIdF3`,
     `${UserTableName}.memberReferIdF4`,
     `${UserTableName}.memberReferIdF5`,
+    `${UserTableName}.memberReferIdF6`,
+    `${UserTableName}.memberReferIdF7`,
+    `${UserTableName}.memberReferIdF8`,
+    `${UserTableName}.memberReferIdF9`,
+    `${UserTableName}.memberReferIdF10`,
 
     `${rootTableName}.paymentBonusTransactionId`,
     `${rootTableName}.paymentMethodId`,
@@ -39,32 +45,37 @@ async function createView() {
     `${rootTableName}.paymentStatus`,
     `${rootTableName}.paymentRef`,
     `${rootTableName}.paymentNote`,
-    `${rootTableName}.paymentOwner`,
-    `${rootTableName}.paymentOriginSource`,
-    `${rootTableName}.paymentOriginName`,
     `${rootTableName}.paymentApproveDate`,
     `${rootTableName}.paymentPICId`,
-    `${rootTableName}.balanceBefore`,
-    `${rootTableName}.balanceAfter`,
+    `${rootTableName}.paymentStaffId`,
+    `${rootTableName}.paymentCategory`,
+
     `${rootTableName}.createdAt`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.referUserId`, //nguoi user duoc tham chieu de tinh hoa hong
     DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
     `${rootTableName}.updatedAt`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.isDeleted`,
+
+    `${StaffUserTableName}.staffUserId`,
+    `${StaffUserTableName}.staffId`,
   ];
 
   var viewDefinition = DB.select(fields)
     .from(rootTableName)
     .leftJoin(UserTableName, function () {
       this.on(`${rootTableName}.appUserId`, '=', `${UserTableName}.appUserId`);
+    })
+    .leftJoin(StaffUserTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${StaffUserTableName}.appUserId`);
     });
 
-  Common.createOrReplaceView(tableName, viewDefinition);
+  await Common.createOrReplaceView(tableName, viewDefinition);
 }
 
 async function initViews() {
-  createView();
+  await createView();
 }
 
 async function insert(data) {
@@ -97,17 +108,7 @@ async function sumAmountDistinctByStatus(filter, startDate, endDate) {
   return await Common.sumAmountDistinctByCustomField(tableName, 'paymentAmount', 'paymentStatus', filter, startDate, endDate);
 }
 
-async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
-  return await query.select();
-}
-
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
-  return await query.count(`${primaryKeyField} as count`);
-}
-
-function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -116,23 +117,23 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`)
-        .orWhere('paymentOwner', 'like', `%${searchText}%`)
-        .orWhere('paymentOriginSource', 'like', `%${searchText}%`)
-        .orWhere('paymentOriginName', 'like', `%${searchText}%`);
+        .orWhere('email', 'like', `%${searchText}%`);
     });
   }
 
-  if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
-  }
-  if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
-  }
+  queryBuilder.where(filterData);
 
   queryBuilder.where({ isDeleted: 0 });
 
-  queryBuilder.where(filterData);
+  if (startDate) {
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
+  }
+
+  if (endDate) {
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
+  }
 
   if (limit) {
     queryBuilder.limit(limit);
@@ -141,85 +142,73 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (skip) {
     queryBuilder.offset(skip);
   }
-
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
-
   return queryBuilder;
 }
 
-function _makeQueryBuilderForReferedUser(
-  filter = {},
-  appUserId,
-  skip,
-  limit,
-  memberReferIdF1,
-  memberReferIdF2,
-  memberReferIdF3,
-  memberReferIdF4,
-  memberReferIdF5,
-  startDate,
-  endDate,
-) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit);
+function _makeQueryBuilderForFullReferedUser(filter, skip, limit, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit, searchText, startDate, endDate, order);
 
-  if (memberReferIdF1) {
-    queryBuilder.where({ memberReferIdF1: memberReferIdF1 });
-  } else if (memberReferIdF2) {
-    queryBuilder.where({ memberReferIdF2: memberReferIdF2 });
-  } else if (memberReferIdF3) {
-    queryBuilder.where({ memberReferIdF3: memberReferIdF3 });
-  } else if (memberReferIdF4) {
-    queryBuilder.where({ memberReferIdF4: memberReferIdF4 });
-  } else if (memberReferIdF5) {
-    queryBuilder.where({ memberReferIdF5: memberReferIdF5 });
-  } else if (appUserId) {
+  if (filter.memberReferIdF1) {
+    queryBuilder.where({ memberReferIdF1: filter.memberReferIdF1 });
+  } else if (filter.memberReferIdF2) {
+    queryBuilder.where({ memberReferIdF2: filter.memberReferIdF2 });
+  } else if (filter.memberReferIdF3) {
+    queryBuilder.where({ memberReferIdF3: filter.memberReferIdF3 });
+  } else if (filter.memberReferIdF4) {
+    queryBuilder.where({ memberReferIdF4: filter.memberReferIdF4 });
+  } else if (filter.memberReferIdF5) {
+    queryBuilder.where({ memberReferIdF5: filter.memberReferIdF5 });
+  } else if (filter.memberReferIdF6) {
+    queryBuilder.where({ memberReferIdF6: filter.memberReferIdF6 });
+  } else if (filter.memberReferIdF7) {
+    queryBuilder.where({ memberReferIdF7: filter.memberReferIdF7 });
+  } else if (filter.memberReferIdF8) {
+    queryBuilder.where({ memberReferIdF8: filter.memberReferIdF8 });
+  } else if (filter.memberReferIdF9) {
+    queryBuilder.where({ memberReferIdF9: filter.memberReferIdF9 });
+  } else if (filter.memberReferIdF10) {
+    queryBuilder.where({ memberReferIdF10: filter.memberReferIdF10 });
+  } else if (filter.appUserId) {
     queryBuilder.where(function () {
-      this.orWhere('memberReferIdF1', appUserId)
-        .orWhere('memberReferIdF2', appUserId)
-        .orWhere('memberReferIdF3', appUserId)
-        .orWhere('memberReferIdF4', appUserId)
-        .orWhere('memberReferIdF5', appUserId);
+      this.orWhere('memberReferIdF1', filter.appUserId)
+        .orWhere('memberReferIdF2', filter.appUserId)
+        .orWhere('memberReferIdF3', filter.appUserId)
+        .orWhere('memberReferIdF4', filter.appUserId)
+        .orWhere('memberReferIdF5', filter.appUserId)
+        .orWhere('memberReferIdF6', filter.appUserId)
+        .orWhere('memberReferIdF7', filter.appUserId)
+        .orWhere('memberReferIdF8', filter.appUserId)
+        .orWhere('memberReferIdF9', filter.appUserId)
+        .orWhere('memberReferIdF10', filter.appUserId);
     });
   }
 
-  if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
-  }
-  if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
-  }
   return queryBuilder;
 }
 
-async function countReferedUserByUserId(
-  filter,
-  appUserId,
-  memberReferIdF1,
-  memberReferIdF2,
-  memberReferIdF3,
-  memberReferIdF4,
-  memberReferIdF5,
-  startDate,
-  endDate,
-) {
-  let queryBuilder = _makeQueryBuilderForReferedUser(
-    filter,
-    appUserId,
-    undefined,
-    undefined,
-    memberReferIdF1,
-    memberReferIdF2,
-    memberReferIdF3,
-    memberReferIdF4,
-    memberReferIdF5,
-    startDate,
-    endDate,
-  );
-  return await queryBuilder.count(`${primaryKeyField} as count`);
+async function customSearch(filter, skip, limit, searchText, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order);
+  return await query.select();
+}
+
+async function customCount(filter, searchText, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, order);
+  return await query.count(`${primaryKeyField} as count`);
+}
+
+async function customSumFullReferedUser(field, filter, startDate, endDate, order) {
+  let query = _makeQueryBuilderForFullReferedUser(filter, undefined, undefined, startDate, endDate, undefined, order);
+  return await query.sum(`${field} as sumResult`);
+}
+
+async function customSum(field, filter, startDate, endDate, order) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, startDate, endDate, order);
+  return await query.sum(`${field} as sumResult`);
 }
 
 module.exports = {
@@ -234,5 +223,6 @@ module.exports = {
   customCount,
   sumAmountDistinctByDate,
   sumAmountDistinctByStatus,
-  countReferedUserByUserId,
+  customSumFullReferedUser,
+  customSum,
 };

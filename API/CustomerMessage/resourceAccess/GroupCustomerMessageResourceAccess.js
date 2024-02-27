@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -37,9 +37,31 @@ async function createTable() {
         })
         .then(async () => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
-          resolve();
+          seeding().then(() => {
+            resolve();
+          });
         });
     });
+  });
+}
+
+async function seeding() {
+  const seedData = [
+    {
+      groupCustomerMessageCategories: MESSAGE_CATEGORY.GENERAL,
+      groupCustomerMessageContent:
+        'Tổng hợp các loại game ăn khách hiện nay, thông tin giải đấu game trong nước và thế giới. Tin tức, hình ảnh, sự kiện, mẹo vặt về game được cập nhật mới',
+      groupCustomerMessageTitle: 'Chào mừng bạn đến với thế giới game',
+      groupCustomerMessageImage: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+  ];
+  return new Promise(async (resolve, reject) => {
+    DB(`${tableName}`)
+      .insert(seedData)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -80,11 +102,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where(filterData);
@@ -101,7 +125,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
@@ -112,8 +136,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
@@ -133,7 +157,7 @@ async function customCountDistinct(fieldDistinct, filter, startDate, endDate, se
     key: `${fieldDistinct}`,
     value: 'asc',
   };
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).select(`${fieldDistinct}`).groupBy(`${fieldDistinct}`);

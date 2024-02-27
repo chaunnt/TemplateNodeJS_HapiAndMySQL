@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -7,9 +7,10 @@ const Common = require('../../Common/resourceAccess/CommonResourceAccess');
 const { OTP_CONFIRM_STATUS, DEFAULT_EXPIRED_MINUTE } = require('../OTPMessageConstant');
 const tableName = 'OTPMessage';
 const primaryKeyField = 'otpMessageId';
+const Logger = require('../../../utils/logging');
 
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
@@ -19,12 +20,16 @@ async function createTable() {
           table.string('id'); // luu (email/sdt)
           table.integer('expiredTime').defaultTo(DEFAULT_EXPIRED_MINUTE);
           table.integer('confirmStatus').defaultTo(OTP_CONFIRM_STATUS.NOT_CONFIRMED);
+          table.integer('otpType').nullable();
           table.timestamp('confirmedAt', { useTz: true }).nullable();
           table.timestamp('expiredAt', { useTz: true }).nullable();
           timestamps(table);
+          table.index('confirmStatus');
+          table.index('otpType');
+          table.index('expiredTime');
         })
         .then(() => {
-          console.info(`${tableName} table created done`);
+          Logger.info(`${tableName} table created done`);
           resolve();
         });
     });

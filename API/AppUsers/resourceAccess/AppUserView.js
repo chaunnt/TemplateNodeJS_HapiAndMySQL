@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -8,8 +8,9 @@ const tableName = 'AppUserViews';
 const rootTableName = 'AppUser';
 const primaryKeyField = 'appUserId';
 const tableMemberShip = 'AppUserMembership';
+const StaffUserTableName = 'StaffUser';
+const AppUserMissionInfo = 'AppUserMissionInfo';
 async function createViews() {
-  // const AreaDataTable = 'AreaData';
   let fields = [
     `${rootTableName}.appUserId`,
     `${rootTableName}.sotaikhoan`,
@@ -17,6 +18,7 @@ async function createViews() {
     `${rootTableName}.tennganhang`,
     `${rootTableName}.username`,
     `${rootTableName}.firstName`,
+    `${rootTableName}.isDeleted`,
     `${rootTableName}.lastName`,
     `${rootTableName}.phoneNumber`,
     `${rootTableName}.userHomeAddress`,
@@ -25,6 +27,7 @@ async function createViews() {
     `${rootTableName}.birthDay`,
     `${rootTableName}.sex`,
     `${rootTableName}.password`,
+    `${rootTableName}.secondaryPassword`,
     `${rootTableName}.lastActiveAt`,
     `${rootTableName}.twoFACode`,
     `${rootTableName}.twoFAQR`,
@@ -43,17 +46,25 @@ async function createViews() {
     `${rootTableName}.memberLevelName`, //luu membership
     `${rootTableName}.appUserMembershipId`, //luu membership
     `${rootTableName}.limitWithdrawDaily`, //luu so tien toi da duoc rut (khi can thiet)
+    `${rootTableName}.userFirstLoginDevice`,
+    `${rootTableName}.userDevice`,
     `${rootTableName}.ipAddress`, //luu IP address -> chong spam va hack
+    `${rootTableName}.firstLoginIp`, //luu IP address -> chong spam va hack
+    `${rootTableName}.duplicatedFirstLoginIp`, //luu IP address -> chong spam va hack
+    `${rootTableName}.duplicatedIpAddress`, //luu IP address -> chong spam va hack
     `${rootTableName}.googleId`, //luu google id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.telegramId`, //luu telegram id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.facebookId`, //luu facebook id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.appleId`, //luu apple id - phong khi 1 user co nhieu tai khoan
     `${rootTableName}.createdAt`,
-    `${rootTableName}.isDeleted`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.appUserNote`,
     `${rootTableName}.activeOTPCode`,
     `${rootTableName}.activeOTPAt`,
     `${rootTableName}.referCode`,
+    `${rootTableName}.blockedLogin`,
+    `${rootTableName}.blockedWithdrawBank`,
+    `${rootTableName}.blockedWithdrawCrypto`,
 
     `${rootTableName}.diachiviUSDT`, // su dung tam
     `${rootTableName}.diachiviBTC`, //su dung tam
@@ -62,6 +73,18 @@ async function createViews() {
     `${rootTableName}.memberReferIdF3`,
     `${rootTableName}.memberReferIdF4`,
     `${rootTableName}.memberReferIdF5`,
+    `${rootTableName}.memberReferIdF6`,
+    `${rootTableName}.memberReferIdF7`,
+    `${rootTableName}.memberReferIdF8`,
+    `${rootTableName}.memberReferIdF9`,
+    `${rootTableName}.memberReferIdF10`,
+    `${rootTableName}.appUserCategoryId`,
+    `${rootTableName}.isVirtualUser`,
+    `${rootTableName}.isAllowedWithdraw`,
+    `${rootTableName}.isAllowedDeposit`,
+    `${rootTableName}.isExpert`,
+    `${rootTableName}.isPlayRoundRefund`,
+    `${rootTableName}.supervisorId`,
     DB.raw(`MONTH(${rootTableName}.createdAt) as createMonth`),
     DB.raw(`YEAR(${rootTableName}.createdAt) as createYear`),
     `${tableMemberShip}.appUserMembershipTitle`,
@@ -71,12 +94,24 @@ async function createViews() {
     `${tableMemberShip}.appUserMembershipAssetF1Required`,
     `${tableMemberShip}.appUserMembershipDescription`,
     `${tableMemberShip}.appUserMembershipImage`,
+
+    `${StaffUserTableName}.staffUserId`,
+    `${StaffUserTableName}.staffId`,
+
+    `${AppUserMissionInfo}.enableMissionPlay`,
+    `${AppUserMissionInfo}.enableAddMissionBonus`,
   ];
 
   var viewDefinition = DB.select(fields)
     .from(rootTableName)
     .leftJoin(tableMemberShip, function () {
       this.on(`${rootTableName}.appUserMembershipId`, '=', `${tableMemberShip}.appUserMembershipId`);
+    })
+    .leftJoin(StaffUserTableName, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${StaffUserTableName}.appUserId`);
+    })
+    .leftJoin(AppUserMissionInfo, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${AppUserMissionInfo}.appUserId`);
     });
   Common.createOrReplaceView(tableName, viewDefinition);
 }
@@ -120,18 +155,22 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
     queryBuilder.where(function () {
       this.orWhere('username', 'like', `%${searchText}%`)
         .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`)
+        .orWhere('firstLoginIp', 'like', `%${searchText}%`)
+        .orWhere('ipAddress', 'like', `%${searchText}%`)
+        .orWhere('referCode', 'like', `%${searchText}%`)
         .orWhere('companyName', 'like', `%${searchText}%`);
     });
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -148,7 +187,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
   return queryBuilder;
 }
@@ -158,7 +197,7 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, skip, limit, startDate, endDate, searchText, order) {
+async function customCount(filter, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
   return await query.count(`${primaryKeyField} as count`);
 }
@@ -168,8 +207,8 @@ async function countUserMonthByYear(filter, startDate, endDate) {
     .select('createMonth')
     .select('createYear')
     .where(filter)
-    .where('createdAt', '>=', startDate)
-    .where('createdAt', '<=', endDate)
+    .where('createdAtTimestamp', '>=', startDate)
+    .where('createdAtTimestamp', '<=', endDate)
     .count(`createMonth as countCreateMonth`)
     .groupBy('createMonth')
     .groupBy('createYear')

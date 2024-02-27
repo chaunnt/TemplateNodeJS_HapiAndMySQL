@@ -1,26 +1,50 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
  */
 'use strict';
 const token = require('../ApiUtils/token');
-const SystemStatus = require('../Maintain/MaintainFunctions').systemStatus;
+const MaintainFunctions = require('../Maintain/MaintainFunctions');
 const errorCodes = require('./route/response').errorCodes;
 const UserResource = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
 const StaffResource = require('../Staff/resourceAccess/RoleStaffView');
 const Logger = require('../../utils/logging');
+const StaffUserResourceAccess = require('../StaffUser/resourceAccess/StaffUserResourceAccess');
+const { ROLE_NAME } = require('../StaffRole/StaffRoleConstants');
+const moment = require('moment');
+const AppUsersResourceAccess = require('../AppUsers/resourceAccess/AppUsersResourceAccess');
+
+function isValidUserAccessToken(accessToken) {
+  let _currentUser = token.decodeToken(accessToken);
+
+  //invalid token
+  if (_currentUser === undefined) {
+    Logger.error(`invalid token`);
+    return;
+  }
+
+  if (!_currentUser.active) {
+    return;
+  }
+
+  return _currentUser;
+}
 
 async function verifyToken(request, reply) {
+  //store IP & last login
+  const requestIp = require('request-ip');
+  const clientIp = requestIp.getClientIp(request);
+  console.log(clientIp);
   return new Promise(async function (resolve) {
     //if there is no token or empty token
     if (!(request.headers.authorization && request.headers.authorization !== '')) {
-      Logger.error(`System was down - current active status = ${SystemStatus.all}`);
+      Logger.error(`System was down - current active status = ${MaintainFunctions.getSystemStatus().all}`);
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
-    let result = token.decodeToken(request.headers.authorization);
+    let result = isValidUserAccessToken(request.headers.authorization);
 
     //invalid token
     if (result === undefined) {
@@ -33,38 +57,52 @@ async function verifyToken(request, reply) {
     request.currentUser = result;
 
     if (!request.currentUser.active) {
+      Logger.error(`request.currentUser not active`);
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
 
     //system down then normal user can not use anything, except staff
-    if (result.appUserId && SystemStatus.all === false) {
-      Logger.error(`System was down - current active status = ${SystemStatus.all}`);
-      reply.response(errorCodes[505]).code(505).takeover();
+    if (result.appUserId && MaintainFunctions.getSystemStatus().all === false) {
+      Logger.error(`System was down - current active status = ${MaintainFunctions.getSystemStatus().all}`);
+      reply.response(errorCodes[599]).code(599).takeover();
       return;
     }
 
     //recheck again with realtime DB
     if (result.appUserId) {
-      let currentUser = await UserResource.findById(result.appUserId);
-
-      // requestToken = requestToken.replace('Bearer ', '');
-      // if (currentUser && currentUser.length > 0 && currentUser[0].userToken && currentUser[0].userToken !== requestToken) {
-      //   reply.response(errorCodes[505]).code(505).takeover();
-      //   return;
-      // }
-
-      if (currentUser && currentUser.active) {
-        request.currentUser = currentUser;
+      let currentUser = await UserResource.find({
+        appUserId: result.appUserId,
+      });
+      if (currentUser && currentUser.length > 0 && currentUser[0].active) {
+        //check token de chi 1 thiet bi active
+        const user = currentUser[0];
+        const currentToken = request.headers.authorization.replace('Bearer ', '');
+        if (user.token != currentToken) {
+          Logger.error(`System login by other device | ${user.ipAddress} ${user.lastActiveAt}`);
+          reply
+            .response({
+              statusCode: 401,
+              error: 'LOGIN_OTHER_DEVICE',
+              message: `${user.ipAddress} | ${user.lastActiveAt}`,
+            })
+            .code(401)
+            .takeover();
+          return;
+        }
+        //append current user to request
+        request.currentUser = currentUser[0];
         resolve('ok');
       } else {
+        Logger.error(`user.token != currentToken`);
         reply.response(errorCodes[505]).code(505).takeover();
         return;
       }
     } else if (result.staffId) {
-      let currentStaff = await StaffResource.findById(result.staffId);
-      if (currentStaff && currentStaff.active) {
-        request.currentUser = currentStaff;
+      let currentStaff = await StaffResource.find({ staffId: result.staffId });
+      if (currentStaff && currentStaff.length > 0 && currentStaff[0].active) {
+        //append current user to request
+        request.currentUser = currentStaff[0];
 
         //do not allow multiple staff login
         //if (currentStaff[0].staffToken !== request.headers.authorization.replace('Bearer ','')) {
@@ -73,6 +111,7 @@ async function verifyToken(request, reply) {
         //}
         resolve('ok');
       } else {
+        Logger.error(`currentStaff && currentStaff.length > 0 && currentStaff[0].active`);
         reply.response(errorCodes[505]).code(505).takeover();
         return;
       }
@@ -88,7 +127,7 @@ async function verifyTokenOrAllowEmpty(request, reply) {
     if (request.headers.authorization !== undefined && request.headers.authorization.trim() !== '') {
       let result = token.decodeToken(request.headers.authorization);
 
-      if (result === undefined || (result.appUserId && SystemStatus.all === false)) {
+      if (result === undefined || (result.appUserId && MaintainFunctions.getSystemStatus().all === false)) {
         reply.response(errorCodes[505]).code(505).takeover();
         return;
       }
@@ -216,7 +255,7 @@ async function verifyTokenOrAllowEmpty(request, reply) {
     if (request.headers.authorization !== undefined && request.headers.authorization.trim() !== '') {
       let result = token.decodeToken(request.headers.authorization);
 
-      if (result === undefined || (result.appUserId && SystemStatus.all === false)) {
+      if (result === undefined || (result.appUserId && MaintainFunctions.getSystemStatus().all === false)) {
         reply.response(errorCodes[505]).code(505).takeover();
         return;
       }
@@ -231,11 +270,34 @@ async function verifyTokenOrAllowEmpty(request, reply) {
   });
 }
 
+async function verifyStaffUser(appUserId, staff) {
+  if (!staff || !staff.staffRoleId) {
+    return 0;
+  }
+  if (staff.staffRoleId != ROLE_NAME.SUPER_ADMIN) {
+    const staffUser = await StaffUserResourceAccess.find(
+      {
+        appUserId: appUserId,
+        staffId: staff.staffId,
+      },
+      0,
+      1,
+    );
+
+    if (staffUser && staffUser.length == 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 module.exports = {
+  isValidUserAccessToken,
   verifyToken,
   verifyStaffToken,
   verifyOwnerToken,
   verifyAdminToken,
   verifyAgentToken,
   verifyTokenOrAllowEmpty,
+  verifyStaffUser,
 };

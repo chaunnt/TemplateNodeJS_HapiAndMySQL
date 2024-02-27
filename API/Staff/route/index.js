@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const Staff = require('./StaffRoute');
 
@@ -13,4 +13,5 @@ module.exports = [
   { method: 'POST', path: '/Staff/resetPasswordStaff', config: Staff.resetPasswordStaff },
   { method: 'POST', path: '/Staff/changePasswordStaff', config: Staff.changePasswordStaff },
   { method: 'POST', path: '/Staff/adminChangePasswordStaff', config: Staff.adminChangePasswordStaff },
+  { method: 'POST', path: '/Staff/getUserReferByStaff', config: Staff.getUserRefer },
 ];

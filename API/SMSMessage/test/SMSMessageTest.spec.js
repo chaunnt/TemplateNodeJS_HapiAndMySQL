@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -10,7 +10,7 @@ const { SMS_MESSAGE_STATUS } = require('../SMSMessageConstants');
 require('dotenv').config();
 const crypto = require('crypto');
 const moment = require('moment');
-
+const Logger = require('../../../utils/logging');
 chai.should();
 chai.use(chaiHttp);
 chai.use(chaiHttp);
@@ -46,7 +46,7 @@ describe(`Test Station`, () => {
         .send(body)
         .end((err, res) => {
           if (err) {
-            console.error(err);
+            Logger.error(err);
           }
           checkResponseStatus(res, 200);
           msgId = res.body.data;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const PaymentBonusTransaction = require('./PaymentBonusTransactionRoute');
 const PaymentBonusTransaction_UserRoute = require('./PaymentBonusTransaction_UserRoute');
@@ -7,24 +7,21 @@ module.exports = [
   //Payment Deposit  APIs
   { method: 'POST', path: '/PaymentBonusTransaction/insert', config: PaymentBonusTransaction.insert },
   { method: 'POST', path: '/PaymentBonusTransaction/find', config: PaymentBonusTransaction.find },
-  // { method: 'POST', path: '/PaymentBonusTransaction/updateById', config: PaymentBonusTransaction.updateById },
+  { method: 'POST', path: '/PaymentBonusTransaction/getReferredBonus', config: PaymentBonusTransaction.getReferredBonusOfUser },
+  { method: 'POST', path: '/PaymentBonusTransaction/updateById', config: PaymentBonusTransaction.updateById },
   { method: 'POST', path: '/PaymentBonusTransaction/findById', config: PaymentBonusTransaction.findById },
-  // { method: 'POST', path: '/PaymentBonusTransaction/deleteById', config: PaymentBonusTransaction.deleteById },
+  { method: 'POST', path: '/PaymentBonusTransaction/deleteById', config: PaymentBonusTransaction.deleteById },
+  { method: 'POST', path: '/PaymentBonusTransaction/approveBonusTransaction', config: PaymentBonusTransaction.approveBonusTransaction },
+  { method: 'POST', path: '/PaymentBonusTransaction/denyBonusTransaction', config: PaymentBonusTransaction.denyBonusTransaction },
   {
     method: 'POST',
-    path: '/PaymentBonusTransaction/approveBonusTransaction',
-    config: PaymentBonusTransaction.approveBonusTransaction,
+    path: '/PaymentBonusTransaction/getWaitingApproveCount',
+    config: PaymentBonusTransaction.getWaitingApproveCount,
   },
   {
     method: 'POST',
-    path: '/PaymentBonusTransaction/denyBonusTransaction',
-    config: PaymentBonusTransaction.denyBonusTransaction,
-  },
-
-  {
-    method: 'POST',
-    path: '/PaymentBonusTransaction/user/requestWithdrawBonus',
-    config: PaymentBonusTransaction_UserRoute.userRequestWithdrawBonus,
+    path: '/PaymentBonusTransaction/user/requestWithdraw',
+    config: PaymentBonusTransaction_UserRoute.userRequestWithdraw,
   },
   {
     method: 'POST',
@@ -33,8 +30,7 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/PaymentBonusTransaction/user/requestExchangePoint',
-    config: PaymentBonusTransaction_UserRoute.userRequestExchangePoint,
+    path: '/PaymentBonusTransaction/user/missionBonusHistory',
+    config: PaymentBonusTransaction_UserRoute.userGetMissionBonusHistory,
   },
-  // { method: 'POST', path: '/PaymentBonusTransaction/user/summaryBonusByStatus', config: PaymentBonusTransaction_UserRoute.userSummaryBonusByStatus },
 ];

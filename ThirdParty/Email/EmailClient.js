@@ -1,7 +1,8 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 require('dotenv').config();
 const nodemailer = require('nodemailer');
+const Logger = require('../../utils/logging');
 
 const emailTransporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -17,7 +18,7 @@ const emailTransporter = nodemailer.createTransport({
 });
 
 async function sendTestEmail(testEmail = 'chaupad@gmail.com', emailClient) {
-  console.info('sendTestEmail');
+  Logger.info('sendTestEmail');
   let mailBody = '';
   mailBody += 'THÔNG BÁO!' + '\r\n\r\n';
   let subject = '[THÔNG BÁO] đây là email test hệ thống';
@@ -35,8 +36,8 @@ async function sendEmail(receiver, subject, body, html, emailClient) {
     try {
       emailData.from = emailClient.options.auth.user;
     } catch (error) {
-      console.error(`can not get email of emailClient`);
-      console.error(error);
+      Logger.error(`can not get email of emailClient`);
+      Logger.error(error);
 
       //if error, then use default
       emailData.from = `<${process.env.SMTP_EMAIL}>`;
@@ -58,8 +59,8 @@ async function sendEmail(receiver, subject, body, html, emailClient) {
 
     emailClient.sendMail(emailData, (err, info) => {
       if (err) {
-        console.error('Send email error: ' + err);
-        console.error(info);
+        Logger.error('Send email error: ' + err);
+        Logger.error(info);
         resolve(undefined);
       }
       if (info && info.messageId) {

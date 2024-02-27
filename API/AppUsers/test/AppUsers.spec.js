@@ -1,10 +1,10 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 const faker = require('faker');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 var crypto = require('crypto');
-
+const Logger = require('../../../utils/logging');
 const { checkResponseStatus } = require('../../Common/test/Common');
 const TestFunctions = require('../../Common/test/CommonTestFunctions');
 const { USER_SEX } = require('../AppUserConstant');
@@ -48,7 +48,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -65,7 +65,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -81,7 +81,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -99,7 +99,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -117,7 +117,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -137,7 +137,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -157,7 +157,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -177,7 +177,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -197,7 +197,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -213,7 +213,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -233,7 +233,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -253,7 +253,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -270,7 +270,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -286,7 +286,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -310,7 +310,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -334,7 +334,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -352,7 +352,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -370,7 +370,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -389,7 +389,7 @@ describe(`Tests ${Model.modelName}`, function () {
   //     .send(body)
   //     .end((err, res) => {
   //       if ( err ) {
-  //         console.error(err);
+  //         Logger.error(err);
   //       }
   //       checkResponseStatus(res, 200);
   //       done();
@@ -415,7 +415,7 @@ describe(`Tests ${Model.modelName}`, function () {
   //       .send(body)
   //       .end((err, res) => {
   //         if ( err ) {
-  //           console.error(err);
+  //           Logger.error(err);
   //         }
   //         checkResponseStatus(res, 200);
   //         done();
@@ -442,7 +442,7 @@ describe(`Tests ${Model.modelName}`, function () {
   //       .send(body)
   //       .end((err, res) => {
   //         if ( err ) {
-  //           console.error(err);
+  //           Logger.error(err);
   //         }
   //         checkResponseStatus(res, 200);
   //         done();
@@ -469,7 +469,7 @@ describe(`Tests ${Model.modelName}`, function () {
   //       .send(body)
   //       .end((err, res) => {
   //         if ( err ) {
-  //           console.error(err);
+  //           Logger.error(err);
   //         }
   //         checkResponseStatus(res, 200);
   //         done();
@@ -488,7 +488,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -504,7 +504,7 @@ describe(`Tests ${Model.modelName}`, function () {
   //     .send(body)
   //     .end((err, res) => {
   //       if ( err ) {
-  //         console.error(err);
+  //         Logger.error(err);
   //       }
   //       checkResponseStatus(res, 200);
   //       done();
@@ -522,7 +522,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -540,7 +540,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -558,7 +558,7 @@ describe(`Tests ${Model.modelName}`, function () {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -8,9 +8,11 @@ const { BET_STATUS } = require('../GamePlayRecordsConstant');
 const tableName = 'GamePlayRecordsView';
 const rootTableName = 'GamePlayRecords';
 const primaryKeyField = 'betRecordId';
-
+const Logger = require('../../../utils/logging');
 async function createGamePlayRecordsView() {
   const GameInfoTableName = 'GameInfo';
+  const StaffUser = 'StaffUser';
+  const AppUser = 'AppUser';
   let fields = [
     `${rootTableName}.betRecordId`,
     `${rootTableName}.appUserId`,
@@ -21,18 +23,43 @@ async function createGamePlayRecordsView() {
     `${rootTableName}.betRecordSection`,
     `${rootTableName}.betRecordNote`,
     `${rootTableName}.betRecordResult`,
+    `${rootTableName}.betRecordValue`,
+    `${rootTableName}.betRecordUnit`,
     `${rootTableName}.betRecordType`,
+    `${rootTableName}.betRecordHash`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.isDeleted`,
     `${rootTableName}.isHidden`,
+    `${rootTableName}.gameInfoId`,
 
     `${GameInfoTableName}.gameName`,
+    `${StaffUser}.staffId`,
+
+    `${AppUser}.username`,
+    `${AppUser}.firstName`,
+    `${AppUser}.memberReferIdF1`,
+    `${AppUser}.memberReferIdF2`,
+    `${AppUser}.memberReferIdF3`,
+    `${AppUser}.memberReferIdF4`,
+    `${AppUser}.memberReferIdF5`,
+    `${AppUser}.memberReferIdF6`,
+    `${AppUser}.memberReferIdF7`,
+    `${AppUser}.memberReferIdF8`,
+    `${AppUser}.memberReferIdF9`,
+    `${AppUser}.memberReferIdF10`,
   ];
 
   var viewDefinition = DB.select(fields)
     .from(`${rootTableName}`)
     .leftJoin(`${GameInfoTableName}`, function () {
       this.on(`${rootTableName}.gameInfoId`, '=', `${GameInfoTableName}.gameInfoId`);
+    })
+    .leftJoin(`${StaffUser}`, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${StaffUser}.appUserId`);
+    })
+    .leftJoin(`${AppUser}`, function () {
+      this.on(`${rootTableName}.appUserId`, '=', `${AppUser}.appUserId`);
     });
   Common.createOrReplaceView(tableName, viewDefinition);
 }
@@ -67,23 +94,13 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   let queryBuilder = DB(tableName);
   let filterData = JSON.parse(JSON.stringify(filter));
 
-  if (searchText) {
-    queryBuilder.where(function () {
-      this.orWhere('username', 'like', `%${searchText}%`)
-        .orWhere('firstName', 'like', `%${searchText}%`)
-        .orWhere('lastName', 'like', `%${searchText}%`)
-        .orWhere('phoneNumber', 'like', `%${searchText}%`)
-        .orWhere('email', 'like', `%${searchText}%`);
-    });
-  }
-
-  queryBuilder.where(filterData);
-
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where(filterData);
@@ -101,19 +118,19 @@ function _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, e
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, searchText, startDate, endDate, order) {
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
   let query = _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate, order);
   return await query.select();
 }
 
-async function customCount(filter, searchText, startDate, endDate) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate, undefined);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, searchText, startDate, endDate);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -130,11 +147,13 @@ async function customSum(sumField, filter, searchText, startDate, endDate, order
 async function customCountDistinct(filter, distinctFields, startDate, endDate) {
   let queryBuilder = DB(tableName);
   if (startDate) {
-    DB.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    DB.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    DB.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    DB.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
   return new Promise((resolve, reject) => {
     try {
@@ -152,6 +171,45 @@ async function customCountDistinct(filter, distinctFields, startDate, endDate) {
     }
   });
 }
+
+function _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount = 0, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit, searchText, startDate, endDate);
+
+  if (filter) {
+    queryBuilder.where(filter);
+  }
+
+  if (appUserId) {
+    queryBuilder.where(function () {
+      if (appUserId && membershipLevelCount >= 1) {
+        this.orWhere('memberReferIdF1', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 2) {
+        this.orWhere('memberReferIdF2', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 3) {
+        this.orWhere('memberReferIdF3', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 4) {
+        this.orWhere('memberReferIdF4', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 5) {
+        this.orWhere('memberReferIdF5', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 6) {
+        this.orWhere('memberReferIdF6', appUserId);
+      }
+    });
+  }
+
+  return queryBuilder;
+}
+
+async function sumReferedUserByUserMembership(sumField, appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText);
+  return await queryBuilder.sum(`${sumField} as sumResult`);
+}
+
 module.exports = {
   insert,
   find,
@@ -164,4 +222,5 @@ module.exports = {
   sumaryWinAmount,
   customSum,
   customCountDistinct,
+  sumReferedUserByUserMembership,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -10,10 +10,16 @@ const tableName = 'AppUser';
 const {
   USER_VERIFY_INFO_STATUS,
   USER_TYPE,
+  USER_REFUND_PLAY,
   USER_VERIFY_EMAIL_STATUS,
   USER_VERIFY_PHONE_NUMBER_STATUS,
-  USER_MEMBER_LEVEL,
+  USER_CATEGORY_ID,
+  USER_CATEGORY,
+  WITHDRAWAL_REQUEST,
+  DEPOSIT_REQUEST,
+  USER_STATUS,
 } = require('../AppUserConstant');
+const { LEVER_MEMBERSHIP, LEVEL_MEMBERSHIP_NAME } = require('../../AppUserMembership/AppUserMembershipConstant');
 const primaryKeyField = 'appUserId';
 
 //cac field nay la optional, tuy du an co the su dung hoac khong
@@ -23,11 +29,47 @@ function optionalFields(table) {
   table.integer('memberReferIdF3').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.integer('memberReferIdF4').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.integer('memberReferIdF5').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF6').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF7').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF8').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF9').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.integer('memberReferIdF10').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.string('sotaikhoan', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.string('tentaikhoan', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.string('tennganhang', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.string('diachiviUSDT', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
   table.string('diachiviBTC', 500).nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('lastDepositAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('lastDepositAmount').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('firstDepositAmount').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('firstDepositAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('lastWithdrawAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('lastWithdrawAmount').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('firstWithdrawAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('firstWithdrawAmount').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('firstMissionAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.timestamp('firstPlayAt').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('firstDepositAtTimestamp').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('firstWithdrawAtTimestamp').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('lastWithdrawAtTimestamp').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('lastDepositAtTimestamp').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.bigInteger('firstMissionAtTimestamp').nullable(); //cac field nay la optional, tuy du an co the su dung hoac khong
+  table.index('memberReferIdF1');
+  table.index('memberReferIdF2');
+  table.index('memberReferIdF3');
+  table.index('memberReferIdF4');
+  table.index('memberReferIdF5');
+  table.index('memberReferIdF6');
+  table.index('memberReferIdF7');
+  table.index('memberReferIdF8');
+  table.index('memberReferIdF9');
+  table.index('memberReferIdF10');
+  table.index('lastDepositAt');
+  table.index('firstDepositAt');
+  table.index('lastWithdrawAt');
+  table.index('firstWithdrawAt');
+  table.index('firstMissionAt');
+  table.index('firstPlayAt');
 }
 
 async function createTable() {
@@ -47,17 +89,23 @@ async function createTable() {
           table.string('birthDay');
           table.integer('sex');
           table.string('password');
+          table.string('token', 5000);
           table.string('secondaryPassword');
           table.string('lastActiveAt');
           table.string('twoFACode');
           table.string('twoFAQR');
+          table.string('userFirstLoginDevice');
+          table.string('userDevice');
           table.integer('twoFAEnable').defaultTo(0);
           table.string('userAvatar', 2000); //Image from social login may be so long (include token)
           table.string('socialInfo', 2000); //Image from social login may be so long (include token)
           table.string('identityNumber');
           table.string('imageBeforeIdentityCard'); //link hinh (ben trong he thong nen chi can 255)
           table.string('imageAfterIdentityCard'); //link hinh (ben trong he thong nen chi can 255)
-          table.boolean('active').defaultTo(1);
+          table.boolean('active').defaultTo(USER_STATUS.ACTIVATED);
+          table.boolean('blockedLogin').defaultTo(0);
+          table.boolean('blockedWithdrawBank').defaultTo(0);
+          table.boolean('blockedWithdrawCrypto').defaultTo(0);
           table.string('verifiedAt');
           table.integer('isVerified').defaultTo(USER_VERIFY_INFO_STATUS.NOT_VERIFIED);
           table.integer('isVerifiedEmail').defaultTo(USER_VERIFY_EMAIL_STATUS.NOT_VERIFIED);
@@ -65,10 +113,13 @@ async function createTable() {
           table.integer('referUserId').nullable(); //dung de luu tru nguoi gioi thieu (khi can thiet)
           table.string('referUser').nullable(); //dung de luu username cua nguoi gioi thieu (khi can thiet)
           table.string('referCode', 15).nullable(); //dung de luu code cua nguoi gioi thieu (khi can thiet)
-          table.string('memberLevelName').defaultTo(USER_MEMBER_LEVEL.LV0); //luu membership
-          table.integer('appUserMembershipId'); // memberShip Id
+          table.string('memberLevelName').defaultTo(LEVEL_MEMBERSHIP_NAME.VIP0); //luu membership
+          table.integer('appUserMembershipId').defaultTo(LEVER_MEMBERSHIP.MEMBER); // memberShip Id
           table.float('limitWithdrawDaily', 48, 24).defaultTo(1000000); //luu so tien toi da duoc rut (khi can thiet)
           table.string('ipAddress').nullable(); //luu IP address -> chong spam va hack
+          table.string('firstLoginIp').nullable(); //luu IP address -> chong spam va hack
+          table.integer('duplicatedFirstLoginIp').defaultTo(0); //luu IP address -> chong spam va hack
+          table.integer('duplicatedIpAddress').defaultTo(0); //luu IP address -> chong spam va hack
           table.string('googleId').nullable(); //luu google id - phong khi 1 user co nhieu tai khoan
           table.string('telegramId').nullable(); //luu telegram id - phong khi 1 user co nhieu tai khoan
           table.string('facebookId').nullable(); //luu facebook id - phong khi 1 user co nhieu tai khoan
@@ -77,6 +128,14 @@ async function createTable() {
           table.string('appUserNote', 500).nullable();
           table.string('activeOTPCode');
           table.string('activeOTPAt');
+          table.boolean('appUserCategoryId').defaultTo(USER_CATEGORY_ID.NORMAL_USER); // quyền đại lý
+          table.boolean('isVirtualUser').defaultTo(USER_CATEGORY.NORMAL_USER);
+          table.boolean('isAllowedWithdraw').defaultTo(WITHDRAWAL_REQUEST.ALLOWED);
+          table.boolean('isAllowedDeposit').defaultTo(DEPOSIT_REQUEST.ALLOWED);
+          table.boolean('isExpert').defaultTo(USER_TYPE.NOMAL);
+          table.boolean('isPlayRoundRefund').defaultTo(USER_REFUND_PLAY.WAITING);
+          table.integer('staffId'); //F0 là tổng đại lý
+          table.integer('supervisorId'); //F0 là user
           optionalFields(table);
           timestamps(table);
           table.index(`${primaryKeyField}`);
@@ -93,6 +152,12 @@ async function createTable() {
           table.index('lastActiveAt');
           table.index('referUser');
           table.index('email');
+          table.index('staffId');
+          table.index('supervisorId');
+          table.index('referCode');
+          table.index('ipAddress');
+          table.index('firstLoginIp');
+          table.index('appUserMembershipId');
         })
         .then(() => {
           Logger.info(`${tableName}`, `${tableName} table created done`);
@@ -135,9 +200,6 @@ async function insert(data) {
 }
 
 async function updateById(id, data) {
-  if (!data || Object.keys(data).length === 0) {
-    return 1;
-  }
   let filter = {};
   filter[`${primaryKeyField}`] = id;
   return await Common.updateById(tableName, filter, data);
@@ -185,15 +247,19 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
         .orWhere('firstName', 'like', `%${searchText}%`)
         .orWhere('lastName', 'like', `%${searchText}%`)
         .orWhere('phoneNumber', 'like', `%${searchText}%`)
+        .orWhere('firstLoginIp', 'like', `%${searchText}%`)
+        .orWhere('ipAddress', 'like', `%${searchText}%`)
         .orWhere('email', 'like', `%${searchText}%`);
     });
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where(filterData);
@@ -211,7 +277,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
@@ -225,6 +291,73 @@ async function customCount(filter, skip, limit, startDate, endDate, searchText, 
   return new Promise((resolve, reject) => {
     try {
       query.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+async function customCountFirstDepositAt(filter, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, searchText, order);
+  if (startDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstDepositAtTimestamp', '>=', moment(startDate).toDate() * 1);
+  }
+  if (endDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstDepositAtTimestamp', '<=', moment(endDate).toDate() * 1);
+  }
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
+async function customCountFirstWithdrawAt(filter, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, searchText, order);
+  if (startDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstWithdrawAtTimestamp', '>=', moment(startDate).toDate() * 1);
+  }
+  if (endDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstWithdrawAtTimestamp', '<=', moment(endDate).toDate() * 1);
+  }
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder.count(`${primaryKeyField} as count`).then(records => {
+        resolve(records);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${JSON.stringify(order)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+async function customCountFirstMissionAt(filter, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, undefined, undefined, searchText, order);
+  if (startDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstMissionAtTimestamp', '>=', moment(startDate).toDate() * 1);
+  }
+  if (endDate) {
+    const moment = require('moment');
+    queryBuilder.where('firstMissionAtTimestamp', '<=', moment(endDate).toDate() * 1);
+  }
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder.count(`${primaryKeyField} as count`).then(records => {
         resolve(records);
       });
     } catch (e) {
@@ -259,10 +392,14 @@ function _makeQueryBuilderForReferedUser(
   memberReferIdF3,
   memberReferIdF4,
   memberReferIdF5,
+  memberReferIdF6,
   startDate,
   endDate,
+  searchText,
+  appUserMembershipId,
+  filter = {},
 ) {
-  let queryBuilder = _makeQueryBuilderByFilter({}, skip, limit);
+  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit);
 
   if (memberReferIdF1) {
     queryBuilder.where({ memberReferIdF1: memberReferIdF1 });
@@ -274,52 +411,123 @@ function _makeQueryBuilderForReferedUser(
     queryBuilder.where({ memberReferIdF4: memberReferIdF4 });
   } else if (memberReferIdF5) {
     queryBuilder.where({ memberReferIdF5: memberReferIdF5 });
+  } else if (memberReferIdF6) {
+    queryBuilder.where({ memberReferIdF6: memberReferIdF6 });
   } else if (appUserId) {
     queryBuilder.where(function () {
       this.orWhere('memberReferIdF1', appUserId)
         .orWhere('memberReferIdF2', appUserId)
         .orWhere('memberReferIdF3', appUserId)
         .orWhere('memberReferIdF4', appUserId)
-        .orWhere('memberReferIdF5', appUserId);
+        .orWhere('memberReferIdF5', appUserId)
+        .orWhere('memberReferIdF6', appUserId);
     });
   }
 
+  if (searchText) {
+    queryBuilder.where(function () {
+      this.orWhere('username', 'like', `%${searchText}%`)
+        .orWhere('firstName', 'like', `%${searchText}%`)
+        .orWhere('lastName', 'like', `%${searchText}%`);
+    });
+  }
+
+  if (appUserMembershipId) {
+    queryBuilder.where({ appUserMembershipId: appUserMembershipId });
+  }
+
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
   return queryBuilder;
 }
 
-async function findReferedUserByUserId(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3) {
-  let queryBuilder = _makeQueryBuilderForReferedUser(appUserId, skip, limit, memberReferIdF1, memberReferIdF2, memberReferIdF3);
+async function findReferedUserByUserId(memberReferObject, skip, limit, startDate, endDate, searchText, appUserMembershipId, filter) {
+  let queryBuilder = _makeQueryBuilderForReferedUser(
+    memberReferObject.appUserId,
+    skip,
+    limit,
+    memberReferObject.memberReferIdF1,
+    memberReferObject.memberReferIdF2,
+    memberReferObject.memberReferIdF3,
+    memberReferObject.memberReferIdF4,
+    memberReferObject.memberReferIdF5,
+    memberReferObject.memberReferIdF6,
+    startDate,
+    endDate,
+    searchText,
+    appUserMembershipId,
+    filter,
+  );
   return await queryBuilder.select();
 }
 
-async function countReferedUserByUserId(
-  appUserId,
-  memberReferIdF1,
-  memberReferIdF2,
-  memberReferIdF3,
-  memberReferIdF4,
-  memberReferIdF5,
-  startDate,
-  endDate,
-) {
+async function countReferedUserByUserId(memberReferObject, startDate, endDate, searchText, appUserMembershipId, filter) {
   let queryBuilder = _makeQueryBuilderForReferedUser(
-    appUserId,
+    memberReferObject.appUserId,
     undefined,
     undefined,
-    memberReferIdF1,
-    memberReferIdF2,
-    memberReferIdF3,
-    memberReferIdF4,
-    memberReferIdF5,
+    memberReferObject.memberReferIdF1,
+    memberReferObject.memberReferIdF2,
+    memberReferObject.memberReferIdF3,
+    memberReferObject.memberReferIdF4,
+    memberReferObject.memberReferIdF5,
+    memberReferObject.memberReferIdF6,
     startDate,
     endDate,
+    searchText,
+    appUserMembershipId,
+    filter,
   );
+  return await queryBuilder.count(`${primaryKeyField} as count`);
+}
+
+function _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount = 0, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, searchText, startDate, endDate);
+
+  if (appUserId) {
+    queryBuilder.where(function () {
+      if (appUserId && membershipLevelCount >= 1) {
+        this.orWhere('memberReferIdF1', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 2) {
+        this.orWhere('memberReferIdF2', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 3) {
+        this.orWhere('memberReferIdF3', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 4) {
+        this.orWhere('memberReferIdF4', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 5) {
+        this.orWhere('memberReferIdF5', appUserId);
+      }
+      if (appUserId && membershipLevelCount >= 6) {
+        this.orWhere('memberReferIdF6', appUserId);
+      }
+    });
+  }
+
+  return queryBuilder;
+}
+
+async function customSumByUserMembership(sumField, appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText);
+  return await queryBuilder.sum(`${sumField} as sumResult`);
+}
+
+async function customSearchByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText);
+  return await queryBuilder.select();
+}
+
+async function customCountByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText) {
+  let queryBuilder = _makeQueryBuilderForByUserMembership(appUserId, membershipLevelCount, filter, skip, limit, startDate, endDate, searchText);
   return await queryBuilder.count(`${primaryKeyField} as count`);
 }
 
@@ -334,9 +542,15 @@ module.exports = {
   findById,
   customSearch,
   customCount,
+  customCountFirstDepositAt,
+  customCountFirstWithdrawAt,
+  customCountFirstMissionAt,
   modelName: tableName,
   updateAllById,
   customCountMemberShip,
   findReferedUserByUserId,
   countReferedUserByUserId,
+  customCountByUserMembership,
+  customSearchByUserMembership,
+  customSumByUserMembership,
 };

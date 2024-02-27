@@ -1,9 +1,9 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const moment = require('moment');
-
+const Logger = require('../../../utils/logging');
 const { checkResponseStatus } = require('../../Common/test/Common');
 const TestFunctions = require('../../Common/test/CommonTestFunctions');
 
@@ -47,7 +47,7 @@ describe(`Tests ${Model.modelName}`, () => {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         paymentId = res.body.data[0];
@@ -73,7 +73,7 @@ describe(`Tests ${Model.modelName}`, () => {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -90,7 +90,7 @@ describe(`Tests ${Model.modelName}`, () => {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         //bảo đảm phải có lịch sử (vì các case ở trên đã tạo ra cho user này)
@@ -110,7 +110,7 @@ describe(`Tests ${Model.modelName}`, () => {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         //bảo đảm phải có lịch sử (vì các case ở trên đã tạo ra cho user này)
@@ -128,7 +128,7 @@ describe(`Tests ${Model.modelName}`, () => {
       .send(body)
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         //bảo đảm phải có lịch sử (vì các case ở trên đã tạo ra cho user này)

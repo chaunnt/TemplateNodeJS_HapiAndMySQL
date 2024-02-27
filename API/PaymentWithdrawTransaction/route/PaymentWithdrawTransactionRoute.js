@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -8,11 +8,13 @@ const moduleName = 'PaymentWithdrawTransaction';
 const Manager = require(`../manager/${moduleName}Manager`);
 const Joi = require('joi');
 const Response = require('../../Common/route/response').setup(Manager);
+const Maintain = require('../../Common/route/response').maintain();
 const CommonFunctions = require('../../Common/CommonFunctions');
-const SystemStatus = require('../../Maintain/MaintainFunctions').systemStatus;
+const MaintainFunctions = require('../../Maintain/MaintainFunctions');
 const { WALLET_TYPE } = require('../../Wallet/WalletConstant');
 const { WALLET_RECORD_TYPE } = require('../../WalletRecord/WalletRecordConstant');
-const { WITHDRAW_TRX_STATUS } = require('../PaymentWithdrawTransactionConstant');
+const { WITHDRAW_TRX_STATUS, WITHDRAW_TRX_CATEGORY } = require('../PaymentWithdrawTransactionConstant');
+const { MAINTAIN_ERROR } = require('../../Common/CommonConstant');
 
 const insertSchema = {
   id: Joi.number().required(),
@@ -21,6 +23,7 @@ const insertSchema = {
   paymentOriginSource: Joi.string().required().max(255),
   paymentOriginName: Joi.string().required().max(255),
   walletType: Joi.string().required().default(WALLET_TYPE.POINT).max(255),
+  paymentMethodId: Joi.number().required().min(0),
 };
 
 const updateSchema = {
@@ -40,6 +43,8 @@ const filterSchema = {
 
 const filterUser = {
   WalletId: Joi.number(),
+  walletType: Joi.string(),
+  paymentStatus: Joi.string(),
 };
 
 module.exports = {
@@ -59,8 +64,8 @@ module.exports = {
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
       Response(req, res, 'insert');
@@ -100,13 +105,13 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
-        searchText: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
+        searchText: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -145,14 +150,15 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
+        confirmWithdraw: Joi.number().min(0).max(1).required(),
         paymentAmount: Joi.number().required().min(0.00001).default(1000000),
         secondaryPassword: Joi.string().min(6),
-        paymentNote: Joi.string(),
+        paymentMethodId: Joi.number().required().min(0),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
       Response(req, res, 'requestWithdrawUSDT');
@@ -172,12 +178,12 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterUser),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -199,15 +205,15 @@ module.exports = {
       payload: Joi.object({
         id: Joi.number().min(0),
         paymentRef: Joi.string().max(500),
-        paymentNote: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
-      Response(req, res, 'approveWithdrawTransaction');
+      //sua lai trạng thái wait để chờ cổng thanh toán xử lý
+      Response(req, res, 'approveAndPayWithdrawTransaction');
     },
   },
   denyWithdrawTransaction: {
@@ -223,12 +229,11 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         id: Joi.number().min(0),
-        paymentNote: Joi.string().max(500),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
       Response(req, res, 'denyWithdrawTransaction');
@@ -247,12 +252,12 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -274,12 +279,12 @@ module.exports = {
       payload: Joi.object({
         paymentAmount: Joi.number().required().min(0.00001).default(1000000),
         secondaryPassword: Joi.string().min(6),
-        paymentNote: Joi.string(),
+        paymentMethodId: Joi.number().required().min(0),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
       Response(req, res, 'requestWithdrawBTC');
@@ -298,12 +303,12 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -324,12 +329,12 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        startDate: Joi.string(),
-        endDate: Joi.string(),
+        limit: Joi.number().default(20).max(100).min(1),
+        startDate: Joi.string().max(255),
+        endDate: Joi.string().max(255),
         order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          key: Joi.string().max(255).default('createdAt').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },
@@ -350,21 +355,41 @@ module.exports = {
       }).unknown(),
       payload: Joi.object({
         walletId: Joi.number(),
+        confirmWithdraw: Joi.number().min(0).max(1).required(),
         paymentAmount: Joi.number().required().min(0.00001).default(1000000),
         paymentOwner: Joi.string().required(), //ten nguoi gui, ten tai khoan
         paymentOriginSource: Joi.string().required(), //ten ngan hang, ten mang (blockchain)
         paymentOriginName: Joi.string().required(), //so tai khoan, dia chi vi
         secondaryPassword: Joi.string().min(6),
-        paymentNote: Joi.string(),
         paymentFeeAmount: Joi.number(),
+        paymentMethodId: Joi.number().required().min(0),
       }),
     },
     handler: function (req, res) {
-      if (SystemStatus.withdraw === false) {
-        res('maintain').code(500);
+      if (MaintainFunctions.getSystemStatus().withdraw === false || MaintainFunctions.getSystemStatus().withdraw === false) {
+        Maintain(MAINTAIN_ERROR.MAINTAIN_WITHDRAW, res);
         return;
       }
       Response(req, res, 'requestWithdraw');
+    },
+  },
+  getWaitingApproveCount: {
+    tags: ['api', `${moduleName}`],
+    description: `get count waiting for approve withdraw transaction ${moduleName}`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        paymentCategory: Joi.string().example(WITHDRAW_TRX_CATEGORY.BANK).required().valid(Object.values(WITHDRAW_TRX_CATEGORY)),
+      }),
+    },
+    handler: function (req, res) {
+      Response(req, res, 'getWaitingApproveCount');
     },
   },
 };

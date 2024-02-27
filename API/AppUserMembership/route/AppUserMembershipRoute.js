@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -13,33 +13,49 @@ const CommonFunctions = require('../../Common/CommonFunctions');
 
 const insertSchema = {
   appUserMembershipTitle: Joi.string().required(),
-  appUserMembershipDescription: Joi.string(),
-  appUserMembershipImage: Joi.string(),
-  appUserMembershipInvitationRequired: Joi.number().required(),
-  appUserMembershipAssetRequired: Joi.number().required().allow([0]),
-  appUserMembershipAssetF1Required: Joi.number().required().allow([0]),
-  appUserMembershipBonusPrize: Joi.number().required().allow([0]),
-  appUserMembershipBonusPrizeType: Joi.number().required(),
-  appUserMembershipBonusPrizeName: Joi.string(),
+  appUserMembershipDescription: Joi.string().allow([null, '']),
+  appUserMembershipImage: Joi.string().allow([null, '']),
+  appUserMembershipInvitationRequired: Joi.number().min(0),
+  appUserMembershipAssetRequired: Joi.number().min(0),
+  appUserMembershipAssetF1Required: Joi.number().min(0),
+  appUserMembershipBonusPrize: Joi.number().min(0),
+  appUserMembershipPlayBonus: Joi.number().min(0),
+  appUserMembershipBonusRate: Joi.number().min(0),
+  appUserMembershipBonusRateF1: Joi.number().min(0),
+  appUserMembershipBonusRateF2: Joi.number().min(0),
+  appUserMembershipBonusRateF3: Joi.number().min(0),
+  appUserMembershipBonusRateF4: Joi.number().min(0),
+  appUserMembershipBonusRateF5: Joi.number().min(0),
+  appUserMembershipBonusRateF6: Joi.number().min(0),
+  appUserMembershipBonusRateF7: Joi.number().min(0),
+  appUserMembershipBonusRateF8: Joi.number().min(0),
+  appUserMembershipBonusRateF9: Joi.number().min(0),
+  appUserMembershipBonusRateF10: Joi.number().min(0),
 };
 
 const updateSchema = {
   appUserMembershipTitle: Joi.string(),
   appUserMembershipDescription: Joi.string(),
   appUserMembershipImage: Joi.string(),
-  appUserMembershipAssetRequired: Joi.number().allow([0]),
-  appUserMembershipAssetF1Required: Joi.number().allow([0]),
-  appUserMembershipInvitationRequired: Joi.number(),
+  appUserMembershipAssetRequired: Joi.number().min(0),
+  appUserMembershipAssetF1Required: Joi.number().min(0),
+  appUserMembershipInvitationRequired: Joi.number().min(0),
+  appUserMembershipBonusRate: Joi.number().min(0),
+  appUserMembershipPlayBonus: Joi.number().min(0),
+  appUserMembershipBonusPrize: Joi.number().min(0),
+  appUserMembershipBonusRateF1: Joi.number().min(0),
+  appUserMembershipBonusRateF2: Joi.number().min(0),
+  appUserMembershipBonusRateF3: Joi.number().min(0),
+  appUserMembershipBonusRateF4: Joi.number().min(0),
+  appUserMembershipBonusRateF5: Joi.number().min(0),
+  appUserMembershipBonusRateF6: Joi.number().min(0),
+  appUserMembershipBonusRateF7: Joi.number().min(0),
+  appUserMembershipBonusRateF8: Joi.number().min(0),
+  appUserMembershipBonusRateF9: Joi.number().min(0),
+  appUserMembershipBonusRateF10: Joi.number().min(0),
 };
 
-const filterSchema = {
-  appUsermembershipId: Joi.number(),
-};
-const filterSchemaUserMembership = {
-  appUserMembershipAssetRequired: Joi.number(),
-  appUserMembershipAssetF1Required: Joi.number(),
-  appUserMembershipInvitationRequired: Joi.number(),
-};
+const filterSchema = {};
 
 module.exports = {
   insert: {
@@ -73,7 +89,7 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
         order: Joi.object({
           key: Joi.string().default('createdAt').allow(''),
           value: Joi.string().default('desc').allow(''),
@@ -117,7 +133,7 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().required().min(0),
+        id: Joi.number().min(0),
         data: Joi.object(updateSchema),
       }),
     },
@@ -137,7 +153,7 @@ module.exports = {
         authorization: Joi.string(),
       }).unknown(),
       payload: Joi.object({
-        id: Joi.number().required().min(0),
+        id: Joi.number().min(0),
       }),
     },
     handler: function (req, res) {
@@ -155,15 +171,7 @@ module.exports = {
       headers: Joi.object({
         authorization: Joi.string(),
       }).unknown(),
-      payload: Joi.object({
-        filter: Joi.object(filterSchemaUserMembership),
-        skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
-        order: Joi.object({
-          key: Joi.string().default('createdAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
-        }),
-      }),
+      payload: Joi.object({}),
     },
     handler: function (req, res) {
       Response(req, res, 'userGetListMemberShip');

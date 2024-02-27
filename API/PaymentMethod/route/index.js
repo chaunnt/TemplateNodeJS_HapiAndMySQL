@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const PaymentMethod = require('./PaymentMethodRoute');
 
@@ -9,5 +9,11 @@ module.exports = [
   { method: 'POST', path: '/PaymentMethod/findById', config: PaymentMethod.findById },
   { method: 'POST', path: '/PaymentMethod/updateById', config: PaymentMethod.updateById },
   { method: 'POST', path: '/PaymentMethod/deleteById', config: PaymentMethod.deleteById },
-  { method: 'POST', path: '/PaymentMethod/user/getList', config: PaymentMethod.getList },
+  { method: 'POST', path: '/PaymentMethod/user/getSystemPaymentMethods', config: PaymentMethod.getList },
+  { method: 'POST', path: '/PaymentMethod/user/getPublicBankList', config: PaymentMethod.userGetPublicBankList },
+  { method: 'POST', path: '/PaymentMethod/user/checkBankInfo', config: PaymentMethod.userCheckBankInfo },
+  { method: 'POST', path: '/PaymentMethod/user/insert', config: PaymentMethod.userInsert },
+  { method: 'POST', path: '/PaymentMethod/user/getUserPaymentMethods', config: PaymentMethod.getUserPaymentMethod },
+  { method: 'POST', path: '/PaymentMethod/user/updateById', config: PaymentMethod.userUpdateById },
+  { method: 'POST', path: '/PaymentMethod/user/deleteById', config: PaymentMethod.userDeleteById },
 ];

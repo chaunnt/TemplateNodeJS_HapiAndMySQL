@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const PaymentDepositTransaction = require('./PaymentDepositTransactionRoute');
 module.exports = [
@@ -10,8 +10,33 @@ module.exports = [
   // { method: 'POST', path: '/PaymentDepositTransaction/deleteById', config: PaymentDepositTransaction.deleteById },
   {
     method: 'POST',
+    path: '/PaymentDepositTransaction/getWaitingApproveCount',
+    config: PaymentDepositTransaction.getWaitingApproveCount,
+  },
+  {
+    method: 'POST',
     path: '/PaymentDepositTransaction/user/requestDeposit',
     config: PaymentDepositTransaction.userRequestDeposit,
+  },
+  {
+    method: 'POST',
+    path: '/PaymentDepositTransaction/user/requestDepositByGateway',
+    config: PaymentDepositTransaction.userRequestDepositByGateway,
+  },
+  {
+    method: 'POST',
+    path: '/PaymentDepositTransaction/user/userRequestDepositByElecMomo',
+    config: PaymentDepositTransaction.userRequestDepositByElecMomo,
+  },
+  {
+    method: 'POST',
+    path: '/PaymentDepositTransaction/user/userRequestDepositByZalo',
+    config: PaymentDepositTransaction.userRequestDepositByZalo,
+  },
+  {
+    method: 'POST',
+    path: '/PaymentDepositTransaction/user/userRequestDepositByViettel',
+    config: PaymentDepositTransaction.userRequestDepositByViettel,
   },
   {
     method: 'POST',

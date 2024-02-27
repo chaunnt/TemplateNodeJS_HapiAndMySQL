@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -7,6 +7,7 @@ const { checkResponseStatus } = require('../../Common/test/Common');
 const TestFunctions = require('../../Common/test/CommonTestFunctions');
 const { WALLET_TYPE } = require('../WalletConstant');
 const app = require('../../../server');
+const Logger = require('../../../utils/logging');
 
 chai.should();
 chai.use(chaiHttp);
@@ -39,7 +40,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -57,7 +58,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -75,7 +76,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -93,7 +94,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -111,7 +112,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -129,7 +130,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();
@@ -147,7 +148,7 @@ describe(`Tests Wallet`, () => {
       })
       .end((err, res) => {
         if (err) {
-          console.error(err);
+          Logger.error(err);
         }
         checkResponseStatus(res, 200);
         done();

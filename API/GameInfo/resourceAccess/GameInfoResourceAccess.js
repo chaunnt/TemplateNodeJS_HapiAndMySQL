@@ -1,30 +1,109 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
 const { DB, timestamps } = require('../../../config/database');
 const Common = require('../../Common/resourceAccess/CommonResourceAccess');
+const { GAME_STATUS, GAME_NAME, GAME_INFO_CATEGORY } = require('../GameInfoConstant');
+const Logger = require('../../../utils/logging');
 
 const tableName = 'GameInfo';
 const primaryKeyField = 'gameInfoId';
 async function createTable() {
-  console.info(`createTable ${tableName}`);
+  Logger.info(`createTable ${tableName}`);
   return new Promise(async (resolve, reject) => {
     DB.schema.dropTableIfExists(`${tableName}`).then(() => {
       DB.schema
         .createTable(`${tableName}`, function (table) {
           table.increments(primaryKeyField).primary();
           table.string('gameName');
+          table.string('gameInfoCategory');
           table.string('gameLogoUrl');
-          table.string('gameBannerUrl');
+          table.string('gameBackgroundUrl');
+          table.string('gameSplashBackgroundUrl');
+          table.string('gameDirectLink');
+          table.string('gameConfigWinRate');
+          table.integer('gameStatus').defaultTo(GAME_STATUS.ACTIVE);
           timestamps(table);
           table.index('gameInfoId');
+          table.index('gameStatus');
         })
         .then(async () => {
-          console.info(`${tableName} table created done`);
-          resolve();
+          Logger.info(`${tableName}`, `${tableName} table created done`);
+          seeding().then(() => {
+            resolve();
+          });
         });
     });
+  });
+}
+
+async function seeding() {
+  let seedingData = [
+    {
+      gameName: GAME_NAME.TIGERDRAGON1P,
+      gameInfoCategory: GAME_INFO_CATEGORY.GAMBLING,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/ban-ca.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.KENO10P,
+      gameInfoCategory: GAME_INFO_CATEGORY.LOTTERY,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/quay-so.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.XSTT,
+      gameInfoCategory: GAME_INFO_CATEGORY.LOTTERY,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/lo-de.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.XSST1P,
+      gameInfoCategory: GAME_INFO_CATEGORY.LOTTERY,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/slots.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.BACARAT1P,
+      gameInfoCategory: GAME_INFO_CATEGORY.GAMBLING,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/game-bai.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.XOCDIA1P,
+      gameInfoCategory: GAME_INFO_CATEGORY.UP_DOWN,
+      gameLogoUrl: `https://${process.env.HOST_NAME}/uploads/media/xocdia.mp4`,
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.BAUCUA1P,
+      gameInfoCategory: GAME_INFO_CATEGORY.UP_DOWN,
+      gameLogoUrl: `https://${process.env.HOST_NAME}/uploads/media/baucua.mp4`,
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+    {
+      gameName: GAME_NAME.BINARYOPTION,
+      gameInfoCategory: GAME_INFO_CATEGORY.UP_DOWN,
+      gameLogoUrl: 'https://t1.ta88.com/img/assets/images/components/mobile/home/banner-sport/video/quay-so.mp4',
+      gameBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+      gameSplashBackgroundUrl: `https://${process.env.HOST_NAME}/uploads/Sample_GameBackground.png`,
+    },
+  ];
+  return new Promise(async (resolve, reject) => {
+    DB(`${tableName}`)
+      .insert(seedingData)
+      .then(result => {
+        Logger.info(`${tableName}`, `seeding ${tableName}` + result);
+        resolve();
+      });
   });
 }
 
@@ -82,4 +161,5 @@ module.exports = {
   updateAll,
   increment,
   findById,
+  modelName: tableName,
 };

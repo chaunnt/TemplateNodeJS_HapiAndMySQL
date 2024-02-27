@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -23,6 +23,10 @@ function createOrReplaceView(viewName, viewDefinition) {
 async function insert(tableName, data) {
   let result = undefined;
   try {
+    if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+      Logger.info(`tableName : ${tableName}, data: ${data}`);
+    }
+    data.createdAtTimestamp = new Date() * 1;
     result = await DB(tableName).insert(data);
     if (result) {
       let id = result[0];
@@ -40,8 +44,10 @@ async function insert(tableName, data) {
   return result;
 }
 async function sum(tableName, field, filter, order) {
-  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, undefined, undefined, order);
-
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: sum ${field}`);
+  }
+  let queryBuilder = makeBasicQueryBuilder(tableName, filter);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.sum(`${field} as sumResult`).then(records => {
@@ -60,13 +66,18 @@ async function sum(tableName, field, filter, order) {
 }
 
 async function sumAmountDistinctByDate(tableName, sumField, filter, startDate, endDate) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: sumAmountDistinctByDate ${sumField}`);
+  }
   let queryBuilder = DB(tableName);
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where(filter);
@@ -94,13 +105,18 @@ async function sumAmountDistinctByDate(tableName, sumField, filter, startDate, e
 }
 
 async function sumAmountDistinctByCustomField(tableName, sumField, customField, filter, startDate, endDate) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: sumAmountDistinctByCustomField ${sumField}, customField: ${customField}`);
+  }
   let queryBuilder = DB(tableName);
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where({ isDeleted: 0 });
@@ -127,7 +143,39 @@ async function sumAmountDistinctByCustomField(tableName, sumField, customField, 
     }
   });
 }
+
+async function sumAmountDistinctByCustomMultiFields(tableName, sumFieldsList, customFieldsList, filter, skip, limit, startDate, endDate, order) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: sumAmountDistinctByCustomMultiFields: ${sumFieldsList}, customFieldsList: ${customFieldsList}`);
+  }
+  let queryBuilder = makeBasicQueryBuilder(tableName, filter, skip, limit, order, startDate, endDate);
+  return new Promise((resolve, reject) => {
+    try {
+      for (let i = 0; i < sumFieldsList.length; i++) {
+        queryBuilder.sum(`${sumFieldsList[i]} as ${sumFieldsList[i]}`);
+      }
+      queryBuilder
+        .select(customFieldsList)
+        .groupBy(customFieldsList)
+        .then(records => {
+          if (records && (records.length < 1 || records[0].totalCount === null)) {
+            resolve(undefined);
+          } else {
+            resolve(records);
+          }
+        });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB sumAmountDistinctByDate ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
 async function updateById(tableName, id, data) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: updateById: id: ${id}, data: ${data}`);
+  }
   let result = undefined;
   try {
     result = await DB(tableName).where(id).update(data);
@@ -148,8 +196,10 @@ async function updateById(tableName, id, data) {
 }
 
 async function updateAll(tableName, data, filter = {}) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: updateAll, data: ${data}`);
+  }
   let result = undefined;
-
   try {
     result = await DB(tableName).where(filter).update(data);
   } catch (e) {
@@ -160,6 +210,9 @@ async function updateAll(tableName, data, filter = {}) {
 }
 
 async function updateAllById(tableName, primaryKeyField, idList, data) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: updateAllById, primaryKeyField: ${primaryKeyField}, idList:${idList}, data: ${data}`);
+  }
   let result = undefined;
   try {
     result = await DB(tableName).whereIn(`${primaryKeyField}`, idList).update(data);
@@ -170,8 +223,9 @@ async function updateAllById(tableName, primaryKeyField, idList, data) {
   return result;
 }
 
-function _makeQueryBuilderByFilter(tableName, filter, skip, limit, order, startDate, endDate) {
+function makeBasicQueryBuilder(tableName, filter, skip, limit, order, startDate, endDate) {
   let queryBuilder = DB(tableName);
+
   if (filter) {
     queryBuilder.where(filter);
   }
@@ -185,19 +239,19 @@ function _makeQueryBuilderByFilter(tableName, filter, skip, limit, order, startD
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   queryBuilder.where({ isDeleted: 0 });
 
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
-  } else {
-    queryBuilder.orderBy('createdAt', 'desc');
   }
 
   return queryBuilder;
@@ -220,13 +274,16 @@ function _makeQueryBuilderByFilterAllDelete(tableName, filter, skip, limit, orde
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
 }
 async function find(tableName, filter, skip, limit, order, fields) {
-  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, skip, limit, order);
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: find ${filter}`);
+  }
+  let queryBuilder = makeBasicQueryBuilder(tableName, filter, skip, limit, order);
   return new Promise((resolve, reject) => {
     try {
       queryBuilder.select(fields).then(records => {
@@ -241,6 +298,9 @@ async function find(tableName, filter, skip, limit, order, fields) {
 }
 
 async function findAllDelete(tableName, filter, skip, limit, order) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: findAllDelete ${filter}`);
+  }
   let queryBuilder = _makeQueryBuilderByFilterAllDelete(tableName, filter, skip, limit, order);
   return new Promise((resolve, reject) => {
     try {
@@ -255,6 +315,9 @@ async function findAllDelete(tableName, filter, skip, limit, order) {
   });
 }
 async function findById(tableName, key, id) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: findById, key:${key}`);
+  }
   let result = undefined;
   //enable redis cache
   if (process.env.REDIS_ENABLE) {
@@ -285,7 +348,10 @@ async function findById(tableName, key, id) {
 }
 
 async function count(tableName, field, filter, order) {
-  let queryBuilder = _makeQueryBuilderByFilter(tableName, filter, undefined, undefined, order);
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: count, field: ${field}`);
+  }
+  let queryBuilder = makeBasicQueryBuilder(tableName, filter, undefined, undefined, order);
 
   return new Promise((resolve, reject) => {
     try {
@@ -300,7 +366,29 @@ async function count(tableName, field, filter, order) {
   });
 }
 
+async function countDistinct(tableName, field, filter, startDate, endDate) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: countDistinct, field:${field}`);
+  }
+  let queryBuilder = makeBasicQueryBuilder(tableName, filter, undefined, undefined, undefined, startDate, endDate);
+
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder.countDistinct(`${field} as count`).then(records => {
+        resolve(records);
+      });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB COUNT ERROR: ${tableName} : ${JSON.stringify(filter)} - ${startDate} - ${endDate}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
 async function deleteById(tableName, id) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: deleteById, id: ${id}`);
+  }
   let result = undefined;
   try {
     result = await DB(tableName).where(id).update({ isDeleted: 1 });
@@ -311,10 +399,13 @@ async function deleteById(tableName, id) {
   return result;
 }
 
-async function permanentlyDeleteById(tableName, id) {
+async function permanentlyDeleteById(tableName, key, id) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: permanentlyDeleteById, key ${key}, id: ${id}`);
+  }
   let result = undefined;
   try {
-    result = await DB(tableName).where(id).del();
+    result = await DB(tableName).where(key, id).del();
   } catch (e) {
     Logger.error('ResourceAccess', `DB DELETEBYID ERROR: ${tableName} : ${id}`);
     Logger.error('ResourceAccess', e);
@@ -338,6 +429,9 @@ function filterHandler(filterData, queryBuilder) {
 }
 
 async function incrementInt(tableName, key, id, field, amount) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: incrementInt, field: ${field}, id: ${id}, key: ${key}`);
+  }
   let result = undefined;
   try {
     result = await DB(tableName).where(key, id).increment(field, amount);
@@ -349,6 +443,9 @@ async function incrementInt(tableName, key, id, field, amount) {
 }
 
 async function decrementInt(tableName, id, amount, field) {
+  if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
+    Logger.info(`tableName : ${tableName}, Query: decrementInt, field ${field}, id: ${id}`);
+  }
   let result = undefined;
   try {
     result = await DB(tableName).where(id).decrement(field, amount);
@@ -358,7 +455,25 @@ async function decrementInt(tableName, id, amount, field) {
   }
   return result;
 }
-async function incrementFloat(tableName, key, id, field, amount) {
+
+let _pendingTrx = {};
+
+setInterval(() => {
+  if (Object.keys(_pendingTrx).length > 0) {
+    for (let i = 0; i < Object.keys(_pendingTrx).length; i++) {
+      const _trxKey = Object.keys(_pendingTrx)[i];
+      let _tableName = _trxKey.split('_')[0];
+      let _key = _trxKey.split('_')[1];
+      let _id = _trxKey.split('_')[2];
+      let _field = _trxKey.split('_')[3];
+      _executeIncrement(_tableName, _key, _id, _field, _pendingTrx[_trxKey]).then(result => {
+        delete _pendingTrx[_trxKey];
+      });
+    }
+  }
+}, 500);
+
+async function _executeIncrement(tableName, key, id, field, amount) {
   let result = undefined;
   try {
     let record = await DB(tableName).select(field).where(key, id);
@@ -376,6 +491,18 @@ async function incrementFloat(tableName, key, id, field, amount) {
   }
   return result;
 }
+
+async function incrementFloat(tableName, key, id, field, amount) {
+  let result = 'ok';
+  let _trxKey = `${tableName}_${key}_${id}_${field}`;
+  if (_pendingTrx[_trxKey]) {
+    _pendingTrx[_trxKey] += amount;
+  } else {
+    _pendingTrx[_trxKey] = amount;
+  }
+  return result;
+}
+
 async function decrementFloat(tableName, key, id, field, amount) {
   let result = undefined;
   try {
@@ -401,6 +528,7 @@ module.exports = {
   updateById,
   updateAllById,
   count,
+  countDistinct,
   createOrReplaceView,
   updateAll,
   sum,
@@ -412,5 +540,7 @@ module.exports = {
   incrementFloat,
   decrementFloat,
   sumAmountDistinctByDate,
+  sumAmountDistinctByCustomMultiFields,
   sumAmountDistinctByCustomField,
+  makeBasicQueryBuilder,
 };

@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -6,6 +6,7 @@
 'use strict';
 const moment = require('moment');
 const crypto = require('crypto');
+
 function nonAccentVietnamese(str) {
   if (!str) {
     return str;
@@ -53,6 +54,7 @@ async function chunkArray(arrData, chunkSize) {
   }
   return arrayResult;
 }
+
 function FormatDate(date, resultFormat) {
   var newDate = moment(date, 'YYYY-MM-DD');
   var newDateFormat = newDate.format(`${resultFormat}`);
@@ -74,6 +76,19 @@ function randomIntByMinMax(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+function randomFloatByMinMax(min, max) {
+  let _mutiplyRate = 1000;
+  let _newMin = min * _mutiplyRate;
+  let _newMax = max * _mutiplyRate;
+  let result = min;
+
+  for (let i = 0; i < 100; i++) {
+    result = randomIntByMinMax(_newMin, _newMax);
+    result = parseFloat(result / _mutiplyRate).toFixed(5);
+  }
+  return result;
+}
+
 function convertStringToHex(inputText) {
   const bufferText = Buffer.from(inputText, 'utf8'); // or Buffer.from('hello world')
   return bufferText.toString('hex');
@@ -92,6 +107,7 @@ function isNotValidValue(value) {
 function isValidValue(value) {
   return !isNotValidValue(value);
 }
+
 function isNotEmptyStringValue(stringValue) {
   if (isNotValidValue(stringValue)) {
     return false;
@@ -113,12 +129,96 @@ function makeHashFromData(data) {
   return hashData;
 }
 
+function replaceCharactersFirstLast(str, startLength = 1, endLength = 1) {
+  if (str.length <= 2) {
+    return str;
+  }
+  const firstChar = str.slice(0, startLength);
+  const lastChar = str.slice(str.length - endLength, str.length);
+  const middleChars = str.slice(startLength, str.length - endLength);
+  const replacedChars = middleChars.replace(/./g, '*');
+  return firstChar + replacedChars + lastChar;
+}
+
+function replaceCharactersToHide(str, charLength = 1) {
+  if (!str || str.length <= 2) {
+    return str;
+  }
+  const firstChar = str.slice(0, charLength);
+  const lastChar = str.slice(str.length - charLength, str.length);
+  const middleChars = str.slice(charLength, str.length - charLength);
+  const replacedChars = middleChars.replace(/./g, '*');
+  return firstChar + replacedChars + lastChar;
+}
+
+// let _specialChars = '!@#$%^&*)';
+// _specialChars = _specialChars.split('');
+let _number = '0123456789';
+_number = _number.split('');
+function generateFakerUsername(isHiddenUsername = true) {
+  const faker = require('faker');
+  let fakeUserName = faker.name.firstName() + faker.name.lastName();
+
+  let indexOfRecord = new Date() * 1;
+
+  if (indexOfRecord % 3 === 0) {
+    fakeUserName = fakeUserName.toUpperCase();
+  } else if (indexOfRecord % 5 === 0) {
+    fakeUserName = fakeUserName;
+  } else if (indexOfRecord % 4 === 0) {
+    // let _charIdx = randomIntByMinMax(0, _specialChars.length - 1);
+    fakeUserName = fakeUserName.toUpperCase();
+    let _randomNumber = randomIntByMinMax(0, _number.length - 1);
+    fakeUserName = fakeUserName.toUpperCase() + _number[_randomNumber];
+  } else {
+    let _randomNumber = randomIntByMinMax(0, _number.length - 1);
+    fakeUserName = fakeUserName + _number[_randomNumber];
+  }
+  if (isHiddenUsername) {
+    fakeUserName = replaceCharactersToHide(fakeUserName);
+  }
+  return fakeUserName;
+}
+generateFakerUsername();
+function formatCurrency(amount) {
+  const number = new Intl.NumberFormat('en-EN').format(amount);
+  return number;
+}
+
+function shuffleArrayRandom(array) {
+  let currentIndex = array.length,
+    randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex != 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
+async function executeBatchPromise(promiseList, batchSize = 30) {
+  let _executingPromiseList = chunkArray(promiseList, batchSize);
+  for (let i = 0; i < _executingPromiseList.length; i++) {
+    await Promise.all(_executingPromiseList[i]);
+  }
+}
+
 module.exports = {
   nonAccentVietnamese,
+  executeBatchPromise,
   replaceAll,
+  shuffleArrayRandom,
   convertToURLFormat,
+  generateFakerUsername,
   randomInt,
   randomIntByMinMax,
+  randomFloatByMinMax,
   chunkArray,
   FormatDate,
   padLeadingZeros,
@@ -127,4 +227,7 @@ module.exports = {
   isNotValidValue,
   isValidValue,
   makeHashFromData,
+  formatCurrency,
+  replaceCharactersFirstLast,
+  replaceCharactersToHide,
 };

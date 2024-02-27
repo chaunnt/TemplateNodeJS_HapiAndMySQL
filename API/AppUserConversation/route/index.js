@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const AppUserChatLog = require('./AppUserChatLogRoute');
 const AppUserConversation = require('./AppUserConversationRoute');
@@ -35,5 +35,15 @@ module.exports = [
     method: 'POST',
     path: '/AppUserChatLog/user/sendNewMessageToAdmin',
     config: AppUserChatLog.userSendNewMessageToAdmin,
+  },
+  {
+    method: 'POST',
+    path: '/AppUserChatLog/user/sendMessageToRoom',
+    config: AppUserChatLog.userSendMessageToRoom,
+  },
+  {
+    method: 'POST',
+    path: '/AppUserChatLog/user/getRoomChatLog',
+    config: AppUserChatLog.userGetRoomChatLog,
   },
 ];

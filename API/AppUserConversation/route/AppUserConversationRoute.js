@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by Huu on 11/18/21.
@@ -55,10 +55,11 @@ module.exports = {
       payload: Joi.object({
         filter: Joi.object(filterSchema),
         skip: Joi.number().default(0).min(0),
-        limit: Joi.number().default(20).max(100),
+        limit: Joi.number().default(20).max(100).min(1),
+        searchText: Joi.string().max(255),
         order: Joi.object({
           key: Joi.string().default('updatedAt').allow(''),
-          value: Joi.string().default('desc').allow(''),
+          value: Joi.string().max(255).default('desc').allow(''),
         }),
       }),
     },

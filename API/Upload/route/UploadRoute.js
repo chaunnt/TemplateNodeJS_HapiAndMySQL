@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -14,6 +14,7 @@ module.exports = {
   uploadMediaFile: {
     tags: ['api', `${moduleName}`],
     description: `${moduleName} upload media`,
+    // pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }], //TODO Delete later
     pre: [{ method: CommonFunctions.verifyToken }],
     auth: {
       strategy: 'jwt',
@@ -28,16 +29,83 @@ module.exports = {
       }),
     },
     payload: {
-      maxBytes: 10 * 1024 * 1024, //100 mb
-      // output: 'file',
+      maxBytes: 10 * 1024 * 1024, //10 mb
       parse: true,
-      // allow: 'multipart/form-data',
-      // multipart: {
-      //     output: 'data',
-      // }
     },
     handler: function (req, res) {
       Response(req, res, 'uploadMediaFile');
+    },
+  },
+  advanceUserUploadMediaFile: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} upload media`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        imageData: Joi.binary().encoding('base64'),
+        imageFormat: Joi.string().default('png'),
+      }),
+    },
+    payload: {
+      maxBytes: 10 * 1024 * 1024, //10 mb
+      parse: true,
+    },
+    handler: function (req, res) {
+      Response(req, res, 'uploadMediaFile');
+    },
+  },
+  uploadAdMediaFile: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} upload media`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyStaffToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        imageData: Joi.binary().encoding('base64'),
+        imageFormat: Joi.string().default('png'),
+      }),
+    },
+    payload: {
+      maxBytes: 10 * 1024 * 1024, //10 mb
+      parse: true,
+    },
+    handler: function (req, res) {
+      Response(req, res, 'uploadAdMediaFile');
+    },
+  },
+  advanceUserUploadAdMediaFile: {
+    tags: ['api', `${moduleName}`],
+    description: `${moduleName} upload media`,
+    pre: [{ method: CommonFunctions.verifyToken }, { method: CommonFunctions.verifyAdvanceUserToken }],
+    auth: {
+      strategy: 'jwt',
+    },
+    validate: {
+      headers: Joi.object({
+        authorization: Joi.string(),
+      }).unknown(),
+      payload: Joi.object({
+        imageData: Joi.binary().encoding('base64'),
+        imageFormat: Joi.string().default('png'),
+      }),
+    },
+    payload: {
+      maxBytes: 10 * 1024 * 1024, //10 mb
+      parse: true,
+    },
+    handler: function (req, res) {
+      Response(req, res, 'uploadAdMediaFile');
     },
   },
   uploadUserAvatar: {

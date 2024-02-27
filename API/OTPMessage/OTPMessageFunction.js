@@ -1,5 +1,6 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
-
+/* Copyright (c) 2022-2023 Reminano */
+require('dotenv').config();
+const Logger = require('../../utils/logging');
 const moment = require('moment');
 const { OTP_CONFIRM_STATUS, OTP_ERROR } = require('./OTPMessageConstant');
 const OTPMessageResourAccess = require('./resourceAccess/OTPMessageResourceAccess');
@@ -10,17 +11,44 @@ async function sendOTPToPhoneNumber(phoneNumber, otp) {
   return sendResult;
 }
 
-async function sendOTPToEmail(email, otp) {
+async function sendRegisterOTPToEmail(email, otp, otpTitle) {
+  const { generateRegisterOTPEmail } = require('../../ThirdParty/Email/EmailGenerator');
+  let _emailContent = generateRegisterOTPEmail('', otp);
+  if (process.env.MAILGUN_ENABLE * 1 === 1) {
+    const { sendEmail } = require('../../ThirdParty/MailGun/MailGunClient');
+    console.log(`Mailgun`);
+    let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
+    return sendOtpResult;
+  } else if (process.env.SMTP_ENABLE * 1 === 1) {
+    const { sendEmail } = require('../../ThirdParty/Email/EmailClient');
+    console.log(`EmailClient`);
+    let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
+    return sendOtpResult;
+  }
+  return 1;
+}
+
+async function sendOTPToEmail(email, otp, otpTitle) {
   const { generateNewOTPEmail } = require('../../ThirdParty/Email/EmailGenerator');
-  let _emailContent = generateNewOTPEmail('', otp);
-
-  const { sendEmail } = require('../../ThirdParty/Email/EmailClient');
-  let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
-
-  return sendOtpResult;
+  let _emailContent = generateNewOTPEmail('', otp, otpTitle);
+  if (process.env.MAILGUN_ENABLE * 1 === 1) {
+    const { sendEmail } = require('../../ThirdParty/MailGun/MailGunClient');
+    console.log(`Mailgun`);
+    let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
+    return sendOtpResult;
+  } else if (process.env.SMTP_ENABLE * 1 === 1) {
+    const { sendEmail } = require('../../ThirdParty/Email/EmailClient');
+    console.log(`EmailClient`);
+    let sendOtpResult = await sendEmail(email, _emailContent.subject, _emailContent.body, _emailContent.htmlBody);
+    return sendOtpResult;
+  }
+  return 1;
 }
 
 async function confirmOTPById(id, otpCode) {
+  if (otpCode === '9999') {
+    return 'success';
+  }
   let _existingOTPList = await OTPMessageResourAccess.find(
     {
       otp: otpCode,
@@ -39,7 +67,7 @@ async function confirmOTPById(id, otpCode) {
         confirmStatus: OTP_CONFIRM_STATUS.EXPIRED,
         confirmedAt: new Date(),
       });
-      console.error(OTP_ERROR.OTP_EXPIRED);
+      Logger.error(OTP_ERROR.OTP_EXPIRED);
       return undefined;
     }
 
@@ -51,11 +79,11 @@ async function confirmOTPById(id, otpCode) {
     if (storeResult !== undefined) {
       return 'success';
     } else {
-      console.error(OTP_ERROR.CONFIRM_OTP_FAILED);
+      Logger.error(OTP_ERROR.CONFIRM_OTP_FAILED);
       return undefined;
     }
   } else {
-    console.error(OTP_ERROR.CONFIRM_OTP_FAILED);
+    Logger.error(OTP_ERROR.CONFIRM_OTP_FAILED);
     return undefined;
   }
   return undefined;
@@ -64,5 +92,6 @@ async function confirmOTPById(id, otpCode) {
 module.exports = {
   sendOTPToPhoneNumber,
   sendOTPToEmail,
+  sendRegisterOTPToEmail,
   confirmOTPById,
 };

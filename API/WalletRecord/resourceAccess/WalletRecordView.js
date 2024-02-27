@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 'use strict';
 require('dotenv').config();
@@ -8,10 +8,10 @@ const { PAYMENT_AMOUTH } = require('../WalletRecordConstant');
 const tableName = 'WalletRecordViews';
 const rootTableName = 'WalletRecord';
 const primaryKeyField = 'WalletRecordId';
+const Logger = require('../../../utils/logging');
 async function createView() {
   const WalletTableName = 'Wallet';
   const UserTableName = 'AppUser';
-  const UserViewsTableName = 'AppUserViews';
   let fields = [
     `${rootTableName}.appUserId`,
     `${rootTableName}.WalletRecordId`,
@@ -25,17 +25,27 @@ async function createView() {
     `${rootTableName}.WalletRecordNote`,
     `${rootTableName}.WalletRecordType`,
     `${rootTableName}.WalletRecordRef`,
+    `${rootTableName}.WalletRecordRefAmount`,
     `${rootTableName}.createdAt`,
+    `${rootTableName}.createdAtTimestamp`,
     `${rootTableName}.updatedAt`,
     `${rootTableName}.isHidden`,
     `${rootTableName}.isDeleted`,
-    `${rootTableName}.staffId`,
+    DB.raw(`DATE_FORMAT(${rootTableName}.createdAt, "%d-%m-%Y") as createdDate`),
+
     `${WalletTableName}.walletType`,
+
+    `${UserTableName}.staffId`,
     `${UserTableName}.memberReferIdF1`,
     `${UserTableName}.memberReferIdF2`,
     `${UserTableName}.memberReferIdF3`,
     `${UserTableName}.memberReferIdF4`,
     `${UserTableName}.memberReferIdF5`,
+    `${UserTableName}.memberReferIdF6`,
+    `${UserTableName}.memberReferIdF7`,
+    `${UserTableName}.memberReferIdF8`,
+    `${UserTableName}.memberReferIdF9`,
+    `${UserTableName}.memberReferIdF10`,
     `${UserTableName}.firstName`,
     `${UserTableName}.lastName`,
     `${UserTableName}.email`,
@@ -48,7 +58,6 @@ async function createView() {
     `${UserTableName}.appleId`,
     `${UserTableName}.username`,
     `${UserTableName}.companyName`,
-
     `${UserTableName}.sotaikhoan`, //dung tam
     `${UserTableName}.tentaikhoan`, //dung tam
     `${UserTableName}.tennganhang`, //dung tam
@@ -97,15 +106,14 @@ async function sumAmountDistinctByDate(filter, startDate, endDate) {
 }
 
 async function customSumDistinct(sumField, distinctFields, filter, skip, limit, startDate, endDate, searchText, order) {
-  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+  let queryBuilder = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
 
   return new Promise((resolve, reject) => {
     try {
       queryBuilder
         .sum(`${sumField} as totalSum`)
-        .count(`${sumField} as totalCount`)
-        .select(`${distinctFields}`)
-        .groupBy(`${distinctFields}`)
+        .select(distinctFields)
+        .groupBy(distinctFields)
         // .paginate({ perPage: 2, currentPage: 1 })
         .then(records => {
           if (records && (records.length < 1 || records[0].totalCount === null)) {
@@ -115,8 +123,33 @@ async function customSumDistinct(sumField, distinctFields, filter, skip, limit, 
           }
         });
     } catch (e) {
-      console.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
-      console.error('ResourceAccess', e);
+      Logger.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
+      reject(undefined);
+    }
+  });
+}
+
+async function customCountDistinct(sumField, distinctFields, filter, startDate, endDate, searchText, order) {
+  let queryBuilder = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+
+  return new Promise((resolve, reject) => {
+    try {
+      queryBuilder
+        .count(`${sumField} as totalCount`)
+        .select(distinctFields)
+        .groupBy(distinctFields)
+        // .paginate({ perPage: 2, currentPage: 1 })
+        .then(records => {
+          if (records && (records.length < 1 || records[0].totalCount === null)) {
+            resolve(undefined);
+          } else {
+            resolve(records);
+          }
+        });
+    } catch (e) {
+      Logger.error('ResourceAccess', `DB customSumDistinct ERROR: ${tableName} ${distinctFields}: ${JSON.stringify(filter)}`);
+      Logger.error('ResourceAccess', e);
       reject(undefined);
     }
   });
@@ -138,14 +171,16 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
 
   queryBuilder.where({ isDeleted: 0 });
 
-  queryBuilder.where(filterData);
+  Common.filterHandler(filterData, queryBuilder);
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
 
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   if (limit) {
@@ -158,7 +193,7 @@ function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, sear
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
   return queryBuilder;
 }
@@ -168,8 +203,8 @@ async function customSearch(filter, skip, limit, startDate, endDate, searchText,
   return await query.select();
 }
 
-async function customCount(filter, startDate, endDate, searchText, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`${primaryKeyField} as count`);
 }
 
@@ -228,10 +263,12 @@ function _makeQueryBuilderForReferedUser(
   }
 
   if (startDate) {
-    queryBuilder.where('createdAt', '>=', startDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '>=', moment(startDate).toDate() * 1);
   }
   if (endDate) {
-    queryBuilder.where('createdAt', '<=', endDate);
+    const moment = require('moment');
+    queryBuilder.where('createdAtTimestamp', '<=', moment(endDate).toDate() * 1);
   }
 
   return queryBuilder;
@@ -293,4 +330,5 @@ module.exports = {
   sumReferedUserByUserId,
   customSum,
   customSumDistinct,
+  customCountDistinct,
 };

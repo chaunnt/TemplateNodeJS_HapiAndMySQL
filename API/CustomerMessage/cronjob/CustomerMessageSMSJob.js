@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -40,7 +40,7 @@ async function _cancelAllSMSMessage(station) {
 }
 
 async function sendMessageSMSToCustomer(station) {
-  console.log(`sendMessageSMSToCustomer ${station.stationsId}`);
+  Logger.info(`sendMessageSMSToCustomer ${station.stationsId}`);
   return new Promise(async (resolve, reject) => {
     //Skip TEST station
     if (station.stationsId === 0) {

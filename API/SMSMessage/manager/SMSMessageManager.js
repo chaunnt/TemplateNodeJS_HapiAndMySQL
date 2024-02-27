@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const Logger = require('../../../utils/logging');
 const SMSMessageFunctions = require('../SMSMessageFunctions');
@@ -6,6 +6,7 @@ const SMSMessageResourceAccess = require('../resourceAccess/SMSMessageResourceAc
 const PaymentDepositTransactionFunctions = require('../../PaymentDepositTransaction/PaymentDepositTransactionFunctions');
 const { SMS_MESSAGE_STATUS } = require('../SMSMessageConstants');
 const { ERROR } = require('../../Common/CommonConstant');
+const Logger = require('../../../utils/logging');
 async function insert(req) {
   return await _createSMSMessage(req);
 }
@@ -33,7 +34,7 @@ async function _createSMSMessage(req) {
         if (paymentDepositId && paymentDepositId.length > 0) {
           paymentDepositId = paymentDepositId[0];
         } else {
-          console.error(`error SMS Message create faild: ${ERROR}`);
+          Logger.error(`error SMS Message create faild: `);
           reject('failed');
           return;
         }
@@ -61,7 +62,7 @@ async function _createSMSMessage(req) {
       if (insertMsgRes) {
         resolve(insertMsgRes[0]);
       } else {
-        console.error(`error SMS Message create faild: ${ERROR}`);
+        Logger.error(`error SMS Message create faild: `);
         reject('failed');
       }
     } catch (error) {
@@ -143,7 +144,7 @@ async function updateById(req) {
       if (updateResult) {
         resolve(updateResult);
       } else {
-        console.error(`error SMS Message updateById with id ${id}: ${ERROR}`);
+        Logger.error(`error SMS Message updateById with id ${id}: `);
         reject('failed');
       }
     } catch (error) {

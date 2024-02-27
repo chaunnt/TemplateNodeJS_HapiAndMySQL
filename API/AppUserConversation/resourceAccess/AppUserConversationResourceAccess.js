@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by Huu on 12/31/21.
@@ -22,7 +22,7 @@ async function createTable() {
           table.increments(`${primaryKeyField}`).primary();
           table.integer('senderId');
           table.integer('receiverId');
-          table.string('conversationType').defaultTo(CONVERSATION_TYPE.USER_TO_ADMIN);
+          table.integer('conversationType').defaultTo(CONVERSATION_TYPE.USER_TO_ADMIN);
           table.integer('senderReadMessage').defaultTo(0);
           table.integer('receiverReadMessage').defaultTo(0);
           timestamps(table);
@@ -99,7 +99,7 @@ async function findById(id) {
   return await Common.findById(tableName, dataId, id);
 }
 
-function _makeQueryBuilderByFilter(filter, skip, limit, order) {
+function _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order) {
   let queryBuilder = DB(tableName);
   let filterData = filter ? JSON.parse(JSON.stringify(filter)) : {};
 
@@ -116,19 +116,19 @@ function _makeQueryBuilderByFilter(filter, skip, limit, order) {
   if (order && order.key !== '' && order.value !== '' && (order.value === 'desc' || order.value === 'asc')) {
     queryBuilder.orderBy(order.key, order.value);
   } else {
-    queryBuilder.orderBy('createdAt', 'desc');
+    queryBuilder.orderBy(`${primaryKeyField}`, 'desc');
   }
 
   return queryBuilder;
 }
 
-async function customSearch(filter, skip, limit, order) {
-  let query = _makeQueryBuilderByFilter(filter, skip, limit, order);
+async function customSearch(filter, skip, limit, startDate, endDate, searchText, order) {
+  let query = _makeQueryBuilderByFilter(filter, skip, limit, startDate, endDate, searchText, order);
   return await query.select();
 }
 
-async function customCount(filter, order) {
-  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, order);
+async function customCount(filter, startDate, endDate, searchText) {
+  let query = _makeQueryBuilderByFilter(filter, undefined, undefined, startDate, endDate, searchText);
   return await query.count(`${primaryKeyField} as count`);
 }
 module.exports = {

@@ -1,4 +1,4 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -12,6 +12,7 @@ const PaymentDepositTransactionResourceAccess = require('./../PaymentDepositTran
 const { DEPOSIT_TRX_STATUS } = require('../PaymentDepositTransaction/PaymentDepositTransactionConstant');
 const UserWallet = require('../Wallet/resourceAccess/WalletResourceAccess');
 const WalletRecordResourAccess = require('../WalletRecord/resourceAccess/WalletRecordResoureAccess');
+const Logger = require('../../utils/logging');
 
 async function adjustBallanceForUser(user, amount, walletType) {
   let wallet = await UserWallet.find({
@@ -20,7 +21,7 @@ async function adjustBallanceForUser(user, amount, walletType) {
   });
 
   if (!wallet || wallet.length < 1) {
-    console.error('user wallet is invalid');
+    Logger.error(`adjustBallanceForUser user wallet is invalid ${user.appUserId}`);
     return undefined;
   }
   wallet = wallet[0];
@@ -30,7 +31,7 @@ async function adjustBallanceForUser(user, amount, walletType) {
     paymentAmount: amount,
     balanceBefore: wallet.balance,
     balanceAfter: wallet.balance + amount,
-    WalletRecordType: WALLET_RECORD_TYPE.ADMIN_ADJUST,
+    WalletRecordType: amount > 0 ? WALLET_RECORD_TYPE.ADMIN_ADJUST_ADD : WALLET_RECORD_TYPE.ADMIN_ADJUST_SUBTRACT,
   };
   let resultIncrement = await UserWallet.incrementBalance(wallet.walletId, amount);
   if (resultIncrement) {
@@ -38,11 +39,11 @@ async function adjustBallanceForUser(user, amount, walletType) {
     if (result) {
       return result;
     } else {
-      console.error('insert deposit transaction error');
+      Logger.error('insert deposit transaction error');
       return undefined;
     }
   } else {
-    console.error('increment error');
+    Logger.error('increment error');
     return undefined;
   }
 }
@@ -61,16 +62,59 @@ async function createWalletForUser(userId) {
       appUserId: userId,
       walletType: WALLET_TYPE.POINT, // vi tiền chính của user
     },
-    // {
-    //   appUserId: userId,
-    //   walletType: WALLET_TYPE.WIN, // vi trúng thửong
-    // },
+    {
+      appUserId: userId,
+      walletType: WALLET_TYPE.FAKE, // vi ảo
+    },
+    {
+      appUserId: userId,
+      walletType: WALLET_TYPE.USDT, //vi usdt
+    },
+    {
+      appUserId: userId,
+      walletType: WALLET_TYPE.BTC, //vi btc
+    },
+    {
+      appUserId: userId,
+      walletType: WALLET_TYPE.MISSION, // vi nhiem vu
+    },
   ];
   let createdResult = await WalletResource.insert(newWalletData);
   return createdResult;
 }
 
+async function getWalletByType(appUserId, walletType) {
+  let wallet = await WalletResource.find(
+    {
+      appUserId: appUserId,
+      walletType: walletType,
+    },
+    0,
+    1,
+  );
+  if (wallet && wallet.length > 0) {
+    return wallet[0];
+  } else {
+    return undefined;
+  }
+}
+
+async function resetMissionWalletBalance(appUserId) {
+  await resetWalletBalance(appUserId, WALLET_TYPE.MISSION, 100000000);
+}
+
+async function resetWalletBalance(appUserId, walletType, defaultAmount = 0) {
+  let _existingWallet = await getWalletByType(appUserId, walletType);
+
+  if (_existingWallet) {
+    _existingWallet.balance = defaultAmount;
+    await WalletResource.updateBalanceTransaction([_existingWallet]);
+  }
+}
 module.exports = {
-  createWalletForUser,
   adjustBallanceForUser,
+  createWalletForUser,
+  getWalletByType,
+  resetWalletBalance,
+  resetMissionWalletBalance,
 };

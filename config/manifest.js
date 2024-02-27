@@ -1,4 +1,4 @@
-/* Copyright (c) 2020-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2020-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -36,12 +36,15 @@ const manifest = {
 };
 
 if (AppConfig.documentation.enable) {
-  manifest.registrations.push({
-    plugin: {
-      register: 'hapi-swagger',
-      options: AppConfig.documentation.options,
-    },
-  });
+  //FEATURE 2023020601 Improve Security of APIs
+  if (process.env.NODE_ENV !== 'production') {
+    manifest.registrations.push({
+      plugin: {
+        register: 'hapi-swagger',
+        options: AppConfig.documentation.options,
+      },
+    });
+  }
 
   if (AppConfig.documentation.options.documentationPage || AppConfig.documentation.options.swaggerUI) {
     manifest.registrations.push(

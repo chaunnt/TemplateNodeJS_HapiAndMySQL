@@ -1,4 +1,4 @@
-/* Copyright (c) 2021-2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2021-2023 Reminano */
 
 /**
  * Created by A on 7/18/17.
@@ -6,88 +6,139 @@
 'use strict';
 
 const Logger = require('../../utils/logging');
+const { SYSTEM_STATUS } = require('./MaintainConstant');
+const SystemConfigurationsResourceAccess = require('../SystemConfigurations/resourceAccess/SystemConfigurationsResourceAccess');
+const { isNotEmptyStringValue } = require('../ApiUtils/utilFunctions');
 
-let systemStatus = {
-  all: true,
-  liveGame: true,
-  deposit: true,
-  transfer: true,
-  withdraw: true,
-  signup: true,
-  maintainMessage: 'Vui lòng liên hệ admin để được hỗ trợ',
-};
+let _systemStatus = JSON.parse(JSON.stringify(SYSTEM_STATUS));
+
+async function initMaintainConfig() {
+  Logger.info(`initMaintainConfig ${new Date()}`);
+  let config = await SystemConfigurationsResourceAccess.find({}, 0, 1);
+  if (config && config.length > 0) {
+    config = config[0];
+
+    if (isNotEmptyStringValue(config.maintainConfig)) _systemStatus = JSON.parse(config.maintainConfig);
+    return config;
+  }
+  return undefined;
+}
+
+setTimeout(() => {
+  initMaintainConfig();
+}, 3000);
+
+async function _updateSystemConfigToDb() {
+  await SystemConfigurationsResourceAccess.updateById(1, {
+    maintainConfig: JSON.stringify(_systemStatus),
+  });
+}
 
 //Maintain button for		ALL WEB
 async function maintainAll(enable) {
-  Logger.info('Maintain', systemStatus);
+  Logger.info('Maintain', _systemStatus);
   if (enable === true) {
-    systemStatus.all = true;
+    _systemStatus.all = true;
   } else {
-    systemStatus.all = false;
+    _systemStatus.all = false;
   }
+  await _updateSystemConfigToDb();
 }
 
 //Maintain button for		Live Game
 async function maintainLiveGame(enable) {
   if (enable === true) {
-    systemStatus.liveGame = true;
+    _systemStatus.liveGame = true;
   } else {
-    systemStatus.liveGame = false;
+    _systemStatus.liveGame = false;
   }
-  Logger.info('Maintain', systemStatus);
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
 }
 
 //Maintain button for		Deposit
 async function maintainDeposit(enable) {
   if (enable === true) {
-    systemStatus.deposit = true;
+    _systemStatus.deposit = true;
   } else {
-    systemStatus.deposit = false;
+    _systemStatus.deposit = false;
   }
-  Logger.info('Maintain', systemStatus);
-}
-
-//Maintain button for		Transfer Deposit / Withdraw
-async function maintainTransfer(enable) {
-  if (enable === true) {
-    systemStatus.transfer = true;
-  } else {
-    systemStatus.transfer = false;
-  }
-  Logger.info('Maintain', systemStatus);
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
 }
 
 //Maintain button for		Withdraw
 async function maintainWithdraw(enable) {
   if (enable === true) {
-    systemStatus.withdraw = true;
+    _systemStatus.withdraw = true;
   } else {
-    systemStatus.withdraw = false;
+    _systemStatus.withdraw = false;
   }
-  Logger.info('Maintain', systemStatus);
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
 }
 
 //Maintain button for		Signup New USER
 async function maintainSignup(enable) {
   if (enable === true) {
-    systemStatus.signup = true;
+    _systemStatus.signup = true;
   } else {
-    systemStatus.signup = false;
+    _systemStatus.signup = false;
   }
-  Logger.info('Maintain', systemStatus);
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
+}
+
+//Maintain button for Signin
+async function maintainSignIn(enable) {
+  if (enable === true) {
+    _systemStatus.signin = true;
+  } else {
+    _systemStatus.signin = false;
+  }
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
+}
+
+//Maintain button for ChangePassword
+async function maintainChangePassword(enable) {
+  if (enable === true) {
+    _systemStatus.changePassword = true;
+  } else {
+    _systemStatus.changePassword = false;
+  }
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
+}
+
+//Maintain button for ForgotPassword
+async function maintainForgotPassword(enable) {
+  if (enable === true) {
+    _systemStatus.forgotPassword = true;
+  } else {
+    _systemStatus.forgotPassword = false;
+  }
+  Logger.info('Maintain', _systemStatus);
+  await _updateSystemConfigToDb();
 }
 
 async function maintainWarningMessage(message) {
-  systemStatus.maintainMessage = message;
+  _systemStatus.maintainMessage = message;
+  await _updateSystemConfigToDb();
 }
 
+function getSystemStatus() {
+  return _systemStatus;
+}
 module.exports = {
   maintainAll,
   maintainDeposit,
   maintainLiveGame,
-  maintainTransfer,
   maintainWithdraw,
   maintainSignup,
+  maintainSignIn,
+  maintainChangePassword,
+  maintainForgotPassword,
   maintainWarningMessage,
-  systemStatus: systemStatus,
+  getSystemStatus,
 };

@@ -1,8 +1,9 @@
-/* Copyright (c) 2022 Toriti Tech Team https://t.me/ToritiTech */
+/* Copyright (c) 2022-2023 Reminano */
 
 const CustomerMessage_User = require('./CustomerMessage_UserRoute');
 const CustomerMessage_Staff = require('./CustomerMessage_StaffRoute');
 const GroupCustomerMessage = require('../route/GroupCustomerMessageRoute');
+const CustomerMessageRoute = require('./CustomerMessageRoute');
 
 module.exports = [
   //Api CustomerSchedule
@@ -22,13 +23,22 @@ module.exports = [
     path: '/GroupCustomerMessage/find',
     config: GroupCustomerMessage.find,
   },
-  // { method: 'POST', path: '/GroupCustomerMessage/deleteById', config: GroupCustomerMessage.deleteById },
+  { method: 'POST', path: '/GroupCustomerMessage/deleteById', config: GroupCustomerMessage.deleteById },
   {
     method: 'POST',
     path: '/GroupCustomerMessage/user/getList',
     config: GroupCustomerMessage.userGetListGroupCustomerMessage,
   },
-
+  {
+    method: 'POST',
+    path: '/GroupCustomerMessage/user/readGroupCustomerMessage',
+    config: GroupCustomerMessage.userReadGroupCustomerMessage,
+  },
+  {
+    method: 'POST',
+    path: '/GroupCustomerMessage/user/getDetail',
+    config: GroupCustomerMessage.userGetDetailGroupCustomerMessage,
+  },
   {
     method: 'POST',
     path: '/CustomerMessage/user/getListNotification',
@@ -99,5 +109,10 @@ module.exports = [
     method: 'POST',
     path: '/CustomerMessage/staff/deleteNotification',
     config: CustomerMessage_Staff.staffDeleteNotificationMessage,
+  },
+  {
+    method: 'POST',
+    path: '/CustomerMessage/insertNotification',
+    config: CustomerMessageRoute.insertNotification,
   },
 ];
