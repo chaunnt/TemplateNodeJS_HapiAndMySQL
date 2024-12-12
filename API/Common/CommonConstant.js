@@ -14,7 +14,7 @@ module.exports = {
     DELETE_FAILED: 'DELETE_FAILED', //Xóa dữ liệu thất bại
     DUPLICATE_DATA: 'DUPLICATE_DATA', //Dữ liệu trùng lặp
   },
-IP_LOCK_LIST: ['127.0.0.2'],
+  IP_LOCK_LIST: ['127.0.0.2'],
   DATE_DATA_FORMAT: 'YYYY/MM/DD',
   DATE_DB_FORMAT: 'DD/MM/YYYY',
   DATE_DB_SORT_FORMAT: 'YYYYMMDD',

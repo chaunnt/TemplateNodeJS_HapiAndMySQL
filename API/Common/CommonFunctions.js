@@ -170,7 +170,7 @@ async function verifyToken(request, reply) {
       reply.response(errorCodes[505]).code(505).takeover();
       return;
     }
-    
+
     //if there is no token or empty token
     if (!(request.headers.authorization && request.headers.authorization !== '')) {
       Logger.error(`System was down - current active status = ${MaintainFunctions.getSystemStatus().all}`);
@@ -258,7 +258,7 @@ async function verifyToken(request, reply) {
           });
         }
       }
-      
+
       if (currentUser && currentUser.length > 0 && currentUser[0].active) {
         //check token de chi 1 thiet bi active
         const user = currentUser[0];

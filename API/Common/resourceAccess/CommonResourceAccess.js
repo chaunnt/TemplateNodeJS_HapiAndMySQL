@@ -317,7 +317,6 @@ async function find(tableName, filter, skip, limit, order, primaryKey) {
   return executeSelectQuery(queryBuilder, tableName, primaryKey);
 }
 
-
 async function findAllDelete(tableName, filter, skip, limit, order) {
   if (process.env.ENABLE_DEBUG_QUERYDB === 1) {
     Logger.info(`tableName : ${tableName}, Query: findAllDelete ${filter}`);
